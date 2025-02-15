@@ -8,34 +8,28 @@ namespace Azure.Messaging.EventGrid.Tests
 {
     public class EventGridTestEnvironment : TestEnvironment
     {
-        public const string TopicKeyEnvironmentVariableName = "EVENT_GRID_TOPIC_KEY";
-        public const string TopicEndpointEnvironmentVariableName = "EVENT_GRID_TOPIC_ENDPOINT";
+        public string TopicHost => GetRecordedVariable("EVENTGRID_TOPIC_ENDPOINT");
+        public string TopicKey => GetRecordedVariable("EVENTGRID_TOPIC_KEY", options => options.IsSecret(SanitizedValue.Base64));
 
-        public const string DomainKeyEnvironmentVariableName = "EVENT_GRID_DOMAIN_KEY";
-        public const string DomainEndpointEnvironmentVariableName = "EVENT_GRID_DOMAIN_ENDPOINT";
+        public string DomainHost => GetRecordedVariable("EVENTGRID_DOMAIN_ENDPOINT");
+        public string DomainKey => GetRecordedVariable("EVENTGRID_DOMAIN_KEY", options => options.IsSecret(SanitizedValue.Base64));
 
-        public const string CloudEventDomainKeyEnvironmentVariableName = "EVENT_GRID_CLOUD_EVENT_DOMAIN_KEY";
-        public const string CloudEventDomainEndpointEnvironmentVariableName = "EVENT_GRID_CLOUD_EVENT_DOMAIN_ENDPOINT";
+        public string CloudEventDomainHost => GetRecordedVariable("EVENTGRID_CLOUD_EVENT_DOMAIN_ENDPOINT");
+        public string CloudEventDomainKey => GetRecordedVariable("EVENTGRID_CLOUD_EVENT_DOMAIN_KEY", options => options.IsSecret(SanitizedValue.Base64));
 
-        public const string CloudEventTopicKeyEnvironmentVariableName = "EVENT_GRID_CLOUD_EVENT_TOPIC_KEY";
-        public const string CloudEventTopicEndpointEnvironmentVariableName = "EVENT_GRID_CLOUD_EVENT_TOPIC_ENDPOINT";
+        public string CloudEventTopicHost => GetRecordedVariable("EVENTGRID_CLOUD_EVENT_TOPIC_ENDPOINT");
+        public string CloudEventTopicKey => GetRecordedVariable("EVENTGRID_CLOUD_EVENT_TOPIC_KEY", options => options.IsSecret(SanitizedValue.Base64));
 
-        public const string CustomEventTopicKeyEnvironmentVariableName = "EVENT_GRID_CUSTOM_EVENT_TOPIC_KEY";
-        public const string CustomEventTopicEndpointEnvironmentVariableName = "EVENT_GRID_CUSTOM_EVENT_TOPIC_ENDPOINT";
+        public string CustomEventTopicHost => GetRecordedVariable("EVENTGRID_CUSTOM_EVENT_TOPIC_ENDPOINT");
+        public string CustomEventTopicKey => GetRecordedVariable("EVENTGRID_CUSTOM_EVENT_TOPIC_KEY", options => options.IsSecret(SanitizedValue.Base64));
 
-        public string TopicHost => GetRecordedVariable(TopicEndpointEnvironmentVariableName);
-        public string TopicKey => GetRecordedVariable(TopicKeyEnvironmentVariableName, options => options.IsSecret(SanitizedValue.Base64));
+        public string PartnerNamespaceHost => GetRecordedVariable("EVENTGRID_PARTNER_NAMESPACE_TOPIC_ENDPOINT");
+        public string PartnerNamespaceKey => GetRecordedVariable("EVENTGRID_PARTNER_NAMESPACE_TOPIC_KEY", options => options.IsSecret(SanitizedValue.Base64));
+        public string PartnerChannelName => GetRecordedVariable("EVENTGRID_PARTNER_CHANNEL_NAME");
 
-        public string DomainHost => GetRecordedVariable(DomainEndpointEnvironmentVariableName);
-        public string DomainKey => GetRecordedVariable(DomainKeyEnvironmentVariableName, options => options.IsSecret(SanitizedValue.Base64));
-
-        public string CloudEventDomainHost => GetRecordedVariable(CloudEventDomainEndpointEnvironmentVariableName);
-        public string CloudEventDomainKey => GetRecordedVariable(CloudEventDomainKeyEnvironmentVariableName, options => options.IsSecret(SanitizedValue.Base64));
-
-        public string CloudEventTopicHost => GetRecordedVariable(CloudEventTopicEndpointEnvironmentVariableName);
-        public string CloudEventTopicKey => GetRecordedVariable(CloudEventTopicKeyEnvironmentVariableName, options => options.IsSecret(SanitizedValue.Base64));
-
-        public string CustomEventTopicHost => GetRecordedVariable(CustomEventTopicEndpointEnvironmentVariableName);
-        public string CustomEventTopicKey => GetRecordedVariable(CustomEventTopicKeyEnvironmentVariableName, options => options.IsSecret(SanitizedValue.Base64));
+        public string NamespaceKey => GetRecordedVariable("EVENTGRID_KEY", options => options.IsSecret(SanitizedValue.Base64));
+        public string NamespaceTopicHost => GetRecordedVariable("EVENTGRID_ENDPOINT");
+        public string NamespaceTopicName => GetRecordedVariable("EVENTGRID_TOPIC_NAME");
+        public string NamespaceSubscriptionName => GetRecordedVariable("EVENTGRID_EVENT_SUBSCRIPTION_NAME");
     }
 }

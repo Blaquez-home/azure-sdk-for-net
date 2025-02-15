@@ -22,6 +22,7 @@ namespace Azure.Messaging.ServiceBus.Administration
         private readonly int _port;
         private readonly ClientDiagnostics _diagnostics;
         private readonly string _versionQuery;
+        private readonly string _scheme;
 
         /// <summary>
         /// Initializes a new <see cref="HttpRequestAndResponse"/> which can be used to send http request and response.
@@ -31,7 +32,8 @@ namespace Azure.Messaging.ServiceBus.Administration
             ClientDiagnostics diagnostics,
             TokenCredential tokenCredential,
             string fullyQualifiedNamespace,
-            ServiceBusAdministrationClientOptions.ServiceVersion version)
+            ServiceBusAdministrationClientOptions.ServiceVersion version,
+            bool useTls)
         {
             _pipeline = pipeline;
             _diagnostics = diagnostics;
@@ -39,15 +41,16 @@ namespace Azure.Messaging.ServiceBus.Administration
             _tokenCredential = tokenCredential;
             _fullyQualifiedNamespace = fullyQualifiedNamespace;
             _port = GetPort(_fullyQualifiedNamespace);
+            _scheme = useTls ? Uri.UriSchemeHttps : Uri.UriSchemeHttp;
         }
 
-        internal async Task ThrowIfRequestFailedAsync(Request request, Response response)
+        internal void ThrowIfRequestFailed(Request request, Response response)
         {
             if ((response.Status >= 200) && (response.Status < 400))
             {
                 return;
             }
-            RequestFailedException ex = await _diagnostics.CreateRequestFailedExceptionAsync(response).ConfigureAwait(false);
+            RequestFailedException ex = new RequestFailedException(response);
             if (response.Status == (int)HttpStatusCode.Unauthorized)
             {
                 throw new UnauthorizedAccessException(
@@ -171,7 +174,7 @@ namespace Azure.Messaging.ServiceBus.Administration
             Uri uri = new UriBuilder(_fullyQualifiedNamespace)
             {
                 Path = entityPath,
-                Scheme = Uri.UriSchemeHttps,
+                Scheme = _scheme,
                 Port = _port,
                 Query = queryString
             }.Uri;
@@ -199,7 +202,7 @@ namespace Azure.Messaging.ServiceBus.Administration
             {
                 Path = entityPath,
                 Port = _port,
-                Scheme = Uri.UriSchemeHttps,
+                Scheme = _scheme,
                 Query = _versionQuery
             }.Uri;
             var requestUriBuilder = new RequestUriBuilder();
@@ -222,7 +225,7 @@ namespace Azure.Messaging.ServiceBus.Administration
                 var token = await GetTokenAsync(forwardTo).ConfigureAwait(false);
                 request.Headers.Add(
                     AdministrationClientConstants.ServiceBusSupplementartyAuthorizationHeaderName,
-                    credential.IsSharedAccessCredential == true ? token : $"Bearer { token }");
+                    credential.IsSharedAccessCredential ? token : $"Bearer { token }");
             }
 
             if (!string.IsNullOrWhiteSpace(fwdDeadLetterTo))
@@ -230,7 +233,7 @@ namespace Azure.Messaging.ServiceBus.Administration
                 var token = await GetTokenAsync(fwdDeadLetterTo).ConfigureAwait(false);
                 request.Headers.Add(
                     AdministrationClientConstants.ServiceBusDlqSupplementaryAuthorizationHeaderName,
-                    credential.IsSharedAccessCredential == true ? token : $"Bearer { token }");
+                    credential.IsSharedAccessCredential ? token : $"Bearer { token }");
             }
 
             Response response = await SendHttpRequestAsync(request, cancellationToken).ConfigureAwait(false);
@@ -245,7 +248,7 @@ namespace Azure.Messaging.ServiceBus.Administration
             Uri uri = new UriBuilder(_fullyQualifiedNamespace)
             {
                 Path = entityPath,
-                Scheme = Uri.UriSchemeHttps,
+                Scheme = _scheme,
                 Port = _port,
                 Query = _versionQuery
             }.Uri;
@@ -274,7 +277,7 @@ namespace Azure.Messaging.ServiceBus.Administration
 
             Response response = await _pipeline.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
-            await ThrowIfRequestFailedAsync(request, response).ConfigureAwait(false);
+            ThrowIfRequestFailed(request, response);
             return response;
         }
 

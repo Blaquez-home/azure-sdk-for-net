@@ -22,27 +22,27 @@ namespace Azure.ResourceManager.Storage.Models
             _value = value ?? throw new ArgumentNullException(nameof(value));
         }
 
-        private const string StandardLRSValue = "Standard_LRS";
-        private const string StandardGRSValue = "Standard_GRS";
+        private const string StandardLrsValue = "Standard_LRS";
+        private const string StandardGrsValue = "Standard_GRS";
         private const string StandardRagrsValue = "Standard_RAGRS";
-        private const string StandardZRSValue = "Standard_ZRS";
-        private const string PremiumLRSValue = "Premium_LRS";
-        private const string PremiumZRSValue = "Premium_ZRS";
+        private const string StandardZrsValue = "Standard_ZRS";
+        private const string PremiumLrsValue = "Premium_LRS";
+        private const string PremiumZrsValue = "Premium_ZRS";
         private const string StandardGzrsValue = "Standard_GZRS";
         private const string StandardRagzrsValue = "Standard_RAGZRS";
 
         /// <summary> Standard_LRS. </summary>
-        public static StorageSkuName StandardLRS { get; } = new StorageSkuName(StandardLRSValue);
+        public static StorageSkuName StandardLrs { get; } = new StorageSkuName(StandardLrsValue);
         /// <summary> Standard_GRS. </summary>
-        public static StorageSkuName StandardGRS { get; } = new StorageSkuName(StandardGRSValue);
+        public static StorageSkuName StandardGrs { get; } = new StorageSkuName(StandardGrsValue);
         /// <summary> Standard_RAGRS. </summary>
         public static StorageSkuName StandardRagrs { get; } = new StorageSkuName(StandardRagrsValue);
         /// <summary> Standard_ZRS. </summary>
-        public static StorageSkuName StandardZRS { get; } = new StorageSkuName(StandardZRSValue);
+        public static StorageSkuName StandardZrs { get; } = new StorageSkuName(StandardZrsValue);
         /// <summary> Premium_LRS. </summary>
-        public static StorageSkuName PremiumLRS { get; } = new StorageSkuName(PremiumLRSValue);
+        public static StorageSkuName PremiumLrs { get; } = new StorageSkuName(PremiumLrsValue);
         /// <summary> Premium_ZRS. </summary>
-        public static StorageSkuName PremiumZRS { get; } = new StorageSkuName(PremiumZRSValue);
+        public static StorageSkuName PremiumZrs { get; } = new StorageSkuName(PremiumZrsValue);
         /// <summary> Standard_GZRS. </summary>
         public static StorageSkuName StandardGzrs { get; } = new StorageSkuName(StandardGzrsValue);
         /// <summary> Standard_RAGZRS. </summary>
@@ -51,7 +51,7 @@ namespace Azure.ResourceManager.Storage.Models
         public static bool operator ==(StorageSkuName left, StorageSkuName right) => left.Equals(right);
         /// <summary> Determines if two <see cref="StorageSkuName"/> values are not the same. </summary>
         public static bool operator !=(StorageSkuName left, StorageSkuName right) => !left.Equals(right);
-        /// <summary> Converts a string to a <see cref="StorageSkuName"/>. </summary>
+        /// <summary> Converts a <see cref="string"/> to a <see cref="StorageSkuName"/>. </summary>
         public static implicit operator StorageSkuName(string value) => new StorageSkuName(value);
 
         /// <inheritdoc />
@@ -62,7 +62,7 @@ namespace Azure.ResourceManager.Storage.Models
 
         /// <inheritdoc />
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+        public override int GetHashCode() => _value != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(_value) : 0;
         /// <inheritdoc />
         public override string ToString() => _value;
     }

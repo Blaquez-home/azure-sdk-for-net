@@ -9,6 +9,7 @@ using Azure.Core;
 using Azure.Messaging.ServiceBus.Authorization;
 using Azure.Messaging.ServiceBus.Core;
 using Azure.Messaging.ServiceBus.Diagnostics;
+using Microsoft.Azure.Amqp;
 using Moq;
 using NUnit.Framework;
 
@@ -129,8 +130,8 @@ namespace Azure.Messaging.ServiceBus.Tests.Diagnostics
                 .Returns(3);
 
             mockTransportBatch
-                .Setup(transport => transport.AsReadOnly<ServiceBusMessage>())
-                .Returns(new List<ServiceBusMessage>());
+                .Setup(transport => transport.AsReadOnly<AmqpMessage>())
+                .Returns(new List<AmqpMessage>());
 
             mockTransportSender.Setup(
                  sender => sender.CreateMessageBatchAsync(
@@ -372,7 +373,7 @@ namespace Azure.Messaging.ServiceBus.Tests.Diagnostics
                 mockConnection.Object,
                 "queueName",
                 false,
-                new ServiceBusReceiverOptions()
+                new ServiceBusReceiverOptions
                 {
                     PrefetchCount = maxMessages - 1
                 })
@@ -883,6 +884,165 @@ namespace Azure.Messaging.ServiceBus.Tests.Diagnostics
                 Times.Once);
         }
 
+         [Test]
+        public async Task DeleteMessagesLogsEvents()
+        {
+            var mockLogger = new Mock<ServiceBusEventSource>();
+            var mockTransportReceiver = new Mock<TransportReceiver>();
+            var mockConnection = GetMockConnection(mockTransportReceiver);
+            mockTransportReceiver.Setup(
+                transportReceiver => transportReceiver.DeleteMessagesAsync(
+                    It.IsAny<int>(),
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(1);
+            var receiver = new ServiceBusReceiver(
+                mockConnection.Object,
+                "queueName",
+                false,
+                new ServiceBusReceiverOptions())
+            {
+                Logger = mockLogger.Object
+            };
+
+            var dateTime = DateTimeOffset.UtcNow;
+            await receiver.DeleteMessagesAsync(1, dateTime);
+
+            mockLogger
+                .Verify(
+                    log => log.DeleteMessagesStart(
+                        receiver.Identifier,
+                        1,
+                        dateTime),
+                Times.Once);
+            mockLogger
+                .Verify(
+                    log => log.DeleteMessagesComplete(
+                        receiver.Identifier,
+                        1),
+                Times.Once);
+        }
+
+        [Test]
+        public void DeleteMessagesExceptionLogsEvents()
+        {
+            var mockLogger = new Mock<ServiceBusEventSource>();
+            var mockTransportReceiver = new Mock<TransportReceiver>();
+            var mockConnection = GetMockConnection(mockTransportReceiver);
+            mockTransportReceiver.Setup(
+                transportReceiver => transportReceiver.DeleteMessagesAsync(
+                    It.IsAny<int>(),
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<CancellationToken>()))
+                .Throws(new Exception());
+            var receiver = new ServiceBusReceiver(
+                mockConnection.Object,
+                "queueName",
+                false,
+                new ServiceBusReceiverOptions())
+            {
+                Logger = mockLogger.Object
+            };
+
+            var time = DateTimeOffset.UtcNow;
+            Assert.That(
+                async () => await receiver.DeleteMessagesAsync(1, time),
+                Throws.InstanceOf<Exception>());
+
+            mockLogger
+                .Verify(
+                    log => log.DeleteMessagesStart(
+                        receiver.Identifier,
+                        1,
+                        time),
+                Times.Once);
+            mockLogger
+                .Verify(
+                    log => log.DeleteMessagesException(
+                        receiver.Identifier,
+                        It.IsAny<string>()),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task PurgeMessagesLogsEvents()
+        {
+            var mockLogger = new Mock<ServiceBusEventSource>();
+            var mockTransportReceiver = new Mock<TransportReceiver>();
+            var mockConnection = GetMockConnection(mockTransportReceiver);
+            mockTransportReceiver.SetupSequence(
+                transportReceiver => transportReceiver.DeleteMessagesAsync(
+                    It.IsAny<int>(),
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(1)
+                .ReturnsAsync(0);
+            var receiver = new ServiceBusReceiver(
+                mockConnection.Object,
+                "queueName",
+                false,
+                new ServiceBusReceiverOptions())
+            {
+                Logger = mockLogger.Object
+            };
+
+            var dateTime = DateTimeOffset.UtcNow;
+            await receiver.PurgeMessagesAsync(dateTime);
+
+            mockLogger
+                .Verify(
+                    log => log.PurgeMessagesStart(
+                        receiver.Identifier,
+                        dateTime),
+                Times.Once);
+            mockLogger
+                .Verify(
+                    log => log.PurgeMessagesComplete(
+                        receiver.Identifier,
+                        1),
+                Times.Once);
+        }
+
+        [Test]
+        public void PurgeMessagesExceptionLogsEvents()
+        {
+            var mockLogger = new Mock<ServiceBusEventSource>();
+            var mockTransportReceiver = new Mock<TransportReceiver>();
+            var mockConnection = GetMockConnection(mockTransportReceiver);
+            mockTransportReceiver.Setup(
+                transportReceiver => transportReceiver.DeleteMessagesAsync(
+                    It.IsAny<int>(),
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<CancellationToken>()))
+                .Throws(new Exception());
+            var receiver = new ServiceBusReceiver(
+                mockConnection.Object,
+                "queueName",
+                false,
+                new ServiceBusReceiverOptions())
+            {
+                Logger = mockLogger.Object
+            };
+
+            var time = DateTimeOffset.UtcNow;
+            Assert.That(
+                async () => await receiver.PurgeMessagesAsync(time),
+                Throws.InstanceOf<Exception>());
+
+            mockLogger
+                .Verify(
+                    log => log.PurgeMessagesStart(
+                        receiver.Identifier,
+                        time),
+                Times.Once);
+            mockLogger
+                .Verify(
+                    log => log.PurgeMessagesException(
+                        receiver.Identifier,
+                        It.IsAny<string>()),
+                Times.Once);
+        }
+
         [Test]
         public async Task RenewMessageLockLogsEvents()
         {
@@ -1256,6 +1416,9 @@ namespace Azure.Messaging.ServiceBus.Tests.Diagnostics
 
         private Mock<ServiceBusConnection> GetMockConnection(Mock<TransportReceiver> mockTransportReceiver)
         {
+            var prefetchCount = 0;
+
+            mockTransportReceiver.Setup(receiver => receiver.PrefetchCount).Returns(() => prefetchCount);
             var mockConnection = GetMockConnection();
 
             mockConnection.Setup(
@@ -1268,7 +1431,12 @@ namespace Azure.Messaging.ServiceBus.Tests.Diagnostics
                     It.IsAny<string>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
-                    CancellationToken.None))
+                    It.IsAny<CancellationToken>()))
+                .Callback<string, ServiceBusRetryPolicy, ServiceBusReceiveMode, uint, string, string, bool, bool, CancellationToken>(
+                    (_, _, _, count, _, _, _, _, _) =>
+                    {
+                        prefetchCount = (int) count;
+                    })
                 .Returns(mockTransportReceiver.Object);
 
             return mockConnection;
@@ -1298,7 +1466,8 @@ namespace Azure.Messaging.ServiceBus.Tests.Diagnostics
             mockConnection.Setup(
                 connection => connection.CreateTransportClient(
                     It.IsAny<ServiceBusTokenCredential>(),
-                    It.IsAny<ServiceBusClientOptions>()))
+                    It.IsAny<ServiceBusClientOptions>(),
+                    It.IsAny<bool>()))
                 .Returns(Mock.Of<TransportClient>());
 
             return mockConnection;

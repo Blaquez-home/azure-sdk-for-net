@@ -10,7 +10,7 @@ using System.ComponentModel;
 
 namespace Azure.Communication.PhoneNumbers
 {
-    /// <summary> The assignment type of the phone numbers to search for. A phone number can be assigned to a person, or to an application. </summary>
+    /// <summary> Represents the assignment type of the offering. </summary>
     public readonly partial struct PhoneNumberAssignmentType : IEquatable<PhoneNumberAssignmentType>
     {
         private readonly string _value;
@@ -33,7 +33,7 @@ namespace Azure.Communication.PhoneNumbers
         public static bool operator ==(PhoneNumberAssignmentType left, PhoneNumberAssignmentType right) => left.Equals(right);
         /// <summary> Determines if two <see cref="PhoneNumberAssignmentType"/> values are not the same. </summary>
         public static bool operator !=(PhoneNumberAssignmentType left, PhoneNumberAssignmentType right) => !left.Equals(right);
-        /// <summary> Converts a string to a <see cref="PhoneNumberAssignmentType"/>. </summary>
+        /// <summary> Converts a <see cref="string"/> to a <see cref="PhoneNumberAssignmentType"/>. </summary>
         public static implicit operator PhoneNumberAssignmentType(string value) => new PhoneNumberAssignmentType(value);
 
         /// <inheritdoc />
@@ -44,7 +44,7 @@ namespace Azure.Communication.PhoneNumbers
 
         /// <inheritdoc />
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+        public override int GetHashCode() => _value != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(_value) : 0;
         /// <inheritdoc />
         public override string ToString() => _value;
     }

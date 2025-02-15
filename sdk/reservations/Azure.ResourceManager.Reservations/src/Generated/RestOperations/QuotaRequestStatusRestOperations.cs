@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.Reservations.Models;
@@ -37,7 +36,23 @@ namespace Azure.ResourceManager.Reservations
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
         }
 
-        internal HttpMessage CreateGetRequest(string subscriptionId, string providerId, string location, string id)
+        internal RequestUriBuilder CreateGetRequestUri(string subscriptionId, string providerId, AzureLocation location, Guid id)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Capacity/resourceProviders/", false);
+            uri.AppendPath(providerId, true);
+            uri.AppendPath("/locations/", false);
+            uri.AppendPath(location, true);
+            uri.AppendPath("/serviceLimitsRequests/", false);
+            uri.AppendPath(id, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateGetRequest(string subscriptionId, string providerId, AzureLocation location, Guid id)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -65,14 +80,12 @@ namespace Azure.ResourceManager.Reservations
         /// <param name="location"> Azure region. </param>
         /// <param name="id"> Quota Request ID. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="providerId"/>, <paramref name="location"/> or <paramref name="id"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="providerId"/>, <paramref name="location"/> or <paramref name="id"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<QuotaRequestDetailsData>> GetAsync(string subscriptionId, string providerId, string location, string id, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="providerId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="providerId"/> is an empty string, and was expected to be non-empty. </exception>
+        public async Task<Response<QuotaRequestDetailData>> GetAsync(string subscriptionId, string providerId, AzureLocation location, Guid id, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(providerId, nameof(providerId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
-            Argument.AssertNotNullOrEmpty(id, nameof(id));
 
             using var message = CreateGetRequest(subscriptionId, providerId, location, id);
             await _pipeline.SendAsync(message, cancellationToken).ConfigureAwait(false);
@@ -80,13 +93,13 @@ namespace Azure.ResourceManager.Reservations
             {
                 case 200:
                     {
-                        QuotaRequestDetailsData value = default;
+                        QuotaRequestDetailData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = QuotaRequestDetailsData.DeserializeQuotaRequestDetailsData(document.RootElement);
+                        value = QuotaRequestDetailData.DeserializeQuotaRequestDetailData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((QuotaRequestDetailsData)null, message.Response);
+                    return Response.FromValue((QuotaRequestDetailData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -98,14 +111,12 @@ namespace Azure.ResourceManager.Reservations
         /// <param name="location"> Azure region. </param>
         /// <param name="id"> Quota Request ID. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="providerId"/>, <paramref name="location"/> or <paramref name="id"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="providerId"/>, <paramref name="location"/> or <paramref name="id"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<QuotaRequestDetailsData> Get(string subscriptionId, string providerId, string location, string id, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="providerId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="providerId"/> is an empty string, and was expected to be non-empty. </exception>
+        public Response<QuotaRequestDetailData> Get(string subscriptionId, string providerId, AzureLocation location, Guid id, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(providerId, nameof(providerId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
-            Argument.AssertNotNullOrEmpty(id, nameof(id));
 
             using var message = CreateGetRequest(subscriptionId, providerId, location, id);
             _pipeline.Send(message, cancellationToken);
@@ -113,19 +124,46 @@ namespace Azure.ResourceManager.Reservations
             {
                 case 200:
                     {
-                        QuotaRequestDetailsData value = default;
+                        QuotaRequestDetailData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = QuotaRequestDetailsData.DeserializeQuotaRequestDetailsData(document.RootElement);
+                        value = QuotaRequestDetailData.DeserializeQuotaRequestDetailData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((QuotaRequestDetailsData)null, message.Response);
+                    return Response.FromValue((QuotaRequestDetailData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
         }
 
-        internal HttpMessage CreateListRequest(string subscriptionId, string providerId, string location, string filter, int? top, string skiptoken)
+        internal RequestUriBuilder CreateListRequestUri(string subscriptionId, string providerId, AzureLocation location, string filter, int? top, string skiptoken)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Capacity/resourceProviders/", false);
+            uri.AppendPath(providerId, true);
+            uri.AppendPath("/locations/", false);
+            uri.AppendPath(location, true);
+            uri.AppendPath("/serviceLimitsRequests", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            if (filter != null)
+            {
+                uri.AppendQuery("$filter", filter, true);
+            }
+            if (top != null)
+            {
+                uri.AppendQuery("$top", top.Value, true);
+            }
+            if (skiptoken != null)
+            {
+                uri.AppendQuery("$skiptoken", skiptoken, true);
+            }
+            return uri;
+        }
+
+        internal HttpMessage CreateListRequest(string subscriptionId, string providerId, AzureLocation location, string filter, int? top, string skiptoken)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -170,13 +208,12 @@ namespace Azure.ResourceManager.Reservations
         /// <param name="top"> Number of records to return. </param>
         /// <param name="skiptoken"> Skiptoken is only used if a previous operation returned a partial result. If a previous response contains a nextLink element, the value of the nextLink element includes a skiptoken parameter that specifies a starting point to use for subsequent calls. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="providerId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="providerId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<QuotaRequestDetailsList>> ListAsync(string subscriptionId, string providerId, string location, string filter = null, int? top = null, string skiptoken = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="providerId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="providerId"/> is an empty string, and was expected to be non-empty. </exception>
+        public async Task<Response<QuotaRequestDetailsList>> ListAsync(string subscriptionId, string providerId, AzureLocation location, string filter = null, int? top = null, string skiptoken = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(providerId, nameof(providerId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateListRequest(subscriptionId, providerId, location, filter, top, skiptoken);
             await _pipeline.SendAsync(message, cancellationToken).ConfigureAwait(false);
@@ -206,13 +243,12 @@ namespace Azure.ResourceManager.Reservations
         /// <param name="top"> Number of records to return. </param>
         /// <param name="skiptoken"> Skiptoken is only used if a previous operation returned a partial result. If a previous response contains a nextLink element, the value of the nextLink element includes a skiptoken parameter that specifies a starting point to use for subsequent calls. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="providerId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="providerId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<QuotaRequestDetailsList> List(string subscriptionId, string providerId, string location, string filter = null, int? top = null, string skiptoken = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="providerId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="providerId"/> is an empty string, and was expected to be non-empty. </exception>
+        public Response<QuotaRequestDetailsList> List(string subscriptionId, string providerId, AzureLocation location, string filter = null, int? top = null, string skiptoken = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(providerId, nameof(providerId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateListRequest(subscriptionId, providerId, location, filter, top, skiptoken);
             _pipeline.Send(message, cancellationToken);
@@ -230,7 +266,15 @@ namespace Azure.ResourceManager.Reservations
             }
         }
 
-        internal HttpMessage CreateListNextPageRequest(string nextLink, string subscriptionId, string providerId, string location, string filter, int? top, string skiptoken)
+        internal RequestUriBuilder CreateListNextPageRequestUri(string nextLink, string subscriptionId, string providerId, AzureLocation location, string filter, int? top, string skiptoken)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
+        }
+
+        internal HttpMessage CreateListNextPageRequest(string nextLink, string subscriptionId, string providerId, AzureLocation location, string filter, int? top, string skiptoken)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -257,14 +301,13 @@ namespace Azure.ResourceManager.Reservations
         /// <param name="top"> Number of records to return. </param>
         /// <param name="skiptoken"> Skiptoken is only used if a previous operation returned a partial result. If a previous response contains a nextLink element, the value of the nextLink element includes a skiptoken parameter that specifies a starting point to use for subsequent calls. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="providerId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="providerId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<QuotaRequestDetailsList>> ListNextPageAsync(string nextLink, string subscriptionId, string providerId, string location, string filter = null, int? top = null, string skiptoken = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/> or <paramref name="providerId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="providerId"/> is an empty string, and was expected to be non-empty. </exception>
+        public async Task<Response<QuotaRequestDetailsList>> ListNextPageAsync(string nextLink, string subscriptionId, string providerId, AzureLocation location, string filter = null, int? top = null, string skiptoken = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(providerId, nameof(providerId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateListNextPageRequest(nextLink, subscriptionId, providerId, location, filter, top, skiptoken);
             await _pipeline.SendAsync(message, cancellationToken).ConfigureAwait(false);
@@ -295,14 +338,13 @@ namespace Azure.ResourceManager.Reservations
         /// <param name="top"> Number of records to return. </param>
         /// <param name="skiptoken"> Skiptoken is only used if a previous operation returned a partial result. If a previous response contains a nextLink element, the value of the nextLink element includes a skiptoken parameter that specifies a starting point to use for subsequent calls. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="providerId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="providerId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<QuotaRequestDetailsList> ListNextPage(string nextLink, string subscriptionId, string providerId, string location, string filter = null, int? top = null, string skiptoken = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/> or <paramref name="providerId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="providerId"/> is an empty string, and was expected to be non-empty. </exception>
+        public Response<QuotaRequestDetailsList> ListNextPage(string nextLink, string subscriptionId, string providerId, AzureLocation location, string filter = null, int? top = null, string skiptoken = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(providerId, nameof(providerId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateListNextPageRequest(nextLink, subscriptionId, providerId, location, filter, top, skiptoken);
             _pipeline.Send(message, cancellationToken);

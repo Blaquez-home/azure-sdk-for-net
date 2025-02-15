@@ -5,28 +5,32 @@
 
 #nullable disable
 
+using System;
 using System.Collections.Generic;
-using Azure;
 using Azure.Core;
 using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources.Models;
 
 namespace Azure.ResourceManager.Network
 {
-    /// <summary> A class representing the ExpressRouteCircuitPeering data model. </summary>
+    /// <summary>
+    /// A class representing the ExpressRouteCircuitPeering data model.
+    /// Peering in an ExpressRouteCircuit resource.
+    /// </summary>
     public partial class ExpressRouteCircuitPeeringData : NetworkResourceData
     {
-        /// <summary> Initializes a new instance of ExpressRouteCircuitPeeringData. </summary>
+        /// <summary> Initializes a new instance of <see cref="ExpressRouteCircuitPeeringData"/>. </summary>
         public ExpressRouteCircuitPeeringData()
         {
             Connections = new ChangeTrackingList<ExpressRouteCircuitConnectionData>();
             PeeredConnections = new ChangeTrackingList<PeerExpressRouteCircuitConnectionData>();
         }
 
-        /// <summary> Initializes a new instance of ExpressRouteCircuitPeeringData. </summary>
+        /// <summary> Initializes a new instance of <see cref="ExpressRouteCircuitPeeringData"/>. </summary>
         /// <param name="id"> Resource ID. </param>
         /// <param name="name"> Resource name. </param>
         /// <param name="resourceType"> Resource type. </param>
+        /// <param name="serializedAdditionalRawData"> Keeps track of any properties unknown to the library. </param>
         /// <param name="etag"> A unique read-only string that changes whenever the resource is updated. </param>
         /// <param name="peeringType"> The peering type. </param>
         /// <param name="state"> The peering state. </param>
@@ -41,16 +45,16 @@ namespace Azure.ResourceManager.Network
         /// <param name="microsoftPeeringConfig"> The Microsoft peering configuration. </param>
         /// <param name="stats"> The peering stats of express route circuit. </param>
         /// <param name="provisioningState"> The provisioning state of the express route circuit peering resource. </param>
-        /// <param name="gatewayManagerEtag"> The GatewayManager Etag. </param>
+        /// <param name="gatewayManagerETag"> The GatewayManager Etag. </param>
         /// <param name="lastModifiedBy"> Who was the last to modify the peering. </param>
         /// <param name="routeFilter"> The reference to the RouteFilter resource. </param>
-        /// <param name="iPv6PeeringConfig"> The IPv6 peering configuration. </param>
+        /// <param name="ipv6PeeringConfig"> The IPv6 peering configuration. </param>
         /// <param name="expressRouteConnection"> The ExpressRoute connection. </param>
         /// <param name="connections"> The list of circuit connections associated with Azure Private Peering for this circuit. </param>
         /// <param name="peeredConnections"> The list of peered circuit connections associated with Azure Private Peering for this circuit. </param>
-        internal ExpressRouteCircuitPeeringData(ResourceIdentifier id, string name, ResourceType? resourceType, ETag? etag, ExpressRoutePeeringType? peeringType, ExpressRoutePeeringState? state, int? azureASN, long? peerASN, string primaryPeerAddressPrefix, string secondaryPeerAddressPrefix, string primaryAzurePort, string secondaryAzurePort, string sharedKey, int? vlanId, ExpressRouteCircuitPeeringConfig microsoftPeeringConfig, ExpressRouteCircuitStats stats, NetworkProvisioningState? provisioningState, string gatewayManagerEtag, string lastModifiedBy, WritableSubResource routeFilter, IPv6ExpressRouteCircuitPeeringConfig iPv6PeeringConfig, SubResource expressRouteConnection, IList<ExpressRouteCircuitConnectionData> connections, IReadOnlyList<PeerExpressRouteCircuitConnectionData> peeredConnections) : base(id, name, resourceType)
+        internal ExpressRouteCircuitPeeringData(ResourceIdentifier id, string name, ResourceType? resourceType, IDictionary<string, BinaryData> serializedAdditionalRawData, ETag? etag, ExpressRoutePeeringType? peeringType, ExpressRoutePeeringState? state, int? azureASN, long? peerASN, string primaryPeerAddressPrefix, string secondaryPeerAddressPrefix, string primaryAzurePort, string secondaryAzurePort, string sharedKey, int? vlanId, ExpressRouteCircuitPeeringConfig microsoftPeeringConfig, ExpressRouteCircuitStats stats, NetworkProvisioningState? provisioningState, string gatewayManagerETag, string lastModifiedBy, WritableSubResource routeFilter, IPv6ExpressRouteCircuitPeeringConfig ipv6PeeringConfig, SubResource expressRouteConnection, IList<ExpressRouteCircuitConnectionData> connections, IReadOnlyList<PeerExpressRouteCircuitConnectionData> peeredConnections) : base(id, name, resourceType, serializedAdditionalRawData)
         {
-            Etag = etag;
+            ETag = etag;
             PeeringType = peeringType;
             State = state;
             AzureASN = azureASN;
@@ -64,17 +68,17 @@ namespace Azure.ResourceManager.Network
             MicrosoftPeeringConfig = microsoftPeeringConfig;
             Stats = stats;
             ProvisioningState = provisioningState;
-            GatewayManagerEtag = gatewayManagerEtag;
+            GatewayManagerETag = gatewayManagerETag;
             LastModifiedBy = lastModifiedBy;
             RouteFilter = routeFilter;
-            IPv6PeeringConfig = iPv6PeeringConfig;
+            IPv6PeeringConfig = ipv6PeeringConfig;
             ExpressRouteConnection = expressRouteConnection;
             Connections = connections;
             PeeredConnections = peeredConnections;
         }
 
         /// <summary> A unique read-only string that changes whenever the resource is updated. </summary>
-        public ETag? Etag { get; }
+        public ETag? ETag { get; }
         /// <summary> The peering type. </summary>
         public ExpressRoutePeeringType? PeeringType { get; set; }
         /// <summary> The peering state. </summary>
@@ -102,7 +106,7 @@ namespace Azure.ResourceManager.Network
         /// <summary> The provisioning state of the express route circuit peering resource. </summary>
         public NetworkProvisioningState? ProvisioningState { get; }
         /// <summary> The GatewayManager Etag. </summary>
-        public string GatewayManagerEtag { get; set; }
+        public string GatewayManagerETag { get; set; }
         /// <summary> Who was the last to modify the peering. </summary>
         public string LastModifiedBy { get; }
         /// <summary> The reference to the RouteFilter resource. </summary>

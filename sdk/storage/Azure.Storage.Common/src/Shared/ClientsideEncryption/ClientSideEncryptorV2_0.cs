@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
 using Azure.Core.Cryptography;
+using Azure.Storage.Common;
 using Azure.Storage.Cryptography.Models;
 
 using static Azure.Storage.Constants.ClientSideEncryption.V2;
@@ -22,6 +23,8 @@ namespace Azure.Storage.Cryptography
         public ClientSideEncryptorV2_0(ClientSideEncryptionOptions options)
         {
             Argument.AssertNotNull(options, nameof(options));
+            Argument.AssertNotNull(options.KeyEncryptionKey, nameof(options.KeyEncryptionKey));
+            Argument.AssertNotNull(options.KeyWrapAlgorithm, nameof(options.KeyWrapAlgorithm));
             if (options.EncryptionVersion != ClientSideEncryptionVersion.V2_0)
             {
                 Errors.InvalidArgument(nameof(options.EncryptionVersion));
@@ -31,15 +34,9 @@ namespace Azure.Storage.Cryptography
             _keyWrapAlgorithm = options.KeyWrapAlgorithm;
         }
 
-        private void ValidateMembers()
-        {
-            if (_keyEncryptionKey == default || _keyWrapAlgorithm == default)
-            {
-                throw Errors.ClientSideEncryption.MissingRequiredEncryptionResources(nameof(_keyEncryptionKey), nameof(_keyWrapAlgorithm));
-            }
-        }
+        public long ExpectedOutputContentLength(long plaintextLength) => CalculateExpectedOutputContentLength(plaintextLength);
 
-        public long ExpectedOutputContentLength(long plaintextLength)
+        public static long CalculateExpectedOutputContentLength(long plaintextLength)
         {
             long numBlocks = plaintextLength / EncryptionRegionDataSize;
             // partial block check
@@ -64,8 +61,6 @@ namespace Azure.Storage.Cryptography
             bool async,
             CancellationToken cancellationToken)
         {
-            ValidateMembers();
-
             var generatedKey = CreateKey(Constants.ClientSideEncryption.EncryptionKeySizeBits);
 
             // transform is disposable but gets disposed by the stream
@@ -95,8 +90,6 @@ namespace Azure.Storage.Cryptography
             bool async,
             CancellationToken cancellationToken)
         {
-            ValidateMembers();
-
             var generatedKey = CreateKey(Constants.ClientSideEncryption.EncryptionKeySizeBits);
             using var gcm = new GcmAuthenticatedCryptographicTransform(generatedKey, TransformMode.Encrypt);
             EncryptionData encryptionData = await CreateEncryptionDataInternal(generatedKey, async, cancellationToken)
@@ -145,8 +138,6 @@ namespace Azure.Storage.Cryptography
             bool async,
             CancellationToken cancellationToken)
         {
-            ValidateMembers();
-
             var generatedKey = CreateKey(Constants.ClientSideEncryption.EncryptionKeySizeBits);
             EncryptionData encryptionData = await CreateEncryptionDataInternal(generatedKey, async, cancellationToken)
                 .ConfigureAwait(false);
@@ -188,12 +179,16 @@ namespace Azure.Storage.Cryptography
         /// <returns>The generated key bytes.</returns>
         private static byte[] CreateKey(int numBits)
         {
+#if NET6_0_OR_GREATER
+            return RandomNumberGenerator.GetBytes(numBits / 8);
+#else
             using (var secureRng = new RNGCryptoServiceProvider())
             {
                 var buff = new byte[numBits / 8];
                 secureRng.GetBytes(buff);
                 return buff;
             }
+#endif
         }
     }
 }

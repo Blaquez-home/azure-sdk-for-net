@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.Workloads.Models;
@@ -33,8 +32,22 @@ namespace Azure.ResourceManager.Workloads
         {
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
-            _apiVersion = apiVersion ?? "2021-12-01-preview";
+            _apiVersion = apiVersion ?? "2023-04-01";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
+        }
+
+        internal RequestUriBuilder CreateCreateRequestUri(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, SapVirtualInstanceData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Workloads/sapVirtualInstances/", false);
+            uri.AppendPath(sapVirtualInstanceName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateCreateRequest(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, SapVirtualInstanceData data)
@@ -53,30 +66,28 @@ namespace Azure.ResourceManager.Workloads
             uri.AppendQuery("api-version", _apiVersion, true);
             request.Uri = uri;
             request.Headers.Add("Accept", "application/json");
-            if (data != null)
-            {
-                request.Headers.Add("Content-Type", "application/json");
-                var content = new Utf8JsonRequestContent();
-                content.JsonWriter.WriteObjectValue(data);
-                request.Content = content;
-            }
+            request.Headers.Add("Content-Type", "application/json");
+            var content = new Utf8JsonRequestContent();
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
+            request.Content = content;
             _userAgent.Apply(message);
             return message;
         }
 
-        /// <summary> Creates an Virtual Instance for SAP. </summary>
+        /// <summary> Creates a Virtual Instance for SAP solutions (VIS) resource. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
-        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP. </param>
-        /// <param name="data"> The Virtual Instance for SAP request body. </param>
+        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP solutions resource. </param>
+        /// <param name="data"> Virtual Instance for SAP solutions resource request body. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="sapVirtualInstanceName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response> CreateAsync(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, SapVirtualInstanceData data = null, CancellationToken cancellationToken = default)
+        public async Task<Response> CreateAsync(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, SapVirtualInstanceData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
             Argument.AssertNotNullOrEmpty(sapVirtualInstanceName, nameof(sapVirtualInstanceName));
+            Argument.AssertNotNull(data, nameof(data));
 
             using var message = CreateCreateRequest(subscriptionId, resourceGroupName, sapVirtualInstanceName, data);
             await _pipeline.SendAsync(message, cancellationToken).ConfigureAwait(false);
@@ -90,19 +101,20 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Creates an Virtual Instance for SAP. </summary>
+        /// <summary> Creates a Virtual Instance for SAP solutions (VIS) resource. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
-        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP. </param>
-        /// <param name="data"> The Virtual Instance for SAP request body. </param>
+        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP solutions resource. </param>
+        /// <param name="data"> Virtual Instance for SAP solutions resource request body. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="sapVirtualInstanceName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response Create(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, SapVirtualInstanceData data = null, CancellationToken cancellationToken = default)
+        public Response Create(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, SapVirtualInstanceData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
             Argument.AssertNotNullOrEmpty(sapVirtualInstanceName, nameof(sapVirtualInstanceName));
+            Argument.AssertNotNull(data, nameof(data));
 
             using var message = CreateCreateRequest(subscriptionId, resourceGroupName, sapVirtualInstanceName, data);
             _pipeline.Send(message, cancellationToken);
@@ -114,6 +126,20 @@ namespace Azure.ResourceManager.Workloads
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetRequestUri(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Workloads/sapVirtualInstances/", false);
+            uri.AppendPath(sapVirtualInstanceName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetRequest(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName)
@@ -136,10 +162,10 @@ namespace Azure.ResourceManager.Workloads
             return message;
         }
 
-        /// <summary> Gets an Virtual Instance for SAP. </summary>
+        /// <summary> Gets a Virtual Instance for SAP solutions resource. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
-        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP. </param>
+        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP solutions resource. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is an empty string, and was expected to be non-empty. </exception>
@@ -167,10 +193,10 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Gets an Virtual Instance for SAP. </summary>
+        /// <summary> Gets a Virtual Instance for SAP solutions resource. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
-        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP. </param>
+        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP solutions resource. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is an empty string, and was expected to be non-empty. </exception>
@@ -198,6 +224,20 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
+        internal RequestUriBuilder CreateUpdateRequestUri(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, SapVirtualInstancePatch patch)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Workloads/sapVirtualInstances/", false);
+            uri.AppendPath(sapVirtualInstanceName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateUpdateRequest(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, SapVirtualInstancePatch patch)
         {
             var message = _pipeline.CreateMessage();
@@ -216,17 +256,17 @@ namespace Azure.ResourceManager.Workloads
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(patch);
+            content.JsonWriter.WriteObjectValue(patch, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
         }
 
-        /// <summary> Updates an Virtual Instance for SAP. </summary>
+        /// <summary> Updates a Virtual Instance for SAP solutions resource. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
-        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP. </param>
-        /// <param name="patch"> The Update Virtual Instance for SAP request body. </param>
+        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP solutions resource. </param>
+        /// <param name="patch"> Request body to update a Virtual Instance for SAP solutions resource. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="sapVirtualInstanceName"/> or <paramref name="patch"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is an empty string, and was expected to be non-empty. </exception>
@@ -253,11 +293,11 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Updates an Virtual Instance for SAP. </summary>
+        /// <summary> Updates a Virtual Instance for SAP solutions resource. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
-        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP. </param>
-        /// <param name="patch"> The Update Virtual Instance for SAP request body. </param>
+        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP solutions resource. </param>
+        /// <param name="patch"> Request body to update a Virtual Instance for SAP solutions resource. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="sapVirtualInstanceName"/> or <paramref name="patch"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is an empty string, and was expected to be non-empty. </exception>
@@ -284,6 +324,20 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
+        internal RequestUriBuilder CreateDeleteRequestUri(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Workloads/sapVirtualInstances/", false);
+            uri.AppendPath(sapVirtualInstanceName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateDeleteRequest(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName)
         {
             var message = _pipeline.CreateMessage();
@@ -304,10 +358,10 @@ namespace Azure.ResourceManager.Workloads
             return message;
         }
 
-        /// <summary> Deletes an Virtual Instance for SAP. </summary>
+        /// <summary> Deletes a Virtual Instance for SAP solutions resource and its child resources, that is the associated Central Services Instance, Application Server Instances and Database Instance. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
-        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP. </param>
+        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP solutions resource. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is an empty string, and was expected to be non-empty. </exception>
@@ -330,10 +384,10 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Deletes an Virtual Instance for SAP. </summary>
+        /// <summary> Deletes a Virtual Instance for SAP solutions resource and its child resources, that is the associated Central Services Instance, Application Server Instances and Database Instance. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
-        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP. </param>
+        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP solutions resource. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is an empty string, and was expected to be non-empty. </exception>
@@ -356,6 +410,19 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
+        internal RequestUriBuilder CreateListByResourceGroupRequestUri(string subscriptionId, string resourceGroupName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Workloads/sapVirtualInstances", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListByResourceGroupRequest(string subscriptionId, string resourceGroupName)
         {
             var message = _pipeline.CreateMessage();
@@ -375,7 +442,7 @@ namespace Azure.ResourceManager.Workloads
             return message;
         }
 
-        /// <summary> Gets all Virtual Instances for SAP in a resource group. </summary>
+        /// <summary> Gets all Virtual Instances for SAP solutions resources in a Resource Group. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
@@ -402,7 +469,7 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Gets all Virtual Instances for SAP in a resource group. </summary>
+        /// <summary> Gets all Virtual Instances for SAP solutions resources in a Resource Group. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
@@ -429,6 +496,17 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
+        internal RequestUriBuilder CreateListBySubscriptionRequestUri(string subscriptionId)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Workloads/sapVirtualInstances", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListBySubscriptionRequest(string subscriptionId)
         {
             var message = _pipeline.CreateMessage();
@@ -446,7 +524,7 @@ namespace Azure.ResourceManager.Workloads
             return message;
         }
 
-        /// <summary> Gets all Virtual Instances for SAP in the subscription. </summary>
+        /// <summary> Gets all Virtual Instances for SAP solutions resources in a Subscription. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
@@ -471,7 +549,7 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Gets all Virtual Instances for SAP in the subscription. </summary>
+        /// <summary> Gets all Virtual Instances for SAP solutions resources in a Subscription. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
@@ -496,6 +574,21 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
+        internal RequestUriBuilder CreateStartRequestUri(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Workloads/sapVirtualInstances/", false);
+            uri.AppendPath(sapVirtualInstanceName, true);
+            uri.AppendPath("/start", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateStartRequest(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName)
         {
             var message = _pipeline.CreateMessage();
@@ -517,10 +610,10 @@ namespace Azure.ResourceManager.Workloads
             return message;
         }
 
-        /// <summary> Starts the SAP System. </summary>
+        /// <summary> Starts the SAP application, that is the Central Services instance and Application server instances. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
-        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP. </param>
+        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP solutions resource. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is an empty string, and was expected to be non-empty. </exception>
@@ -542,10 +635,10 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Starts the SAP System. </summary>
+        /// <summary> Starts the SAP application, that is the Central Services instance and Application server instances. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
-        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP. </param>
+        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP solutions resource. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is an empty string, and was expected to be non-empty. </exception>
@@ -567,7 +660,22 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        internal HttpMessage CreateStopRequest(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, StopContent content)
+        internal RequestUriBuilder CreateStopRequestUri(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, SapStopContent content)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Workloads/sapVirtualInstances/", false);
+            uri.AppendPath(sapVirtualInstanceName, true);
+            uri.AppendPath("/stop", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateStopRequest(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, SapStopContent content)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -588,22 +696,22 @@ namespace Azure.ResourceManager.Workloads
             {
                 request.Headers.Add("Content-Type", "application/json");
                 var content0 = new Utf8JsonRequestContent();
-                content0.JsonWriter.WriteObjectValue(content);
+                content0.JsonWriter.WriteObjectValue(content, ModelSerializationExtensions.WireOptions);
                 request.Content = content0;
             }
             _userAgent.Apply(message);
             return message;
         }
 
-        /// <summary> Stops the SAP System. </summary>
+        /// <summary> Stops the SAP Application, that is the Application server instances and Central Services instance. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
-        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP. </param>
-        /// <param name="content"> The Virtual Instances for SAP stop request body. </param>
+        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP solutions resource. </param>
+        /// <param name="content"> The Virtual Instance for SAP solutions resource stop request body. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response> StopAsync(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, StopContent content = null, CancellationToken cancellationToken = default)
+        public async Task<Response> StopAsync(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, SapStopContent content = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -621,15 +729,15 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Stops the SAP System. </summary>
+        /// <summary> Stops the SAP Application, that is the Application server instances and Central Services instance. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
-        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP. </param>
-        /// <param name="content"> The Virtual Instances for SAP stop request body. </param>
+        /// <param name="sapVirtualInstanceName"> The name of the Virtual Instances for SAP solutions resource. </param>
+        /// <param name="content"> The Virtual Instance for SAP solutions resource stop request body. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="sapVirtualInstanceName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response Stop(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, StopContent content = null, CancellationToken cancellationToken = default)
+        public Response Stop(string subscriptionId, string resourceGroupName, string sapVirtualInstanceName, SapStopContent content = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -647,6 +755,14 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
+        internal RequestUriBuilder CreateListByResourceGroupNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
+        }
+
         internal HttpMessage CreateListByResourceGroupNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName)
         {
             var message = _pipeline.CreateMessage();
@@ -661,7 +777,7 @@ namespace Azure.ResourceManager.Workloads
             return message;
         }
 
-        /// <summary> Gets all Virtual Instances for SAP in a resource group. </summary>
+        /// <summary> Gets all Virtual Instances for SAP solutions resources in a Resource Group. </summary>
         /// <param name="nextLink"> The URL to the next page of results. </param>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
@@ -690,7 +806,7 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Gets all Virtual Instances for SAP in a resource group. </summary>
+        /// <summary> Gets all Virtual Instances for SAP solutions resources in a Resource Group. </summary>
         /// <param name="nextLink"> The URL to the next page of results. </param>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
@@ -719,6 +835,14 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
+        internal RequestUriBuilder CreateListBySubscriptionNextPageRequestUri(string nextLink, string subscriptionId)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
+        }
+
         internal HttpMessage CreateListBySubscriptionNextPageRequest(string nextLink, string subscriptionId)
         {
             var message = _pipeline.CreateMessage();
@@ -733,7 +857,7 @@ namespace Azure.ResourceManager.Workloads
             return message;
         }
 
-        /// <summary> Gets all Virtual Instances for SAP in the subscription. </summary>
+        /// <summary> Gets all Virtual Instances for SAP solutions resources in a Subscription. </summary>
         /// <param name="nextLink"> The URL to the next page of results. </param>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
@@ -760,7 +884,7 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Gets all Virtual Instances for SAP in the subscription. </summary>
+        /// <summary> Gets all Virtual Instances for SAP solutions resources in a Subscription. </summary>
         /// <param name="nextLink"> The URL to the next page of results. </param>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>

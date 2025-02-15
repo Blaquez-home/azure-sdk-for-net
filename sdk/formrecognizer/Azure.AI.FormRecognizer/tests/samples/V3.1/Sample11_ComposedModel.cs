@@ -13,14 +13,14 @@ using Azure.Core.TestFramework;
 
 namespace Azure.AI.FormRecognizer.Samples
 {
-    public partial class FormRecognizerSamples : SamplesBase<FormRecognizerTestEnvironment>
+    public partial class FormRecognizerSamples
     {
         [RecordedTest]
         public async Task CreateComposedModel()
         {
             string endpoint = TestEnvironment.Endpoint;
             string apiKey = TestEnvironment.ApiKey;
-            string trainingFileUrl = TestEnvironment.BlobContainerSasUrlV2;
+            string trainingFileUrl = TestEnvironment.BlobContainerSasUrl;
 
             FormTrainingClient client = new FormTrainingClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
 
@@ -28,7 +28,7 @@ namespace Azure.AI.FormRecognizer.Samples
             // For this sample, you can use the training forms found in the `trainingFiles` folder.
             // Upload the forms to your storage container and then generate a container SAS URL.
             // For instructions on setting up forms for training in an Azure Storage Blob Container, see
-            // https://docs.microsoft.com/azure/cognitive-services/form-recognizer/build-training-data-set#upload-your-training-data
+            // https://learn.microsoft.com/azure/cognitive-services/form-recognizer/build-training-data-set#upload-your-training-data
 
             bool useLabels = true;
 

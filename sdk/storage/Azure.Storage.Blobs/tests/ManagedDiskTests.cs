@@ -38,10 +38,10 @@ namespace Azure.Storage.Blobs.Tests.ManagedDisk
         }
 
         [Test]
-        [RetryOnException(5, typeof(AssertionException))]
         public async Task CanDiffPagesBetweenSnapshots()
         {
             // Arrange
+            Setup();
             var snapshot1Client = InstrumentClient(new PageBlobClient(snapshot1SASUri, GetOptions()));
             var snapshot2Client = InstrumentClient(new PageBlobClient(snapshot2SASUri, GetOptions()));
 
@@ -74,6 +74,7 @@ namespace Azure.Storage.Blobs.Tests.ManagedDisk
         public async Task GetManagedDiskPageRangesDiffAsync_Error()
         {
             // Arrange
+            Setup();
             var snapshot1Client = InstrumentClient(new PageBlobClient(snapshot1SASUri, GetOptions()));
 
             // Act
@@ -90,6 +91,7 @@ namespace Azure.Storage.Blobs.Tests.ManagedDisk
         [Test]
         public async Task GetManagedDiskPageRangesDiffAsync_AccessConditions()
         {
+            Setup();
             var snapshot2Client = InstrumentClient(new PageBlobClient(snapshot2SASUri, GetOptions()));
 
             foreach (var parameters in Reduced_AccessConditions_Data)
@@ -114,6 +116,7 @@ namespace Azure.Storage.Blobs.Tests.ManagedDisk
         [Test]
         public async Task GetManagedDiskPageRangesDiffAsync_AccessConditionsFail()
         {
+            Setup();
             var snapshot2Client = InstrumentClient(new PageBlobClient(snapshot2SASUri, GetOptions()));
             foreach (var parameters in Reduced_AccessConditions_Fail_Data)
             {
@@ -157,7 +160,10 @@ namespace Azure.Storage.Blobs.Tests.ManagedDisk
         private async Task<byte[]> DownloadRange(PageBlobClient client, HttpRange range)
         {
             var memoryStream = new MemoryStream();
-            using BlobDownloadStreamingResult result1 = await client.DownloadStreamingAsync(range: range);
+            using BlobDownloadStreamingResult result1 = await client.DownloadStreamingAsync(new BlobDownloadOptions
+            {
+                Range = range
+            });
             await result1.Content.CopyToAsync(memoryStream);
             return memoryStream.ToArray();
         }

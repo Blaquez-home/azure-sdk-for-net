@@ -15,9 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub
 {
@@ -139,7 +137,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub
         {
             var hub = Utilities.FirstOrDefault(attribute.Hub, _options.Hub);
             var service = new WebPubSubService(attribute.Connection, hub);
-            return service.GetClientConnection(attribute.UserId);
+            return service.GetClientConnection(attribute.UserId, clientProtocol: attribute.ClientProtocol);
         }
 
         private void ValidateConnectionString(string attributeConnectionString, string attributeConnectionStringName)
@@ -158,11 +156,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub
             {
                 Converters = new List<JsonConverter>
                 {
-                    new StringEnumConverter(),
                     new BinaryDataJsonConverter(),
                     new ConnectionStatesNewtonsoftConverter(),
+                    new WebPubSubDataTypeJsonConverter(),
+                    new WebPubSubEventTypeJsonConverter(),
+                    new WebPubSubTriggerAcceptedClientProtocolsJsonConverter(),
                 },
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
         }
 

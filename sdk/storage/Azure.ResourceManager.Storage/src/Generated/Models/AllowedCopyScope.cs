@@ -23,17 +23,17 @@ namespace Azure.ResourceManager.Storage.Models
         }
 
         private const string PrivateLinkValue = "PrivateLink";
-        private const string AADValue = "AAD";
+        private const string AadValue = "AAD";
 
         /// <summary> PrivateLink. </summary>
         public static AllowedCopyScope PrivateLink { get; } = new AllowedCopyScope(PrivateLinkValue);
         /// <summary> AAD. </summary>
-        public static AllowedCopyScope AAD { get; } = new AllowedCopyScope(AADValue);
+        public static AllowedCopyScope Aad { get; } = new AllowedCopyScope(AadValue);
         /// <summary> Determines if two <see cref="AllowedCopyScope"/> values are the same. </summary>
         public static bool operator ==(AllowedCopyScope left, AllowedCopyScope right) => left.Equals(right);
         /// <summary> Determines if two <see cref="AllowedCopyScope"/> values are not the same. </summary>
         public static bool operator !=(AllowedCopyScope left, AllowedCopyScope right) => !left.Equals(right);
-        /// <summary> Converts a string to a <see cref="AllowedCopyScope"/>. </summary>
+        /// <summary> Converts a <see cref="string"/> to a <see cref="AllowedCopyScope"/>. </summary>
         public static implicit operator AllowedCopyScope(string value) => new AllowedCopyScope(value);
 
         /// <inheritdoc />
@@ -44,7 +44,7 @@ namespace Azure.ResourceManager.Storage.Models
 
         /// <inheritdoc />
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+        public override int GetHashCode() => _value != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(_value) : 0;
         /// <inheritdoc />
         public override string ToString() => _value;
     }

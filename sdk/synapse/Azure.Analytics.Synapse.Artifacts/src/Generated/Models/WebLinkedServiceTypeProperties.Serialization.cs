@@ -18,15 +18,19 @@ namespace Azure.Analytics.Synapse.Artifacts.Models
         void IUtf8JsonSerializable.Write(Utf8JsonWriter writer)
         {
             writer.WriteStartObject();
-            writer.WritePropertyName("url");
-            writer.WriteObjectValue(Url);
-            writer.WritePropertyName("authenticationType");
+            writer.WritePropertyName("url"u8);
+            writer.WriteObjectValue<object>(Url);
+            writer.WritePropertyName("authenticationType"u8);
             writer.WriteStringValue(AuthenticationType.ToString());
             writer.WriteEndObject();
         }
 
         internal static WebLinkedServiceTypeProperties DeserializeWebLinkedServiceTypeProperties(JsonElement element)
         {
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
             if (element.TryGetProperty("authenticationType", out JsonElement discriminator))
             {
                 switch (discriminator.GetString())
@@ -36,22 +40,23 @@ namespace Azure.Analytics.Synapse.Artifacts.Models
                     case "ClientCertificate": return WebClientCertificateAuthentication.DeserializeWebClientCertificateAuthentication(element);
                 }
             }
-            object url = default;
-            WebAuthenticationType authenticationType = default;
-            foreach (var property in element.EnumerateObject())
-            {
-                if (property.NameEquals("url"))
-                {
-                    url = property.Value.GetObject();
-                    continue;
-                }
-                if (property.NameEquals("authenticationType"))
-                {
-                    authenticationType = new WebAuthenticationType(property.Value.GetString());
-                    continue;
-                }
-            }
-            return new WebLinkedServiceTypeProperties(url, authenticationType);
+            return UnknownWebLinkedServiceTypeProperties.DeserializeUnknownWebLinkedServiceTypeProperties(element);
+        }
+
+        /// <summary> Deserializes the model from a raw response. </summary>
+        /// <param name="response"> The response to deserialize the model from. </param>
+        internal static WebLinkedServiceTypeProperties FromResponse(Response response)
+        {
+            using var document = JsonDocument.Parse(response.Content);
+            return DeserializeWebLinkedServiceTypeProperties(document.RootElement);
+        }
+
+        /// <summary> Convert into a <see cref="RequestContent"/>. </summary>
+        internal virtual RequestContent ToRequestContent()
+        {
+            var content = new Utf8JsonRequestContent();
+            content.JsonWriter.WriteObjectValue(this);
+            return content;
         }
 
         internal partial class WebLinkedServiceTypePropertiesConverter : JsonConverter<WebLinkedServiceTypeProperties>
@@ -60,6 +65,7 @@ namespace Azure.Analytics.Synapse.Artifacts.Models
             {
                 writer.WriteObjectValue(model);
             }
+
             public override WebLinkedServiceTypeProperties Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
                 using var document = JsonDocument.ParseValue(ref reader);

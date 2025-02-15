@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.Compute.Models;
@@ -33,11 +32,30 @@ namespace Azure.ResourceManager.Compute
         {
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
-            _apiVersion = apiVersion ?? "2022-01-03";
+            _apiVersion = apiVersion ?? "2024-03-03";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
         }
 
-        internal HttpMessage CreateListRequest(string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValues? sharedTo)
+        internal RequestUriBuilder CreateListRequestUri(string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValue? sharedTo)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Compute/locations/", false);
+            uri.AppendPath(location, true);
+            uri.AppendPath("/sharedGalleries/", false);
+            uri.AppendPath(galleryUniqueName, true);
+            uri.AppendPath("/images", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            if (sharedTo != null)
+            {
+                uri.AppendQuery("sharedTo", sharedTo.Value.ToString(), true);
+            }
+            return uri;
+        }
+
+        internal HttpMessage CreateListRequest(string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValue? sharedTo)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -70,7 +88,7 @@ namespace Azure.ResourceManager.Compute
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="galleryUniqueName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="galleryUniqueName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<SharedGalleryImageList>> ListAsync(string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValues? sharedTo = null, CancellationToken cancellationToken = default)
+        public async Task<Response<SharedGalleryImageList>> ListAsync(string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValue? sharedTo = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(galleryUniqueName, nameof(galleryUniqueName));
@@ -99,7 +117,7 @@ namespace Azure.ResourceManager.Compute
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="galleryUniqueName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="galleryUniqueName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<SharedGalleryImageList> List(string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValues? sharedTo = null, CancellationToken cancellationToken = default)
+        public Response<SharedGalleryImageList> List(string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValue? sharedTo = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(galleryUniqueName, nameof(galleryUniqueName));
@@ -118,6 +136,22 @@ namespace Azure.ResourceManager.Compute
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetRequestUri(string subscriptionId, AzureLocation location, string galleryUniqueName, string galleryImageName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Compute/locations/", false);
+            uri.AppendPath(location, true);
+            uri.AppendPath("/sharedGalleries/", false);
+            uri.AppendPath(galleryUniqueName, true);
+            uri.AppendPath("/images/", false);
+            uri.AppendPath(galleryImageName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetRequest(string subscriptionId, AzureLocation location, string galleryUniqueName, string galleryImageName)
@@ -206,7 +240,15 @@ namespace Azure.ResourceManager.Compute
             }
         }
 
-        internal HttpMessage CreateListNextPageRequest(string nextLink, string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValues? sharedTo)
+        internal RequestUriBuilder CreateListNextPageRequestUri(string nextLink, string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValue? sharedTo)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
+        }
+
+        internal HttpMessage CreateListNextPageRequest(string nextLink, string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValue? sharedTo)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -229,7 +271,7 @@ namespace Azure.ResourceManager.Compute
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/> or <paramref name="galleryUniqueName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="galleryUniqueName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<SharedGalleryImageList>> ListNextPageAsync(string nextLink, string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValues? sharedTo = null, CancellationToken cancellationToken = default)
+        public async Task<Response<SharedGalleryImageList>> ListNextPageAsync(string nextLink, string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValue? sharedTo = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -260,7 +302,7 @@ namespace Azure.ResourceManager.Compute
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/> or <paramref name="galleryUniqueName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="galleryUniqueName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<SharedGalleryImageList> ListNextPage(string nextLink, string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValues? sharedTo = null, CancellationToken cancellationToken = default)
+        public Response<SharedGalleryImageList> ListNextPage(string nextLink, string subscriptionId, AzureLocation location, string galleryUniqueName, SharedToValue? sharedTo = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));

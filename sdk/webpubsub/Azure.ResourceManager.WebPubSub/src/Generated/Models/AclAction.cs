@@ -10,7 +10,7 @@ using System.ComponentModel;
 
 namespace Azure.ResourceManager.WebPubSub.Models
 {
-    /// <summary> Default action when no other rule matches. </summary>
+    /// <summary> Azure Networking ACL Action. </summary>
     public readonly partial struct AclAction : IEquatable<AclAction>
     {
         private readonly string _value;
@@ -33,7 +33,7 @@ namespace Azure.ResourceManager.WebPubSub.Models
         public static bool operator ==(AclAction left, AclAction right) => left.Equals(right);
         /// <summary> Determines if two <see cref="AclAction"/> values are not the same. </summary>
         public static bool operator !=(AclAction left, AclAction right) => !left.Equals(right);
-        /// <summary> Converts a string to a <see cref="AclAction"/>. </summary>
+        /// <summary> Converts a <see cref="string"/> to a <see cref="AclAction"/>. </summary>
         public static implicit operator AclAction(string value) => new AclAction(value);
 
         /// <inheritdoc />
@@ -44,7 +44,7 @@ namespace Azure.ResourceManager.WebPubSub.Models
 
         /// <inheritdoc />
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+        public override int GetHashCode() => _value != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(_value) : 0;
         /// <inheritdoc />
         public override string ToString() => _value;
     }

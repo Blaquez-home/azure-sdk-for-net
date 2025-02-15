@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 using Azure.Core;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Azure.Core.TestFramework;
@@ -16,12 +17,12 @@ namespace Azure.ResourceManager.CosmosDB.Tests
         // see azure cli sample: https://docs.microsoft.com/en-us/cli/azure/cosmosdb/sql/role/assignment?view=azure-cli-latest#az-cosmosdb-sql-role-assignment-create-examples
         private const string RoleAssignmentId = "cb8ed2d7-2371-4e3c-bd31-6cc1560e84f8";
         private const string RoleDefinitionId2 ="851363f2-1fe6-477b-ae76-9ef3ba3d4a31";
-        private const string PrincipalId = "ed4c2395-a18c-4018-afb3-6e521e7534d2";
+        private Guid PrincipalId = new Guid("ed4c2395-a18c-4018-afb3-6e521e7534d2");
 
-        private DatabaseAccountResource _databaseAccount;
-        private SqlDatabaseResource _sqlDatabase;
-        private SqlRoleDefinitionResource _roleDefinition;
-        private SqlRoleAssignmentResource _roleAssignment;
+        private CosmosDBAccountResource _databaseAccount;
+        private CosmosDBSqlDatabaseResource _sqlDatabase;
+        private CosmosDBSqlRoleDefinitionResource _roleDefinition;
+        private CosmosDBSqlRoleAssignmentResource _roleAssignment;
 
         private string SqlRoleAssignmentScope { get => $"{_databaseAccount.Id}/dbs/{_sqlDatabase.Data.Name}"; }
 
@@ -29,7 +30,7 @@ namespace Azure.ResourceManager.CosmosDB.Tests
         {
         }
 
-        protected SqlRoleAssignmentCollection SqlRoleAssignmentCollection { get => _databaseAccount.GetSqlRoleAssignments(); }
+        protected CosmosDBSqlRoleAssignmentCollection SqlRoleAssignmentCollection { get => _databaseAccount.GetCosmosDBSqlRoleAssignments(); }
 
         [OneTimeSetUp]
         public async Task GlobalSetup()
@@ -42,30 +43,34 @@ namespace Azure.ResourceManager.CosmosDB.Tests
         {
             _resourceGroup = await ArmClient.GetResourceGroupResource(_resourceGroupIdentifier).GetAsync();
 
-            _databaseAccount = await CreateDatabaseAccount(Recording.GenerateAssetName("dbaccount-"), DatabaseAccountKind.GlobalDocumentDB);
+            _databaseAccount = await CreateDatabaseAccount(Recording.GenerateAssetName("dbaccount-"), CosmosDBAccountKind.GlobalDocumentDB);
 
-            _sqlDatabase = await SqlDatabaseTests.CreateSqlDatabase(Recording.GenerateAssetName("sql-db-"), null, _databaseAccount.GetSqlDatabases());
+            _sqlDatabase = await SqlDatabaseTests.CreateSqlDatabase(Recording.GenerateAssetName("sql-db-"), null, _databaseAccount.GetCosmosDBSqlDatabases());
 
-            _roleDefinition = (await SqlRoleDefinitionTests.CreateSqlRoleDefinition(Recording.GenerateAssetName("sql-role-def-"), $"{_databaseAccount.Id}/dbs/{_sqlDatabase.Data.Name}", _databaseAccount.GetSqlRoleDefinitions()));
+            _roleDefinition = (await SqlRoleDefinitionTests.CreateSqlRoleDefinition(Recording.GenerateAssetName("sql-role-def-"), $"{_databaseAccount.Id}/dbs/{_sqlDatabase.Data.Name}", _databaseAccount.GetCosmosDBSqlRoleDefinitions()));
         }
 
         [TearDown]
         public async Task TearDown()
         {
-            if (_roleAssignment != null)
+            if (Mode != RecordedTestMode.Playback)
             {
-                if (await SqlRoleAssignmentCollection.ExistsAsync(RoleAssignmentId))
+                if (_roleAssignment != null)
                 {
-                    await _roleAssignment.DeleteAsync(WaitUntil.Completed);
+                    if (await SqlRoleAssignmentCollection.ExistsAsync(RoleAssignmentId))
+                    {
+                        await _roleAssignment.DeleteAsync(WaitUntil.Completed);
+                    }
                 }
+                await _roleDefinition.DeleteAsync(WaitUntil.Completed);
+                await _sqlDatabase.DeleteAsync(WaitUntil.Completed);
+                await _databaseAccount.DeleteAsync(WaitUntil.Completed);
             }
-            await _roleDefinition.DeleteAsync(WaitUntil.Completed);
-            await _sqlDatabase.DeleteAsync(WaitUntil.Completed);
-            await _databaseAccount.DeleteAsync(WaitUntil.Completed);
         }
 
         [Test]
         [RecordedTest]
+        [LiveOnly]
         public async Task SqlRoleAssignmentCreateAndUpdate()
         {
             var assignment = await CreateSqlRoleAssignment();
@@ -77,12 +82,12 @@ namespace Azure.ResourceManager.CosmosDB.Tests
             bool ifExists = await SqlRoleAssignmentCollection.ExistsAsync(RoleAssignmentId);
             Assert.True(ifExists);
 
-            SqlRoleAssignmentResource assignment2 = await SqlRoleAssignmentCollection.GetAsync(RoleAssignmentId);
+            CosmosDBSqlRoleAssignmentResource assignment2 = await SqlRoleAssignmentCollection.GetAsync(RoleAssignmentId);
             Assert.AreEqual(_roleAssignment.Data.Name, assignment2.Data.Name);
             VerifySqlRoleAssignments(assignment, assignment2);
 
-            var roleDefinition2 = await SqlRoleDefinitionTests.CreateSqlRoleDefinition(RoleDefinitionId2, Recording.GenerateAssetName("sql-role-def-"), $"{_databaseAccount.Id}/dbs/{_sqlDatabase.Data.Name}", _databaseAccount.GetSqlRoleDefinitions());
-            var updateParameters = new SqlRoleAssignmentCreateOrUpdateContent
+            var roleDefinition2 = await SqlRoleDefinitionTests.CreateSqlRoleDefinition(RoleDefinitionId2, Recording.GenerateAssetName("sql-role-def-"), $"{_databaseAccount.Id}/dbs/{_sqlDatabase.Data.Name}", _databaseAccount.GetCosmosDBSqlRoleDefinitions());
+            var updateParameters = new CosmosDBSqlRoleAssignmentCreateOrUpdateContent
             {
                 RoleDefinitionId = roleDefinition2.Id,
                 Scope = SqlRoleAssignmentScope,
@@ -100,6 +105,7 @@ namespace Azure.ResourceManager.CosmosDB.Tests
 
         [Test]
         [RecordedTest]
+        [LiveOnly]
         public async Task SqlRoleAssignmentList()
         {
             var assignment = await CreateSqlRoleAssignment();
@@ -113,6 +119,7 @@ namespace Azure.ResourceManager.CosmosDB.Tests
 
         [Test]
         [RecordedTest]
+        [LiveOnly]
         public async Task SqlRoleAssignmentDelete()
         {
             var assignment = await CreateSqlRoleAssignment();
@@ -121,9 +128,9 @@ namespace Azure.ResourceManager.CosmosDB.Tests
             Assert.IsFalse(await SqlRoleAssignmentCollection.ExistsAsync(RoleAssignmentId));
         }
 
-        protected async Task<SqlRoleAssignmentResource> CreateSqlRoleAssignment()
+        protected async Task<CosmosDBSqlRoleAssignmentResource> CreateSqlRoleAssignment()
         {
-            var parameters = new SqlRoleAssignmentCreateOrUpdateContent
+            var parameters = new CosmosDBSqlRoleAssignmentCreateOrUpdateContent
             {
                 RoleDefinitionId = _roleDefinition.Id,
                 Scope = SqlRoleAssignmentScope,
@@ -135,7 +142,7 @@ namespace Azure.ResourceManager.CosmosDB.Tests
             return _roleAssignment;
         }
 
-        private void VerifySqlRoleAssignments(SqlRoleAssignmentResource expectedValue, SqlRoleAssignmentResource actualValue)
+        private void VerifySqlRoleAssignments(CosmosDBSqlRoleAssignmentResource expectedValue, CosmosDBSqlRoleAssignmentResource actualValue)
         {
             Assert.AreEqual(expectedValue.Id, actualValue.Id);
             Assert.AreEqual(expectedValue.Data.Name, actualValue.Data.Name);

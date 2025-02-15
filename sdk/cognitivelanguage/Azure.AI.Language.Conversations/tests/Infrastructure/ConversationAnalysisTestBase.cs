@@ -10,10 +10,16 @@ namespace Azure.AI.Language.Conversations.Tests
     /// Base class for live client tests using different service versions.
     /// </summary>
     /// <typeparam name="TClient">The type of client being tested.</typeparam>
-    [ClientTestFixture(ConversationAnalysisClientOptions.ServiceVersion.V2022_05_01)]
+    [ClientTestFixture(
+        ConversationsClientOptions.ServiceVersion.V2024_11_15_Preview,
+        ConversationsClientOptions.ServiceVersion.V2024_11_01,
+        ConversationsClientOptions.ServiceVersion.V2024_05_01,
+        ConversationsClientOptions.ServiceVersion.V2023_04_01,
+        ConversationsClientOptions.ServiceVersion.V2022_05_01)]
+    [IgnoreServiceError(429, "429")]
     public abstract class ConversationAnalysisTestBase<TClient> : RecordedTestBase<ConversationAnalysisTestEnvironment> where TClient : class
     {
-        protected ConversationAnalysisTestBase(bool isAsync, ConversationAnalysisClientOptions.ServiceVersion serviceVersion, RecordedTestMode? mode)
+        protected ConversationAnalysisTestBase(bool isAsync, ConversationsClientOptions.ServiceVersion serviceVersion, RecordedTestMode? mode)
             : base(isAsync, mode)
         {
             // TODO: Compare bodies again when https://github.com/Azure/azure-sdk-for-net/issues/22219 is resolved.
@@ -31,7 +37,7 @@ namespace Azure.AI.Language.Conversations.Tests
         /// <summary>
         /// Gets the service version used for this instance of the test fixture.
         /// </summary>
-        protected ConversationAnalysisClientOptions.ServiceVersion ServiceVersion { get; }
+        protected ConversationsClientOptions.ServiceVersion ServiceVersion { get; }
 
         /// <summary>
         /// Creates the <see cref="Client"/> once tests begin.
@@ -40,11 +46,11 @@ namespace Azure.AI.Language.Conversations.Tests
         {
             await base.StartTestRecordingAsync();
 
+            ConversationsClientOptions options = new ConversationsClientOptions(ServiceVersion);
             Client = CreateClient<TClient>(
                 TestEnvironment.Endpoint,
                 new AzureKeyCredential(TestEnvironment.ApiKey),
-                InstrumentClientOptions(
-                    new ConversationAnalysisClientOptions(ServiceVersion)));
+                InstrumentClientOptions(options));
         }
     }
 }

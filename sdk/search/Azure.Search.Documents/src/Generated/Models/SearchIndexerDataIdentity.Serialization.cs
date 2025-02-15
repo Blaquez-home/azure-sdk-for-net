@@ -5,9 +5,9 @@
 
 #nullable disable
 
-using System;
 using System.Text.Json;
 using Azure.Core;
+using Azure.Search.Documents.Models;
 
 namespace Azure.Search.Documents.Indexes.Models
 {
@@ -16,22 +16,42 @@ namespace Azure.Search.Documents.Indexes.Models
         void IUtf8JsonSerializable.Write(Utf8JsonWriter writer)
         {
             writer.WriteStartObject();
-            writer.WritePropertyName("@odata.type");
+            writer.WritePropertyName("@odata.type"u8);
             writer.WriteStringValue(ODataType);
             writer.WriteEndObject();
         }
 
         internal static SearchIndexerDataIdentity DeserializeSearchIndexerDataIdentity(JsonElement element)
         {
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
             if (element.TryGetProperty("@odata.type", out JsonElement discriminator))
             {
                 switch (discriminator.GetString())
                 {
-                    case "#Microsoft.Azure.Search.SearchIndexerDataNoneIdentity": return SearchIndexerDataNoneIdentity.DeserializeSearchIndexerDataNoneIdentity(element);
-                    case "#Microsoft.Azure.Search.SearchIndexerDataUserAssignedIdentity": return SearchIndexerDataUserAssignedIdentity.DeserializeSearchIndexerDataUserAssignedIdentity(element);
+                    case "#Microsoft.Azure.Search.DataNoneIdentity": return SearchIndexerDataNoneIdentity.DeserializeSearchIndexerDataNoneIdentity(element);
+                    case "#Microsoft.Azure.Search.DataUserAssignedIdentity": return SearchIndexerDataUserAssignedIdentity.DeserializeSearchIndexerDataUserAssignedIdentity(element);
                 }
             }
-            throw new NotSupportedException("Deserialization of abstract type 'global::Azure.Search.Documents.Indexes.Models.SearchIndexerDataIdentity' not supported.");
+            return UnknownSearchIndexerDataIdentity.DeserializeUnknownSearchIndexerDataIdentity(element);
+        }
+
+        /// <summary> Deserializes the model from a raw response. </summary>
+        /// <param name="response"> The response to deserialize the model from. </param>
+        internal static SearchIndexerDataIdentity FromResponse(Response response)
+        {
+            using var document = JsonDocument.Parse(response.Content);
+            return DeserializeSearchIndexerDataIdentity(document.RootElement);
+        }
+
+        /// <summary> Convert into a <see cref="RequestContent"/>. </summary>
+        internal virtual RequestContent ToRequestContent()
+        {
+            var content = new Utf8JsonRequestContent();
+            content.JsonWriter.WriteObjectValue(this);
+            return content;
         }
     }
 }

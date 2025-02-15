@@ -11,7 +11,9 @@
     <DocumentationFile>$(IntermediateOutputPath)$(TargetFramework)\$(MSBuildProjectName).xml</DocumentationFile>
 
     <!-- Client in this context is any library that is following the new Azure SDK guidelines -->
+    <IsGeneratorLibrary Condition="'$(IsGeneratorLibrary)' == '' and $(MSBuildProjectName.StartsWith('Azure.Generator'))">true</IsGeneratorLibrary>
     <IsClientLibrary Condition="'$(IsClientLibrary)' == '' and $(MSBuildProjectName.StartsWith('Azure.'))">true</IsClientLibrary>
+    <IsFunctionsLibrary Condition="'$(IsFunctionsLibrary)' == '' and $(MSBuildProjectName.StartsWith('Microsoft.Azure.WebJobs.Extensions.'))">true</IsFunctionsLibrary>
 
     <IsTestProject Condition="'$(IsTestProject)' == '' and $(MSBuildProjectName.EndsWith('.Tests'))">true</IsTestProject>
     <IsSamplesProject Condition="'$(IsSamplesProject)' == '' and $(MSBuildProjectName.EndsWith('.Samples'))">true</IsSamplesProject>
@@ -27,18 +29,18 @@
 
   <!-- Setup default project properties -->
   <PropertyGroup>
-    <LangVersion>9</LangVersion>
+    <LangVersion>latest</LangVersion>
     <!--
       Disable NU5105 NuGet Pack warning that the version is SemVer 2.0.
       SemVer 2.0 is supported by NuGet since 3.0.0 (July 2015) in some capacity, and fully since 3.5.0 (October 2016).
     -->
     <NoWarn>$(NoWarn);NU5105</NoWarn>
-    <!-- 
+    <!--
       https://github.com/dotnet/roslyn-analyzers/issues/5628
     -->
     <NoWarn>$(NoWarn);CA1812</NoWarn>
     <!--
-      Disable some FxCop rules
+      Disable some NetAnalyzers rules
      -->
     <NoWarn>
       $(NoWarn);
@@ -68,7 +70,22 @@
       MSB3245; <!-- Do not warn if a package reference is unavailable -->
     </NoWarn>
 
+    <!--
+      Experimental Azure SDK features
+    -->
+    <NoWarn>
+      $(NoWarn);
+      AZPROVISION001; <!-- Provisioning -->
+    </NoWarn>
+
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!--
+      .NET 8 now produces security warnings for nuget packages in dotnet restore. We want to keep all but critical (NU1904) as warnings and not turn them to errors.
+      For T1 we want to keep them all as warnings as we cannot easily fix them all currently and plan to remove the libraries in the future.
+      See: https://learn.microsoft.com/en-us/nuget/reference/errors-and-warnings/nu1901-nu1904
+    -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903</WarningsNotAsErrors>
+    <WarningsNotAsErrors Condition="'$(IsClientLibrary)' != 'true'">$(WarningsNotAsErrors);NU1904</WarningsNotAsErrors>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>symbols.nupkg</SymbolPackageFormat>
@@ -78,7 +95,7 @@
 
   <PropertyGroup>
     <EnableClientSdkAnalyzers Condition="'$(IsShippingClientLibrary)' == 'true'">true</EnableClientSdkAnalyzers>
-    <EnableFxCopAnalyzers Condition="'$(IsShippingClientLibrary)' == 'true'">true</EnableFxCopAnalyzers>
+    <EnableMicrosoftCodeAnalysisNetAnalyzers Condition="'$(IsShippingClientLibrary)' == 'true'">true</EnableMicrosoftCodeAnalysisNetAnalyzers>
     <EnableStyleCopAnalyzers Condition="'$(EnableStyleCopAnalyzers)' == '' and '$(IsClientLibrary)' == 'true'">true</EnableStyleCopAnalyzers>
     <EnableBannedApiAnalyzers Condition="'$(IsShippingClientLibrary)' == 'true'">true</EnableBannedApiAnalyzers>
     <GenerateAPIListing Condition="'$(IsShippingClientLibrary)' == 'true'">true</GenerateAPIListing>
@@ -89,6 +106,7 @@
     <GenerateAPIListing Condition="'$(GenerateAPIListing)' == '' AND '$(IsShippingClientLibrary)' == 'true'">true</GenerateAPIListing>
     <EnableSourceLink Condition="'$(EnableSourceLink)' == ''">true</EnableSourceLink>
     <DefineConstants Condition="'$(BuildSnippets)' == 'true'">$(DefineConstants);SNIPPET</DefineConstants>
+    <ApiCompatBaselineTargetFramework Condition="'$(TargetFramework)' == 'net8.0'">netstandard2.0</ApiCompatBaselineTargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsShippingClientLibrary)' == 'true' and '$(TF_BUILD)' == 'true'">
@@ -111,20 +129,25 @@
   </PropertyGroup>
 
   <!-- TargetFramework default properties -->
+  <!-- Update pipelines/templates/steps/install-dotnet.yml as needed, without re-installing SDKs already found on all supported agents -->
   <PropertyGroup>
     <!-- Client libraries are moving forward to NS 2.0 and Net 4.6.1 as the min supported versions -->
     <SupportsNetStandard20 Condition="'$(SupportsNetStandard20)' == '' and '$(IsClientLibrary)' == 'true'">true</SupportsNetStandard20>
     <SupportsNetStandard20 Condition="'$(SupportsNetStandard20)' == ''">false</SupportsNetStandard20>
 
     <RequiredTargetFrameworks>net452;netstandard1.4;net461;netstandard2.0</RequiredTargetFrameworks>
-    <RequiredTargetFrameworks Condition="'$(SupportsNetStandard20)' == 'true'">netstandard2.0</RequiredTargetFrameworks>
+    <RequiredTargetFrameworks Condition="'$(SupportsNetStandard20)' == 'true'">net8.0;netstandard2.0</RequiredTargetFrameworks>
+    <RequiredTargetFrameworks Condition="'$(IsGeneratorLibrary)' == 'true'">net8.0</RequiredTargetFrameworks>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsTestProject)' == 'true' or '$(IsTestSupportProject)' == 'true' or '$(IsSamplesProject)' == 'true' or '$(IsPerfProject)' == 'true' or '$(IsStressProject)' == 'true'">
+  <PropertyGroup Condition="'$(IsGeneratorLibrary)' != 'true' and ('$(IsTestProject)' == 'true' or '$(IsTestSupportProject)' == 'true' or '$(IsSamplesProject)' == 'true' or '$(IsPerfProject)' == 'true' or '$(IsStressProject)' == 'true')">
     <IsPackable>false</IsPackable>
-    <RequiredTargetFrameworks>netcoreapp3.1;net6.0</RequiredTargetFrameworks>
-    <!-- Also test net461 on Windows; it's listed first so that coverage reports are for netcoreapp3.1 (the "primary"). -->
-    <RequiredTargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net461;netcoreapp3.1;net6.0</RequiredTargetFrameworks>
+    <!-- List newest targets first so that recordings are made with latest, running tests from editor runs latest, etc. -->
+    <RequiredTargetFrameworks>net8.0;net6.0</RequiredTargetFrameworks>
+    <!-- Also test net462 on Windows. net461 is out of support as of 4/2022 and is not supported in version 4.4.x and beyond of NUnit3TestAdapter. -->
+    <RequiredTargetFrameworks Condition="'$(OS)' == 'Windows_NT'">$(RequiredTargetFrameworks);net462</RequiredTargetFrameworks>
+    <!-- But only build snippets for the latest. -->
+    <RequiredTargetFrameworks Condition="'$(BuildSnippets)' == 'true'">net8.0</RequiredTargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(IsMgmtSubLibrary)' == 'true' and !$(MSBuildProjectName.Equals('Azure.ResourceManager.Tests'))">
@@ -148,7 +171,7 @@
     <Authors>Microsoft</Authors>
     <Product>Azure .NET SDK</Product>
     <PackageIcon>pkgicon.png</PackageIcon>
-    <PackageIconPath>$(RepoEngPath)/images/$(PackageIcon)</PackageIconPath>  
+    <PackageIconPath>$(RepoEngPath)/images/$(PackageIcon)</PackageIconPath>
     <RepositoryUrl>https://github.com/Azure/azure-sdk-for-net</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -224,6 +247,7 @@
     <PackageCommonTags>windowsazureofficial;azureofficial</PackageCommonTags>
     <AzureCoreSharedSources>$(MSBuildThisFileDirectory)/../sdk/core/Azure.Core/src/Shared/</AzureCoreSharedSources>
     <AzureCoreTestFramework>$(MSBuildThisFileDirectory)/../sdk/core/Azure.Core.TestFramework/src/Azure.Core.TestFramework.csproj</AzureCoreTestFramework>
+    <AzureCoreAmqpSharedSources>$(MSBuildThisFileDirectory)/../sdk/core/Azure.Core.Amqp/src/Shared/</AzureCoreAmqpSharedSources>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsTestProject)' == 'true' or '$(IsTestSupportProject)' == 'true' or '$(IsSamplesProject)' == 'true' or '$(IsPerfProject)' == 'true' or '$(IsStressProject)' == 'true'">

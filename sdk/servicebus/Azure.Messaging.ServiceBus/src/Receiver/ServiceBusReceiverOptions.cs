@@ -41,6 +41,12 @@ namespace Azure.Messaging.ServiceBus
         public ServiceBusReceiveMode ReceiveMode { get; set; } = ServiceBusReceiveMode.PeekLock;
 
         /// <summary>
+        /// A property used to set the <see cref="ServiceBusReceiver"/> ID to identify the client. This can be used to correlate logs
+        /// and exceptions. If <c>null</c> or empty, a random unique value will be used.
+        /// </summary>
+        public string Identifier { get; set; }
+
+        /// <summary>
         /// Gets or sets the subqueue to connect the receiver to. By default, the receiver will not connect to a subqueue.
         /// </summary>
         public SubQueue SubQueue { get; set; } = SubQueue.None;
@@ -72,18 +78,5 @@ namespace Azure.Messaging.ServiceBus
         ///
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override string ToString() => base.ToString();
-
-        /// <summary>
-        /// Creates a new copy of the current <see cref="ServiceBusReceiverOptions" />, cloning its attributes into a new instance.
-        /// </summary>
-        ///
-        /// <returns>A new copy of <see cref="ServiceBusReceiverOptions" />.</returns>
-        internal ServiceBusReceiverOptions Clone() =>
-            new ServiceBusReceiverOptions
-            {
-                ReceiveMode = ReceiveMode,
-                PrefetchCount = PrefetchCount,
-                SubQueue = SubQueue,
-            };
     }
 }

@@ -49,6 +49,7 @@ namespace Microsoft.Azure.WebJobs.EventHubs
         public Dictionary<string, Type> GetBindingContract(bool isSingleDispatch = true)
         {
             var contract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+            contract.Add("TriggerPartitionContext", typeof(TriggerPartitionContext));
             contract.Add("PartitionContext", typeof(PartitionContext));
 
             AddBindingContractMember(contract, "PartitionKey", typeof(string), isSingleDispatch);
@@ -78,6 +79,7 @@ namespace Microsoft.Azure.WebJobs.EventHubs
             }
 
             var bindingData = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            SafeAddValue(() => bindingData.Add("TriggerPartitionContext", value.ProcessorPartition?.PartitionContext));
             SafeAddValue(() => bindingData.Add("PartitionContext", value.ProcessorPartition?.PartitionContext));
 
             if (value.IsSingleDispatch)
@@ -112,7 +114,7 @@ namespace Microsoft.Azure.WebJobs.EventHubs
             for (int i = 0; i < events.Length; i++)
             {
                 partitionKeys[i] = events[i].PartitionKey;
-                offsets[i] = events[i].Offset.ToString(CultureInfo.InvariantCulture);
+                offsets[i] = events[i].OffsetString;
                 sequenceNumbers[i] = events[i].SequenceNumber;
                 enqueuedTimesUtc[i] = events[i].EnqueuedTime.DateTime;
                 properties[i] = events[i].Properties;
@@ -123,7 +125,7 @@ namespace Microsoft.Azure.WebJobs.EventHubs
         private static void AddBindingData(Dictionary<string, object> bindingData, EventData eventData)
         {
             SafeAddValue(() => bindingData.Add("PartitionKey", eventData.PartitionKey));
-            SafeAddValue(() => bindingData.Add("Offset", eventData.Offset));
+            SafeAddValue(() => bindingData.Add("Offset", eventData.OffsetString));
             SafeAddValue(() => bindingData.Add("SequenceNumber", eventData.SequenceNumber));
             SafeAddValue(() => bindingData.Add("EnqueuedTimeUtc", eventData.EnqueuedTime.DateTime));
             SafeAddValue(() => bindingData.Add("Properties", eventData.Properties));
@@ -153,7 +155,7 @@ namespace Microsoft.Azure.WebJobs.EventHubs
 
             // Following is needed to maintain structure of bindingdata: https://github.com/Azure/azure-webjobs-sdk/pull/1849
             modifiedDictionary["SequenceNumber"] = eventData.SequenceNumber;
-            modifiedDictionary["Offset"] = eventData.Offset;
+            modifiedDictionary["Offset"] = eventData.OffsetString;
             modifiedDictionary["PartitionKey"] = eventData.PartitionKey;
             modifiedDictionary["EnqueuedTimeUtc"] = eventData.EnqueuedTime.DateTime;
             return modifiedDictionary;

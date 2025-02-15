@@ -12,7 +12,7 @@ using NUnit.Framework;
 
 namespace Azure.ResourceManager.Tests
 {
-    [ClientTestFixture(true, "2021-04-01", "2019-10-01")]
+    [ClientTestFixture(true, "2022-09-01", "2019-10-01")]
     public class ResourceGroupOperationsTests : ResourceManagerTestBase
     {
         public ResourceGroupOperationsTests(bool isAsync, string apiVersion)
@@ -86,7 +86,11 @@ namespace Azure.ResourceManager.Tests
         {
             var rgName = Recording.GenerateAssetName("testrg");
             SubscriptionResource subscription = await Client.GetDefaultSubscriptionAsync().ConfigureAwait(false);
-            var rg1Op = await subscription.GetResourceGroups().CreateOrUpdateAsync(WaitUntil.Completed, rgName, new ResourceGroupData(AzureLocation.WestUS2));
+            var tags = new Dictionary<string, string>()
+            {
+                { "key", "value"}
+            };
+            var rg1Op = await subscription.GetResourceGroups().Construct(AzureLocation.WestUS2, tags).CreateOrUpdateAsync(rgName);
             ResourceGroupResource rg1 = rg1Op.Value;
             var parameters = new ResourceGroupPatch
             {
@@ -100,6 +104,22 @@ namespace Azure.ResourceManager.Tests
             Assert.AreEqual(rg1.Data.Location, rg2.Data.Location);
             Assert.AreEqual(rg1.Data.ManagedBy, rg2.Data.ManagedBy);
             Assert.AreEqual(rg1.Data.Tags, rg2.Data.Tags);
+
+            var parameters3 = new ResourceGroupPatch
+            {
+                Name = rgName,
+                Tags = {} // This does not touch the ChangeTrackingDictionary and no tags property will be sent in the patch request.
+            };
+            ResourceGroupResource rg3 = await rg2.UpdateAsync(parameters3);
+            Assert.AreEqual(rg1.Data.Tags, rg3.Data.Tags);
+
+            var parameters4 = new ResourceGroupPatch
+            {
+                Name = rgName
+            };
+            parameters4.Tags.Clear();
+            ResourceGroupResource rg4 = await rg3.UpdateAsync(parameters4);
+            Assert.AreEqual(0, rg4.Data.Tags.Count);
 
             Assert.ThrowsAsync<ArgumentNullException>(async () => _ = await rg1.UpdateAsync(null));
         }
@@ -122,9 +142,12 @@ namespace Azure.ResourceManager.Tests
             });
         }
 
-        [RecordedTest]
-        public async Task AddTag()
+        [TestCase(null)]
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task AddTag(bool? useTagResource)
         {
+            SetTagResourceUsage(Client, useTagResource);
             SubscriptionResource subscription = await Client.GetDefaultSubscriptionAsync().ConfigureAwait(false);
             var rg1Op = await subscription.GetResourceGroups().CreateOrUpdateAsync(WaitUntil.Completed, Recording.GenerateAssetName("testrg"), new ResourceGroupData(AzureLocation.WestUS2));
             ResourceGroupResource rg1 = rg1Op.Value;
@@ -144,9 +167,12 @@ namespace Azure.ResourceManager.Tests
             Assert.AreEqual(400, ex.Status);
         }
 
-        [RecordedTest]
-        public async Task SetTags()
+        [TestCase(null)]
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task SetTags(bool? useTagResource)
         {
+            SetTagResourceUsage(Client, useTagResource);
             SubscriptionResource subscription = await Client.GetDefaultSubscriptionAsync().ConfigureAwait(false);
             var rg1Op = await subscription.GetResourceGroups().CreateOrUpdateAsync(WaitUntil.Completed, Recording.GenerateAssetName("testrg"), new ResourceGroupData(AzureLocation.WestUS2));
             ResourceGroupResource rg1 = rg1Op.Value;
@@ -167,9 +193,12 @@ namespace Azure.ResourceManager.Tests
             Assert.ThrowsAsync<ArgumentNullException>(async () => _ = await rg1.SetTagsAsync(null));
         }
 
-        [RecordedTest]
-        public async Task RemoveTag()
+        [TestCase(null)]
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task RemoveTag(bool? useTagResource)
         {
+            SetTagResourceUsage(Client, useTagResource);
             SubscriptionResource subscription = await Client.GetDefaultSubscriptionAsync().ConfigureAwait(false);
             var rg1Op = await subscription.GetResourceGroups().CreateOrUpdateAsync(WaitUntil.Completed, Recording.GenerateAssetName("testrg"), new ResourceGroupData(AzureLocation.WestUS2));
             ResourceGroupResource rg1 = rg1Op.Value;
