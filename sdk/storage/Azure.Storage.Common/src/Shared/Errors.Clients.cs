@@ -78,7 +78,7 @@ namespace Azure.Storage
             => new InvalidOperationException($"SAS Uri cannot be generated. {builderName}.{paramName} cannot be set to create a {sasType} SAS.");
 
         public static InvalidOperationException SasIncorrectResourceType(string builderName, string builderParam, string value, string clientName)
-            => new InvalidOperationException($"SAS Uri cannot be generated. Expected {builderName}.{builderParam} to be set to {value} to generate" +
+            => new InvalidOperationException($"SAS Uri cannot be generated. Expected {builderName}.{builderParam} to be set to {value} to generate " +
                 $"the respective SAS for the client, {clientName}");
 
         public static ArgumentException InvalidPermission(char s)
@@ -102,12 +102,8 @@ namespace Azure.Storage
         public static ArgumentException VersionNotSupported(string paramName)
             => new ArgumentException($"The version specified by {paramName} is not supported by this library.");
 
-        public static RequestFailedException ClientRequestIdMismatch(ClientDiagnostics clientDiagnostics, Response response, string echo, string original)
-            => clientDiagnostics.CreateRequestFailedException(
-                response,
-                new ResponseError(
-                    response.GetErrorCode(null),
-                    $"Response x-ms-client-request-id '{echo}' does not match the original expected request id, '{original}'."));
+        public static RequestFailedException ClientRequestIdMismatch(Response response, string echo, string original)
+            => new RequestFailedException(response.Status, $"Response x-ms-client-request-id '{echo}' does not match the original expected request id, '{original}'.", null);
 
         public static ArgumentException TransactionalHashingNotSupportedWithClientSideEncryption()
             => new ArgumentException("Client-side encryption and transactional hashing are not supported at the same time.");
@@ -122,6 +118,9 @@ namespace Azure.Storage
 
         public static class ClientSideEncryption
         {
+            public static ArgumentException UnrecognizedVersion()
+                => new ArgumentException($"Unrecognized ClientSideEncryptionVersion");
+
             public static InvalidOperationException ClientSideEncryptionVersionNotSupported(string versionString = default)
                 => new InvalidOperationException("This library does not support the given version of client-side encryption." +
                     versionString == default ? "" : $" Version ID = {versionString}");

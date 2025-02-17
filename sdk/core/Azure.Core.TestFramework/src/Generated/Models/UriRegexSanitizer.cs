@@ -6,6 +6,7 @@
 #nullable disable
 
 using System;
+using Azure.Core;
 
 namespace Azure.Core.TestFramework.Models
 {
@@ -14,27 +15,18 @@ namespace Azure.Core.TestFramework.Models
     {
         /// <summary> Initializes a new instance of UriRegexSanitizer. </summary>
         /// <param name="regex"></param>
-        /// <param name="value"></param>
-        /// <exception cref="ArgumentNullException"> <paramref name="regex"/> or <paramref name="value"/> is null. </exception>
-        public UriRegexSanitizer(string regex, string value)
+        /// <exception cref="ArgumentNullException"> <paramref name="regex"/> is null. </exception>
+        public UriRegexSanitizer(string regex)
         {
-            if (regex == null)
-            {
-                throw new ArgumentNullException(nameof(regex));
-            }
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
+            Argument.AssertNotNull(regex, nameof(regex));
 
             Regex = regex;
-            Value = value;
         }
 
         /// <summary> Gets the regex. </summary>
         public string Regex { get; }
-        /// <summary> Gets the value. </summary>
-        public string Value { get; }
+        /// <summary> Gets or sets the value. </summary>
+        public string Value { get; set; }
         /// <summary> Gets or sets the group for replace. </summary>
         public string GroupForReplace { get; set; }
     }

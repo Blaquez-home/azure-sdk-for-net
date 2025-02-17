@@ -1,14 +1,14 @@
-## Using the Processor
+# Using the processor
 
 This sample demonstrates how to use the processor. The processor offers automatic completion of processed messages, automatic message lock renewal, and concurrent execution of user specified event handlers.
 
-### Processing messages
+## Processing messages
 
 ```C# Snippet:ServiceBusProcessMessages
-string connectionString = "<connection_string>";
+string fullyQualifiedNamespace = "<fully_qualified_namespace>";
 string queueName = "<queue_name>";
 // since ServiceBusClient implements IAsyncDisposable we create it with "await using"
-await using var client = new ServiceBusClient(connectionString);
+await using ServiceBusClient client = new(fullyQualifiedNamespace, new DefaultAzureCredential());
 
 // create the sender
 ServiceBusSender sender = client.CreateSender(queueName);
@@ -24,10 +24,10 @@ ServiceBusMessage[] messages = new ServiceBusMessage[]
 await sender.SendMessagesAsync(messages);
 
 // create the options to use for configuring the processor
-var options = new ServiceBusProcessorOptions
+ServiceBusProcessorOptions options = new()
 {
     // By default or when AutoCompleteMessages is set to true, the processor will complete the message after executing the message handler
-    // Set AutoCompleteMessages to false to [settle messages](https://docs.microsoft.com/en-us/azure/service-bus-messaging/message-transfers-locks-settlement#peeklock) on your own.
+    // Set AutoCompleteMessages to false to [settle messages](https://learn.microsoft.com/azure/service-bus-messaging/message-transfers-locks-settlement#peeklock) on your own.
     // In both cases, if the message handler throws an exception without settling the message, the processor will abandon the message.
     AutoCompleteMessages = false,
 
@@ -69,9 +69,3 @@ await processor.StartProcessingAsync();
 // since the processing happens in the background, we add a Console.ReadKey to allow the processing to continue until a key is pressed.
 Console.ReadKey();
 ```
-
-## Source
-
-To see the full example source, see:
-
-* [Sample04_Processor.cs](https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/tests/Samples/Sample04_Processor.cs)

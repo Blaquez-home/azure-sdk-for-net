@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
@@ -17,8 +18,15 @@ namespace Microsoft.Extensions.Azure
     {
         private const string ServiceVersionParameterTypeName = "ServiceVersion";
         private const string ConnectionStringParameterName = "connectionString";
+        private const char TenantDelimiter = ';';
 
-        public static object CreateClient(Type clientType, Type optionsType, object options, IConfiguration configuration, TokenCredential credential)
+        [RequiresUnreferencedCode("Binding strongly typed objects to configuration values is not supported with trimming. Use the Configuration Binder Source Generator (EnableConfigurationBindingGenerator=true) instead.")]
+        public static object CreateClient(
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type clientType,
+            Type optionsType,
+            object options,
+            IConfiguration configuration,
+            TokenCredential credential)
         {
             List<object> arguments = new List<object>();
             // Handle single values as connection strings
@@ -83,22 +91,38 @@ namespace Microsoft.Extensions.Azure
             throw new InvalidOperationException(BuildErrorMessage(configuration, clientType, optionsType));
         }
 
-        internal static TokenCredential CreateCredential(IConfiguration configuration, TokenCredentialOptions identityClientOptions = null)
+        internal static TokenCredential CreateCredential(IConfiguration configuration)
         {
             var credentialType = configuration["credential"];
             var clientId = configuration["clientId"];
             var tenantId = configuration["tenantId"];
             var resourceId = configuration["managedIdentityResourceId"];
+            var objectId = configuration["managedIdentityObjectId"];
             var clientSecret = configuration["clientSecret"];
             var certificate = configuration["clientCertificate"];
             var certificateStoreName = configuration["clientCertificateStoreName"];
             var certificateStoreLocation = configuration["clientCertificateStoreLocation"];
+            var additionallyAllowedTenants = configuration["additionallyAllowedTenants"];
+            var tokenFilePath = configuration["tokenFilePath"];
+            IEnumerable<string> additionallyAllowedTenantsList = null;
+            if (!string.IsNullOrWhiteSpace(additionallyAllowedTenants))
+            {
+                // not relying on StringSplitOptions.RemoveEmptyEntries as we want to remove leading/trailing whitespace between entries
+                additionallyAllowedTenantsList = additionallyAllowedTenants.Split(TenantDelimiter)
+                    .Select(t => t.Trim())
+                    .Where(t => t.Length > 0);
+            }
 
             if (string.Equals(credentialType, "managedidentity", StringComparison.OrdinalIgnoreCase))
             {
-                if (!string.IsNullOrWhiteSpace(clientId) && !string.IsNullOrWhiteSpace(resourceId))
+                int idCount = 0;
+                idCount += string.IsNullOrWhiteSpace(clientId) ? 0 : 1;
+                idCount += string.IsNullOrWhiteSpace(resourceId) ? 0 : 1;
+                idCount += string.IsNullOrWhiteSpace(objectId) ? 0 : 1;
+
+                if (idCount > 1)
                 {
-                    throw new ArgumentException("Cannot specify both 'clientId' and 'UserAssignedManagedIdentityResourceId'");
+                    throw new ArgumentException("Only one of either 'clientId', 'managedIdentityResourceId', or 'managedIdentityObjectId' can be specified for managed identity.");
                 }
 
                 if (!string.IsNullOrWhiteSpace(resourceId))
@@ -106,14 +130,57 @@ namespace Microsoft.Extensions.Azure
                     return new ManagedIdentityCredential(new ResourceIdentifier(resourceId));
                 }
 
+                if (!string.IsNullOrWhiteSpace(objectId))
+                {
+                    return new ManagedIdentityCredential(ManagedIdentityId.FromUserAssignedObjectId(objectId));
+                }
+
                 return new ManagedIdentityCredential(clientId);
+            }
+
+            if (string.Equals(credentialType, "workloadidentity", StringComparison.OrdinalIgnoreCase))
+            {
+                // The WorkloadIdentityCredentialOptions object initialization populates its instance members
+                // from the environment variables AZURE_TENANT_ID, AZURE_CLIENT_ID, and AZURE_FEDERATED_TOKEN_FILE
+                var workloadIdentityOptions = new WorkloadIdentityCredentialOptions();
+                if (!string.IsNullOrWhiteSpace(tenantId))
+                {
+                    workloadIdentityOptions.TenantId = tenantId;
+                }
+
+                if (!string.IsNullOrWhiteSpace(clientId))
+                {
+                    workloadIdentityOptions.ClientId = clientId;
+                }
+
+                if (!string.IsNullOrWhiteSpace(tokenFilePath))
+                {
+                    workloadIdentityOptions.TokenFilePath = tokenFilePath;
+                }
+
+                if (!string.IsNullOrWhiteSpace(workloadIdentityOptions.TenantId) &&
+                    !string.IsNullOrWhiteSpace(workloadIdentityOptions.ClientId) &&
+                    !string.IsNullOrWhiteSpace(workloadIdentityOptions.TokenFilePath))
+                {
+                    return new WorkloadIdentityCredential(workloadIdentityOptions);
+                }
+
+                throw new ArgumentException("For workload identity, 'tenantId', 'clientId', and 'tokenFilePath' must be specified via environment variables or the configuration.");
             }
 
             if (!string.IsNullOrWhiteSpace(tenantId) &&
                 !string.IsNullOrWhiteSpace(clientId) &&
                 !string.IsNullOrWhiteSpace(clientSecret))
             {
-                return new ClientSecretCredential(tenantId, clientId, clientSecret, identityClientOptions);
+                var options = new ClientSecretCredentialOptions();
+                if (additionallyAllowedTenantsList != null)
+                {
+                    foreach (string tenant in additionallyAllowedTenantsList)
+                    {
+                        options.AdditionallyAllowedTenants.Add(tenant);
+                    }
+                }
+                return new ClientSecretCredential(tenantId, clientId, clientSecret, options);
             }
 
             if (!string.IsNullOrWhiteSpace(tenantId) &&
@@ -141,17 +208,67 @@ namespace Microsoft.Extensions.Azure
                     throw new InvalidOperationException($"Unable to find a certificate with thumbprint '{certificate}'");
                 }
 
-                var credential = new ClientCertificateCredential(tenantId, clientId, certs[0], identityClientOptions);
+                var options = new ClientCertificateCredentialOptions();
+
+                if (additionallyAllowedTenantsList != null)
+                {
+                    foreach (string tenant in additionallyAllowedTenantsList)
+                    {
+                        options.AdditionallyAllowedTenants.Add(tenant);
+                    }
+                }
+                var credential = new ClientCertificateCredential(tenantId, clientId, certs[0], options);
+
                 store.Close();
 
                 return credential;
             }
 
             // TODO: More logging
+
+            if (!string.IsNullOrWhiteSpace(objectId))
+            {
+                throw new ArgumentException("'managedIdentityObjectId' is only supported when the credential type is 'managedidentity'.");
+            }
+
+            if (additionallyAllowedTenantsList != null
+                || !string.IsNullOrWhiteSpace(tenantId)
+                || !string.IsNullOrWhiteSpace(clientId)
+                || !string.IsNullOrWhiteSpace(resourceId))
+            {
+                var options = new DefaultAzureCredentialOptions();
+                if (additionallyAllowedTenantsList != null)
+                {
+                    foreach (string tenant in additionallyAllowedTenantsList)
+                    {
+                        options.AdditionallyAllowedTenants.Add(tenant);
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(tenantId))
+                {
+                    options.TenantId = tenantId;
+                }
+
+                if (!string.IsNullOrWhiteSpace(clientId))
+                {
+                    options.ManagedIdentityClientId = clientId;
+                }
+
+                // validation that both clientId and ResourceId are not set happens in Azure.Identity
+                if (!string.IsNullOrWhiteSpace(resourceId))
+                {
+                    options.ManagedIdentityResourceId = new ResourceIdentifier(resourceId);
+                }
+
+                return new DefaultAzureCredential(options);
+            }
             return null;
         }
 
-        internal static object CreateClientOptions(object version, Type optionsType)
+        internal static object CreateClientOptions(
+            object version,
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type optionsType)
         {
             ConstructorInfo parameterlessConstructor = null;
             int versionParameterIndex = 0;
@@ -228,7 +345,11 @@ namespace Microsoft.Extensions.Azure
                    parameter.Position == ((ConstructorInfo)parameter.Member).GetParameters().Length - 1;
         }
 
-        private static string BuildErrorMessage(IConfiguration configuration, Type clientType, Type optionsType)
+        [RequiresUnreferencedCode("Walks the constructors of the type's constructor parameters, which can't be annotated for trimming.")]
+        private static string BuildErrorMessage(
+            IConfiguration configuration,
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type clientType,
+            Type optionsType)
         {
             var builder = new StringBuilder();
 
@@ -318,7 +439,12 @@ namespace Microsoft.Extensions.Azure
                    IsOptionsParameter(parameters[parameters.Length - 1], optionsType);
         }
 
-        private static bool TryConvertArgument(IConfiguration configuration, string parameterName, Type parameterType, out object value)
+        [RequiresUnreferencedCode("Recursively walks the constructors of parameterType's constructor parameters, which can't be annotated for trimming.")]
+        private static bool TryConvertArgument(
+            IConfiguration configuration,
+            string parameterName,
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type parameterType,
+            out object value)
         {
             if (parameterType == typeof(string))
             {
@@ -351,7 +477,11 @@ namespace Microsoft.Extensions.Azure
             return true;
         }
 
-        internal static bool TryCreateObject(Type type, IConfigurationSection configuration, out object value)
+        [RequiresUnreferencedCode("Recursively walks the constructors of the type's constructor parameters, which can't be annotated for trimming.")]
+        internal static bool TryCreateObject(
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type,
+            IConfigurationSection configuration,
+            out object value)
         {
             if (!configuration.GetChildren().Any())
             {
@@ -389,7 +519,8 @@ namespace Microsoft.Extensions.Azure
             return false;
         }
 
-        private static IOrderedEnumerable<ConstructorInfo> GetApplicableParameterConstructors(Type type)
+        private static IOrderedEnumerable<ConstructorInfo> GetApplicableParameterConstructors(
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type)
         {
             return type.GetConstructors(BindingFlags.Public | BindingFlags.Instance).OrderByDescending(c => c.GetParameters().Length);
         }

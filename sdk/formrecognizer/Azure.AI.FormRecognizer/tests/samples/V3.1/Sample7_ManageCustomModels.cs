@@ -4,15 +4,16 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Azure.AI.FormRecognizer.Tests;
 using Azure.AI.FormRecognizer.Training;
 using Azure.Core.TestFramework;
+using NUnit.Framework;
 
 namespace Azure.AI.FormRecognizer.Samples
 {
-    public partial class FormRecognizerSamples : SamplesBase<FormRecognizerTestEnvironment>
+    public partial class FormRecognizerSamples
     {
         [RecordedTest]
+        [Ignore("https://github.com/Azure/azure-sdk-for-net/issues/47689")]
         public async Task ManageCustomModels()
         {
             string endpoint = TestEnvironment.Endpoint;
@@ -46,7 +47,7 @@ namespace Azure.AI.FormRecognizer.Samples
 #if SNIPPET
             Uri trainingFileUri = new Uri("<trainingFileUri>");
 #else
-            Uri trainingFileUri = new Uri(TestEnvironment.BlobContainerSasUrlV2);
+            Uri trainingFileUri = new Uri(TestEnvironment.BlobContainerSasUrl);
 #endif
             TrainingOperation operation = client.StartTraining(trainingFileUri, useTrainingLabels: false, "My new model");
             Response<CustomFormModel> operationResponse = await operation.WaitForCompletionAsync();

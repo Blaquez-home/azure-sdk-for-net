@@ -23,20 +23,20 @@ namespace Azure.ResourceManager.MachineLearning.Models
         }
 
         private const string ManagedValue = "Managed";
-        private const string AMLTokenValue = "AMLToken";
+        private const string AmlTokenValue = "AMLToken";
         private const string UserIdentityValue = "UserIdentity";
 
         /// <summary> Managed. </summary>
         public static IdentityConfigurationType Managed { get; } = new IdentityConfigurationType(ManagedValue);
         /// <summary> AMLToken. </summary>
-        public static IdentityConfigurationType AMLToken { get; } = new IdentityConfigurationType(AMLTokenValue);
+        public static IdentityConfigurationType AmlToken { get; } = new IdentityConfigurationType(AmlTokenValue);
         /// <summary> UserIdentity. </summary>
         public static IdentityConfigurationType UserIdentity { get; } = new IdentityConfigurationType(UserIdentityValue);
         /// <summary> Determines if two <see cref="IdentityConfigurationType"/> values are the same. </summary>
         public static bool operator ==(IdentityConfigurationType left, IdentityConfigurationType right) => left.Equals(right);
         /// <summary> Determines if two <see cref="IdentityConfigurationType"/> values are not the same. </summary>
         public static bool operator !=(IdentityConfigurationType left, IdentityConfigurationType right) => !left.Equals(right);
-        /// <summary> Converts a string to a <see cref="IdentityConfigurationType"/>. </summary>
+        /// <summary> Converts a <see cref="string"/> to a <see cref="IdentityConfigurationType"/>. </summary>
         public static implicit operator IdentityConfigurationType(string value) => new IdentityConfigurationType(value);
 
         /// <inheritdoc />
@@ -47,7 +47,7 @@ namespace Azure.ResourceManager.MachineLearning.Models
 
         /// <inheritdoc />
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+        public override int GetHashCode() => _value != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(_value) : 0;
         /// <inheritdoc />
         public override string ToString() => _value;
     }

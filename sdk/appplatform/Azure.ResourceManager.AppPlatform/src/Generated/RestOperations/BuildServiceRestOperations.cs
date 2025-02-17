@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.AppPlatform.Models;
@@ -33,8 +32,23 @@ namespace Azure.ResourceManager.AppPlatform
         {
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
-            _apiVersion = apiVersion ?? "2022-03-01-preview";
+            _apiVersion = apiVersion ?? "2022-12-01";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
+        }
+
+        internal RequestUriBuilder CreateListBuildServicesRequestUri(string subscriptionId, string resourceGroupName, string serviceName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListBuildServicesRequest(string subscriptionId, string resourceGroupName, string serviceName)
@@ -116,6 +130,22 @@ namespace Azure.ResourceManager.AppPlatform
             }
         }
 
+        internal RequestUriBuilder CreateGetBuildServiceRequestUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices/", false);
+            uri.AppendPath(buildServiceName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateGetBuildServiceRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName)
         {
             var message = _pipeline.CreateMessage();
@@ -146,7 +176,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/> or <paramref name="buildServiceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/> or <paramref name="buildServiceName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AppBuildServiceData>> GetBuildServiceAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppPlatformBuildServiceData>> GetBuildServiceAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -159,13 +189,13 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        AppBuildServiceData value = default;
+                        AppPlatformBuildServiceData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AppBuildServiceData.DeserializeAppBuildServiceData(document.RootElement);
+                        value = AppPlatformBuildServiceData.DeserializeAppPlatformBuildServiceData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AppBuildServiceData)null, message.Response);
+                    return Response.FromValue((AppPlatformBuildServiceData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -179,7 +209,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/> or <paramref name="buildServiceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/> or <paramref name="buildServiceName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AppBuildServiceData> GetBuildService(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, CancellationToken cancellationToken = default)
+        public Response<AppPlatformBuildServiceData> GetBuildService(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -192,16 +222,33 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        AppBuildServiceData value = default;
+                        AppPlatformBuildServiceData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AppBuildServiceData.DeserializeAppBuildServiceData(document.RootElement);
+                        value = AppPlatformBuildServiceData.DeserializeAppPlatformBuildServiceData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AppBuildServiceData)null, message.Response);
+                    return Response.FromValue((AppPlatformBuildServiceData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListBuildsRequestUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices/", false);
+            uri.AppendPath(buildServiceName, true);
+            uri.AppendPath("/builds", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListBuildsRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName)
@@ -289,6 +336,24 @@ namespace Azure.ResourceManager.AppPlatform
             }
         }
 
+        internal RequestUriBuilder CreateGetBuildRequestUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices/", false);
+            uri.AppendPath(buildServiceName, true);
+            uri.AppendPath("/builds/", false);
+            uri.AppendPath(buildName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateGetBuildRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName)
         {
             var message = _pipeline.CreateMessage();
@@ -322,7 +387,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="buildName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="buildName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AppBuildData>> GetBuildAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppPlatformBuildData>> GetBuildAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -336,13 +401,13 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        AppBuildData value = default;
+                        AppPlatformBuildData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AppBuildData.DeserializeAppBuildData(document.RootElement);
+                        value = AppPlatformBuildData.DeserializeAppPlatformBuildData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AppBuildData)null, message.Response);
+                    return Response.FromValue((AppPlatformBuildData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -357,7 +422,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="buildName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="buildName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AppBuildData> GetBuild(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, CancellationToken cancellationToken = default)
+        public Response<AppPlatformBuildData> GetBuild(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -371,19 +436,37 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        AppBuildData value = default;
+                        AppPlatformBuildData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AppBuildData.DeserializeAppBuildData(document.RootElement);
+                        value = AppPlatformBuildData.DeserializeAppPlatformBuildData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AppBuildData)null, message.Response);
+                    return Response.FromValue((AppPlatformBuildData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
         }
 
-        internal HttpMessage CreateCreateOrUpdateBuildRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, AppBuildData data)
+        internal RequestUriBuilder CreateCreateOrUpdateBuildRequestUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, AppPlatformBuildData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices/", false);
+            uri.AppendPath(buildServiceName, true);
+            uri.AppendPath("/builds/", false);
+            uri.AppendPath(buildName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateCreateOrUpdateBuildRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, AppPlatformBuildData data)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -405,7 +488,7 @@ namespace Azure.ResourceManager.AppPlatform
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(data);
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -421,7 +504,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/>, <paramref name="buildName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="buildName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AppBuildData>> CreateOrUpdateBuildAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, AppBuildData data, CancellationToken cancellationToken = default)
+        public async Task<Response<AppPlatformBuildData>> CreateOrUpdateBuildAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, AppPlatformBuildData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -437,9 +520,9 @@ namespace Azure.ResourceManager.AppPlatform
                 case 200:
                 case 201:
                     {
-                        AppBuildData value = default;
+                        AppPlatformBuildData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AppBuildData.DeserializeAppBuildData(document.RootElement);
+                        value = AppPlatformBuildData.DeserializeAppPlatformBuildData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -457,7 +540,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/>, <paramref name="buildName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="buildName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AppBuildData> CreateOrUpdateBuild(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, AppBuildData data, CancellationToken cancellationToken = default)
+        public Response<AppPlatformBuildData> CreateOrUpdateBuild(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, AppPlatformBuildData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -473,14 +556,33 @@ namespace Azure.ResourceManager.AppPlatform
                 case 200:
                 case 201:
                     {
-                        AppBuildData value = default;
+                        AppPlatformBuildData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AppBuildData.DeserializeAppBuildData(document.RootElement);
+                        value = AppPlatformBuildData.DeserializeAppPlatformBuildData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListBuildResultsRequestUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices/", false);
+            uri.AppendPath(buildServiceName, true);
+            uri.AppendPath("/builds/", false);
+            uri.AppendPath(buildName, true);
+            uri.AppendPath("/results", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListBuildResultsRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName)
@@ -574,6 +676,26 @@ namespace Azure.ResourceManager.AppPlatform
             }
         }
 
+        internal RequestUriBuilder CreateGetBuildResultRequestUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, string buildResultName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices/", false);
+            uri.AppendPath(buildServiceName, true);
+            uri.AppendPath("/builds/", false);
+            uri.AppendPath(buildName, true);
+            uri.AppendPath("/results/", false);
+            uri.AppendPath(buildResultName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateGetBuildResultRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, string buildResultName)
         {
             var message = _pipeline.CreateMessage();
@@ -610,7 +732,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/>, <paramref name="buildName"/> or <paramref name="buildResultName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/>, <paramref name="buildName"/> or <paramref name="buildResultName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AppBuildResultData>> GetBuildResultAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, string buildResultName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppPlatformBuildResultData>> GetBuildResultAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, string buildResultName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -625,13 +747,13 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        AppBuildResultData value = default;
+                        AppPlatformBuildResultData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AppBuildResultData.DeserializeAppBuildResultData(document.RootElement);
+                        value = AppPlatformBuildResultData.DeserializeAppPlatformBuildResultData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AppBuildResultData)null, message.Response);
+                    return Response.FromValue((AppPlatformBuildResultData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -647,7 +769,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/>, <paramref name="buildName"/> or <paramref name="buildResultName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/>, <paramref name="buildName"/> or <paramref name="buildResultName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AppBuildResultData> GetBuildResult(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, string buildResultName, CancellationToken cancellationToken = default)
+        public Response<AppPlatformBuildResultData> GetBuildResult(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, string buildResultName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -662,16 +784,37 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        AppBuildResultData value = default;
+                        AppPlatformBuildResultData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AppBuildResultData.DeserializeAppBuildResultData(document.RootElement);
+                        value = AppPlatformBuildResultData.DeserializeAppPlatformBuildResultData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AppBuildResultData)null, message.Response);
+                    return Response.FromValue((AppPlatformBuildResultData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetBuildResultLogRequestUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, string buildResultName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices/", false);
+            uri.AppendPath(buildServiceName, true);
+            uri.AppendPath("/builds/", false);
+            uri.AppendPath(buildName, true);
+            uri.AppendPath("/results/", false);
+            uri.AppendPath(buildResultName, true);
+            uri.AppendPath("/getLogFileUrl", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetBuildResultLogRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, string buildResultName)
@@ -711,7 +854,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/>, <paramref name="buildName"/> or <paramref name="buildResultName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/>, <paramref name="buildName"/> or <paramref name="buildResultName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<BuildResultLog>> GetBuildResultLogAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, string buildResultName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppPlatformBuildResultLog>> GetBuildResultLogAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, string buildResultName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -726,9 +869,9 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        BuildResultLog value = default;
+                        AppPlatformBuildResultLog value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = BuildResultLog.DeserializeBuildResultLog(document.RootElement);
+                        value = AppPlatformBuildResultLog.DeserializeAppPlatformBuildResultLog(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -746,7 +889,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/>, <paramref name="buildName"/> or <paramref name="buildResultName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/>, <paramref name="buildName"/> or <paramref name="buildResultName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<BuildResultLog> GetBuildResultLog(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, string buildResultName, CancellationToken cancellationToken = default)
+        public Response<AppPlatformBuildResultLog> GetBuildResultLog(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName, string buildResultName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -761,14 +904,31 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        BuildResultLog value = default;
+                        AppPlatformBuildResultLog value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = BuildResultLog.DeserializeBuildResultLog(document.RootElement);
+                        value = AppPlatformBuildResultLog.DeserializeAppPlatformBuildResultLog(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetResourceUploadUriRequestUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices/", false);
+            uri.AppendPath(buildServiceName, true);
+            uri.AppendPath("/getResourceUploadUrl", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetResourceUploadUriRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName)
@@ -802,7 +962,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/> or <paramref name="buildServiceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/> or <paramref name="buildServiceName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ResourceUploadResult>> GetResourceUploadUriAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppPlatformResourceUploadResult>> GetResourceUploadUriAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -815,9 +975,9 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        ResourceUploadResult value = default;
+                        AppPlatformResourceUploadResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ResourceUploadResult.DeserializeResourceUploadResult(document.RootElement);
+                        value = AppPlatformResourceUploadResult.DeserializeAppPlatformResourceUploadResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -833,7 +993,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/> or <paramref name="buildServiceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/> or <paramref name="buildServiceName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ResourceUploadResult> GetResourceUploadUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, CancellationToken cancellationToken = default)
+        public Response<AppPlatformResourceUploadResult> GetResourceUploadUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -846,14 +1006,31 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        ResourceUploadResult value = default;
+                        AppPlatformResourceUploadResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ResourceUploadResult.DeserializeResourceUploadResult(document.RootElement);
+                        value = AppPlatformResourceUploadResult.DeserializeAppPlatformResourceUploadResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListSupportedBuildpacksRequestUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices/", false);
+            uri.AppendPath(buildServiceName, true);
+            uri.AppendPath("/supportedBuildpacks", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListSupportedBuildpacksRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName)
@@ -941,6 +1118,24 @@ namespace Azure.ResourceManager.AppPlatform
             }
         }
 
+        internal RequestUriBuilder CreateGetSupportedBuildpackRequestUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildpackName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices/", false);
+            uri.AppendPath(buildServiceName, true);
+            uri.AppendPath("/supportedBuildpacks/", false);
+            uri.AppendPath(buildpackName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateGetSupportedBuildpackRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildpackName)
         {
             var message = _pipeline.CreateMessage();
@@ -974,7 +1169,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="buildpackName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="buildpackName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<SupportedBuildpackResourceData>> GetSupportedBuildpackAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildpackName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppPlatformSupportedBuildpackData>> GetSupportedBuildpackAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildpackName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -988,13 +1183,13 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        SupportedBuildpackResourceData value = default;
+                        AppPlatformSupportedBuildpackData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = SupportedBuildpackResourceData.DeserializeSupportedBuildpackResourceData(document.RootElement);
+                        value = AppPlatformSupportedBuildpackData.DeserializeAppPlatformSupportedBuildpackData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((SupportedBuildpackResourceData)null, message.Response);
+                    return Response.FromValue((AppPlatformSupportedBuildpackData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -1009,7 +1204,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="buildpackName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="buildpackName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<SupportedBuildpackResourceData> GetSupportedBuildpack(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildpackName, CancellationToken cancellationToken = default)
+        public Response<AppPlatformSupportedBuildpackData> GetSupportedBuildpack(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildpackName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1023,16 +1218,33 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        SupportedBuildpackResourceData value = default;
+                        AppPlatformSupportedBuildpackData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = SupportedBuildpackResourceData.DeserializeSupportedBuildpackResourceData(document.RootElement);
+                        value = AppPlatformSupportedBuildpackData.DeserializeAppPlatformSupportedBuildpackData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((SupportedBuildpackResourceData)null, message.Response);
+                    return Response.FromValue((AppPlatformSupportedBuildpackData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListSupportedStacksRequestUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices/", false);
+            uri.AppendPath(buildServiceName, true);
+            uri.AppendPath("/supportedStacks", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListSupportedStacksRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName)
@@ -1120,6 +1332,24 @@ namespace Azure.ResourceManager.AppPlatform
             }
         }
 
+        internal RequestUriBuilder CreateGetSupportedStackRequestUri(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string stackName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.AppPlatform/Spring/", false);
+            uri.AppendPath(serviceName, true);
+            uri.AppendPath("/buildServices/", false);
+            uri.AppendPath(buildServiceName, true);
+            uri.AppendPath("/supportedStacks/", false);
+            uri.AppendPath(stackName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateGetSupportedStackRequest(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string stackName)
         {
             var message = _pipeline.CreateMessage();
@@ -1153,7 +1383,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="stackName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="stackName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<SupportedStackResourceData>> GetSupportedStackAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string stackName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppPlatformSupportedStackData>> GetSupportedStackAsync(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string stackName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1167,13 +1397,13 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        SupportedStackResourceData value = default;
+                        AppPlatformSupportedStackData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = SupportedStackResourceData.DeserializeSupportedStackResourceData(document.RootElement);
+                        value = AppPlatformSupportedStackData.DeserializeAppPlatformSupportedStackData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((SupportedStackResourceData)null, message.Response);
+                    return Response.FromValue((AppPlatformSupportedStackData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -1188,7 +1418,7 @@ namespace Azure.ResourceManager.AppPlatform
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="stackName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serviceName"/>, <paramref name="buildServiceName"/> or <paramref name="stackName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<SupportedStackResourceData> GetSupportedStack(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string stackName, CancellationToken cancellationToken = default)
+        public Response<AppPlatformSupportedStackData> GetSupportedStack(string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string stackName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1202,16 +1432,24 @@ namespace Azure.ResourceManager.AppPlatform
             {
                 case 200:
                     {
-                        SupportedStackResourceData value = default;
+                        AppPlatformSupportedStackData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = SupportedStackResourceData.DeserializeSupportedStackResourceData(document.RootElement);
+                        value = AppPlatformSupportedStackData.DeserializeAppPlatformSupportedStackData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((SupportedStackResourceData)null, message.Response);
+                    return Response.FromValue((AppPlatformSupportedStackData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListBuildServicesNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string serviceName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListBuildServicesNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string serviceName)
@@ -1288,6 +1526,14 @@ namespace Azure.ResourceManager.AppPlatform
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListBuildsNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListBuildsNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName)
@@ -1368,6 +1614,14 @@ namespace Azure.ResourceManager.AppPlatform
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListBuildResultsNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListBuildResultsNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string serviceName, string buildServiceName, string buildName)

@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.Workloads.Models;
@@ -33,11 +32,24 @@ namespace Azure.ResourceManager.Workloads
         {
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
-            _apiVersion = apiVersion ?? "2021-12-01-preview";
+            _apiVersion = apiVersion ?? "2023-04-01";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
         }
 
-        internal HttpMessage CreateSapSizingRecommendationsRequest(string subscriptionId, string location, SapSizingRecommendationContent content)
+        internal RequestUriBuilder CreateSapSizingRecommendationsRequestUri(string subscriptionId, AzureLocation location, SapSizingRecommendationContent content)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Workloads/locations/", false);
+            uri.AppendPath(location, true);
+            uri.AppendPath("/sapVirtualInstanceMetadata/default/getSizingRecommendations", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateSapSizingRecommendationsRequest(string subscriptionId, AzureLocation location, SapSizingRecommendationContent content)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -56,24 +68,23 @@ namespace Azure.ResourceManager.Workloads
             {
                 request.Headers.Add("Content-Type", "application/json");
                 var content0 = new Utf8JsonRequestContent();
-                content0.JsonWriter.WriteObjectValue(content);
+                content0.JsonWriter.WriteObjectValue(content, ModelSerializationExtensions.WireOptions);
                 request.Content = content0;
             }
             _userAgent.Apply(message);
             return message;
         }
 
-        /// <summary> Get SAP sizing recommendations. </summary>
+        /// <summary> Get SAP sizing recommendations by providing input SAPS for application tier and memory required for database tier. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="location"> The name of Azure region. </param>
         /// <param name="content"> SAP Sizing Recommendation Request body. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<SapSizingRecommendationResult>> SapSizingRecommendationsAsync(string subscriptionId, string location, SapSizingRecommendationContent content = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
+        public async Task<Response<SapSizingRecommendationResult>> SapSizingRecommendationsAsync(string subscriptionId, AzureLocation location, SapSizingRecommendationContent content = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateSapSizingRecommendationsRequest(subscriptionId, location, content);
             await _pipeline.SendAsync(message, cancellationToken).ConfigureAwait(false);
@@ -91,17 +102,16 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Get SAP sizing recommendations. </summary>
+        /// <summary> Get SAP sizing recommendations by providing input SAPS for application tier and memory required for database tier. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="location"> The name of Azure region. </param>
         /// <param name="content"> SAP Sizing Recommendation Request body. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<SapSizingRecommendationResult> SapSizingRecommendations(string subscriptionId, string location, SapSizingRecommendationContent content = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
+        public Response<SapSizingRecommendationResult> SapSizingRecommendations(string subscriptionId, AzureLocation location, SapSizingRecommendationContent content = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateSapSizingRecommendationsRequest(subscriptionId, location, content);
             _pipeline.Send(message, cancellationToken);
@@ -119,7 +129,20 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        internal HttpMessage CreateSapSupportedSkuRequest(string subscriptionId, string location, SapSupportedSkusContent content)
+        internal RequestUriBuilder CreateSapSupportedSkuRequestUri(string subscriptionId, AzureLocation location, SapSupportedSkusContent content)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Workloads/locations/", false);
+            uri.AppendPath(location, true);
+            uri.AppendPath("/sapVirtualInstanceMetadata/default/getSapSupportedSku", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateSapSupportedSkuRequest(string subscriptionId, AzureLocation location, SapSupportedSkusContent content)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -138,24 +161,23 @@ namespace Azure.ResourceManager.Workloads
             {
                 request.Headers.Add("Content-Type", "application/json");
                 var content0 = new Utf8JsonRequestContent();
-                content0.JsonWriter.WriteObjectValue(content);
+                content0.JsonWriter.WriteObjectValue(content, ModelSerializationExtensions.WireOptions);
                 request.Content = content0;
             }
             _userAgent.Apply(message);
             return message;
         }
 
-        /// <summary> Get SAP supported SKUs. </summary>
+        /// <summary> Get a list of SAP supported SKUs for ASCS, Application and Database tier. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="location"> The name of Azure region. </param>
         /// <param name="content"> SAP Supported SKU Request body. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<SapSupportedResourceSkusResult>> SapSupportedSkuAsync(string subscriptionId, string location, SapSupportedSkusContent content = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
+        public async Task<Response<SapSupportedResourceSkusResult>> SapSupportedSkuAsync(string subscriptionId, AzureLocation location, SapSupportedSkusContent content = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateSapSupportedSkuRequest(subscriptionId, location, content);
             await _pipeline.SendAsync(message, cancellationToken).ConfigureAwait(false);
@@ -173,17 +195,16 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Get SAP supported SKUs. </summary>
+        /// <summary> Get a list of SAP supported SKUs for ASCS, Application and Database tier. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="location"> The name of Azure region. </param>
         /// <param name="content"> SAP Supported SKU Request body. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<SapSupportedResourceSkusResult> SapSupportedSku(string subscriptionId, string location, SapSupportedSkusContent content = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
+        public Response<SapSupportedResourceSkusResult> SapSupportedSku(string subscriptionId, AzureLocation location, SapSupportedSkusContent content = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateSapSupportedSkuRequest(subscriptionId, location, content);
             _pipeline.Send(message, cancellationToken);
@@ -201,7 +222,20 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        internal HttpMessage CreateSapDiskConfigurationsRequest(string subscriptionId, string location, SapDiskConfigurationsContent content)
+        internal RequestUriBuilder CreateSapDiskConfigurationsRequestUri(string subscriptionId, AzureLocation location, SapDiskConfigurationsContent content)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Workloads/locations/", false);
+            uri.AppendPath(location, true);
+            uri.AppendPath("/sapVirtualInstanceMetadata/default/getDiskConfigurations", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateSapDiskConfigurationsRequest(string subscriptionId, AzureLocation location, SapDiskConfigurationsContent content)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -220,24 +254,23 @@ namespace Azure.ResourceManager.Workloads
             {
                 request.Headers.Add("Content-Type", "application/json");
                 var content0 = new Utf8JsonRequestContent();
-                content0.JsonWriter.WriteObjectValue(content);
+                content0.JsonWriter.WriteObjectValue(content, ModelSerializationExtensions.WireOptions);
                 request.Content = content0;
             }
             _userAgent.Apply(message);
             return message;
         }
 
-        /// <summary> Get SAP Disk Configurations. </summary>
+        /// <summary> Get the SAP Disk Configuration Layout prod/non-prod SAP System. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="location"> The name of Azure region. </param>
         /// <param name="content"> SAP Disk Configurations Request body. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<SapDiskConfigurationsResult>> SapDiskConfigurationsAsync(string subscriptionId, string location, SapDiskConfigurationsContent content = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
+        public async Task<Response<SapDiskConfigurationsResult>> SapDiskConfigurationsAsync(string subscriptionId, AzureLocation location, SapDiskConfigurationsContent content = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateSapDiskConfigurationsRequest(subscriptionId, location, content);
             await _pipeline.SendAsync(message, cancellationToken).ConfigureAwait(false);
@@ -255,17 +288,16 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Get SAP Disk Configurations. </summary>
+        /// <summary> Get the SAP Disk Configuration Layout prod/non-prod SAP System. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="location"> The name of Azure region. </param>
         /// <param name="content"> SAP Disk Configurations Request body. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<SapDiskConfigurationsResult> SapDiskConfigurations(string subscriptionId, string location, SapDiskConfigurationsContent content = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
+        public Response<SapDiskConfigurationsResult> SapDiskConfigurations(string subscriptionId, AzureLocation location, SapDiskConfigurationsContent content = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateSapDiskConfigurationsRequest(subscriptionId, location, content);
             _pipeline.Send(message, cancellationToken);
@@ -283,7 +315,20 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        internal HttpMessage CreateSapAvailabilityZoneDetailsRequest(string subscriptionId, string location, SapAvailabilityZoneDetailsContent content)
+        internal RequestUriBuilder CreateSapAvailabilityZoneDetailsRequestUri(string subscriptionId, AzureLocation location, SapAvailabilityZoneDetailsContent content)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Workloads/locations/", false);
+            uri.AppendPath(location, true);
+            uri.AppendPath("/sapVirtualInstanceMetadata/default/getAvailabilityZoneDetails", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateSapAvailabilityZoneDetailsRequest(string subscriptionId, AzureLocation location, SapAvailabilityZoneDetailsContent content)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -302,24 +347,23 @@ namespace Azure.ResourceManager.Workloads
             {
                 request.Headers.Add("Content-Type", "application/json");
                 var content0 = new Utf8JsonRequestContent();
-                content0.JsonWriter.WriteObjectValue(content);
+                content0.JsonWriter.WriteObjectValue(content, ModelSerializationExtensions.WireOptions);
                 request.Content = content0;
             }
             _userAgent.Apply(message);
             return message;
         }
 
-        /// <summary> Get SAP Availability Zone Details. </summary>
+        /// <summary> Get the recommended SAP Availability Zone Pair Details for your region. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="location"> The name of Azure region. </param>
         /// <param name="content"> SAP Availability Zone Details Request body. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<SapAvailabilityZoneDetailsResult>> SapAvailabilityZoneDetailsAsync(string subscriptionId, string location, SapAvailabilityZoneDetailsContent content = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
+        public async Task<Response<SapAvailabilityZoneDetailsResult>> SapAvailabilityZoneDetailsAsync(string subscriptionId, AzureLocation location, SapAvailabilityZoneDetailsContent content = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateSapAvailabilityZoneDetailsRequest(subscriptionId, location, content);
             await _pipeline.SendAsync(message, cancellationToken).ConfigureAwait(false);
@@ -337,17 +381,16 @@ namespace Azure.ResourceManager.Workloads
             }
         }
 
-        /// <summary> Get SAP Availability Zone Details. </summary>
+        /// <summary> Get the recommended SAP Availability Zone Pair Details for your region. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="location"> The name of Azure region. </param>
         /// <param name="content"> SAP Availability Zone Details Request body. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<SapAvailabilityZoneDetailsResult> SapAvailabilityZoneDetails(string subscriptionId, string location, SapAvailabilityZoneDetailsContent content = null, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
+        public Response<SapAvailabilityZoneDetailsResult> SapAvailabilityZoneDetails(string subscriptionId, AzureLocation location, SapAvailabilityZoneDetailsContent content = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateSapAvailabilityZoneDetailsRequest(subscriptionId, location, content);
             _pipeline.Send(message, cancellationToken);

@@ -17,20 +17,22 @@ namespace Azure.Messaging.ServiceBus.Tests.Samples
             {
                 #region Snippet:ServiceBusSendAndReceiveSessionMessage
 #if SNIPPET
-                string connectionString = "<connection_string>";
+                string fullyQualifiedNamespace = "<fully_qualified_namespace>";
                 string queueName = "<queue_name>";
-#else
-                string connectionString = TestEnvironment.ServiceBusConnectionString;
-                string queueName = scope.QueueName;
-#endif
+
                 // since ServiceBusClient implements IAsyncDisposable we create it with "await using"
-                await using var client = new ServiceBusClient(connectionString);
+                await using ServiceBusClient client = new(fullyQualifiedNamespace, new DefaultAzureCredential());
+#else
+                string fullyQualifiedNamespace = TestEnvironment.FullyQualifiedNamespace;
+                string queueName = scope.QueueName;
+                await using ServiceBusClient client = new(fullyQualifiedNamespace, TestEnvironment.Credential);
+#endif
 
                 // create the sender
                 ServiceBusSender sender = client.CreateSender(queueName);
 
                 // create a session message that we can send
-                ServiceBusMessage message = new ServiceBusMessage(Encoding.UTF8.GetBytes("Hello world!"))
+                ServiceBusMessage message = new(Encoding.UTF8.GetBytes("Hello world!"))
                 {
                     SessionId = "mySessionId"
                 };
@@ -67,10 +69,10 @@ namespace Azure.Messaging.ServiceBus.Tests.Samples
         {
             await using (var scope = await ServiceBusScope.CreateWithQueue(enablePartitioning: false, enableSession: true))
             {
-                string connectionString = TestEnvironment.ServiceBusConnectionString;
+                string fullyQualifiedNamespace = TestEnvironment.FullyQualifiedNamespace;
                 string queueName = scope.QueueName;
                 // since ServiceBusClient implements IAsyncDisposable we create it with "await using"
-                await using var client = new ServiceBusClient(connectionString);
+                await using ServiceBusClient client = new(fullyQualifiedNamespace, TestEnvironment.Credential);
 
                 // create the sender
                 ServiceBusSender sender = client.CreateSender(queueName);
@@ -102,6 +104,44 @@ namespace Azure.Messaging.ServiceBus.Tests.Samples
                 #endregion
                 Assert.AreEqual(Encoding.UTF8.GetBytes("Second"), receivedMessage.Body.ToArray());
                 Assert.AreEqual("Session2", receivedMessage.SessionId);
+            }
+        }
+
+        [Test]
+        public async Task RenewSessionLockAndComplete()
+        {
+            await using (var scope = await ServiceBusScope.CreateWithQueue(enablePartitioning: false, enableSession: true))
+            {
+                string fullyQualifiedNamespace = TestEnvironment.FullyQualifiedNamespace;
+                string queueName = scope.QueueName;
+                // since ServiceBusClient implements IAsyncDisposable we create it with "await using"
+                await using var client = new ServiceBusClient(fullyQualifiedNamespace, TestEnvironment.Credential);
+
+                // create the sender
+                ServiceBusSender sender = client.CreateSender(queueName);
+
+                // create a message and set the SessionId
+                ServiceBusMessage message = new("Hello world!") { SessionId = "mySessionId" };
+
+                // send the message
+                await sender.SendMessageAsync(message);
+
+                // create a receiver that we can use to receive and settle the message
+                ServiceBusSessionReceiver receiver = await client.AcceptNextSessionAsync(queueName);
+
+                #region Snippet:ServiceBusRenewSessionLockAndComplete
+                ServiceBusReceivedMessage receivedMessage = await receiver.ReceiveMessageAsync();
+
+                // If we know that we are going to be processing the session for a long time, we can extend the lock for the session
+                // by the configured LockDuration (by default, 30 seconds).
+                await receiver.RenewSessionLockAsync();
+
+                // simulate some processing of the message
+                await Task.Delay(TimeSpan.FromSeconds(10));
+
+                // complete the message, thereby deleting it from the service
+                await receiver.CompleteMessageAsync(receivedMessage);
+                #endregion
             }
         }
     }

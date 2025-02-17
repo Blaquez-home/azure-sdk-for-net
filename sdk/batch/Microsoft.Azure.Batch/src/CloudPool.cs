@@ -113,13 +113,15 @@
                 Models.MetadataItem[] mdiArray = UtilitiesInternal.ConvertToProtocolArray(this.Metadata);
                 Models.ApplicationPackageReference[] applicationPackageArray = UtilitiesInternal.ConvertToProtocolArray(this.ApplicationPackageReferences);
                 Models.StartTask modelStartTask = UtilitiesInternal.CreateObjectWithNullCheck(this.StartTask, item => item.GetTransportObject());
-                
+                Models.NodeCommunicationMode? targetCommunicationMode = UtilitiesInternal.MapNullableEnum<Common.NodeCommunicationMode, Models.NodeCommunicationMode>(this.TargetNodeCommunicationMode);
+
                 asyncTask = this.parentBatchClient.ProtocolLayer.UpdatePool(
                     this.Id,
                     modelStartTask, 
                     certRefArray, 
                     applicationPackageArray,
-                    mdiArray, 
+                    mdiArray,
+                    targetCommunicationMode,
                     bhMgr, 
                     cancellationToken);
             }
@@ -176,6 +178,18 @@
             Models.ApplicationPackageReference[] applicationPackageArray =
                 this.propertyContainer.ApplicationPackageReferencesProperty.GetTransportObjectIfChanged<ApplicationPackageReference, Models.ApplicationPackageReference>();
             Models.StartTask modelStartTask = this.propertyContainer.StartTaskProperty.GetTransportObjectIfChanged<StartTask, Models.StartTask>();
+            Models.NodeCommunicationMode? targetCommunicationMode = UtilitiesInternal.MapNullableEnum<Common.NodeCommunicationMode, Models.NodeCommunicationMode>(this.TargetNodeCommunicationMode);
+            string displayName = this.propertyContainer.DisplayNameProperty.HasBeenModified ? this.propertyContainer.DisplayNameProperty.Value : null;
+            string vmSize = this.propertyContainer.VirtualMachineSizeProperty.HasBeenModified ? this.propertyContainer.VirtualMachineSizeProperty.Value: null;
+            int? taskSlotsPerNode = this.propertyContainer.TaskSlotsPerNodeProperty.HasBeenModified ? this.propertyContainer.TaskSlotsPerNodeProperty.Value : null;
+            Models.TaskSchedulingPolicy taskSchedulingPolicy = this.propertyContainer.TaskSchedulingPolicyProperty.GetTransportObjectIfChanged<TaskSchedulingPolicy, Models.TaskSchedulingPolicy>();
+            bool? enableInterNodeCommunication = this.propertyContainer.InterComputeNodeCommunicationEnabledProperty.HasBeenModified ? this.propertyContainer.InterComputeNodeCommunicationEnabledProperty.Value : null;
+            Models.VirtualMachineConfiguration virtualMachineConfiguration = this.propertyContainer.VirtualMachineConfigurationProperty.GetTransportObjectIfChanged<VirtualMachineConfiguration, Models.VirtualMachineConfiguration>();
+            Models.NetworkConfiguration networkConfiguration = this.propertyContainer.NetworkConfigurationProperty.GetTransportObjectIfChanged<NetworkConfiguration, Models.NetworkConfiguration>();
+            Models.UserAccount[] userAccounts = this.propertyContainer.UserAccountsProperty.GetTransportObjectIfChanged<UserAccount, Models.UserAccount>();
+            Models.MountConfiguration[] mountConfiguration = this.propertyContainer.MountConfigurationProperty.GetTransportObjectIfChanged<MountConfiguration, Models.MountConfiguration>();
+            Models.UpgradePolicy upgradePolicy = this.propertyContainer.UpgradePolicyProperty.GetTransportObjectIfChanged<UpgradePolicy, Models.UpgradePolicy>();
+            IDictionary<string, string> resourceTags = this.propertyContainer.ResourceTagsProperty.HasBeenModified ? this.propertyContainer.ResourceTagsProperty.Value : null;
 
             System.Threading.Tasks.Task asyncTask = this.parentBatchClient.ProtocolLayer.PatchPool(
                     this.Id,
@@ -183,6 +197,18 @@
                     certRefArray,
                     applicationPackageArray,
                     mdiArray,
+                    targetCommunicationMode,
+                    displayName,
+                    vmSize,
+                    taskSlotsPerNode,
+                    taskSchedulingPolicy,
+                    enableInterNodeCommunication,
+                    virtualMachineConfiguration,
+                    networkConfiguration,
+                    userAccounts,
+                    mountConfiguration,
+                    upgradePolicy,
+                    resourceTags,
                     bhMgr,
                     cancellationToken);
 

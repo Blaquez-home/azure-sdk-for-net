@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Azure.Core.TestFramework.Models;
 using Castle.DynamicProxy;
@@ -20,6 +21,8 @@ namespace Azure.Core.TestFramework
     public abstract class RecordedTestBase : ClientTestBase
     {
         public TestRecording Recording { get; private set; }
+
+        private static string EmptyGuid = Guid.Empty.ToString();
 
         public RecordedTestMode Mode { get; set; }
 
@@ -34,6 +37,10 @@ namespace Azure.Core.TestFramework
             (char)31, ':', '*', '?', '\\', '/'
         });
 
+        private static readonly object s_syncLock = new();
+
+        private static bool s_ranTestProxyValidation;
+
         private TestProxy _proxy;
 
         private DateTime _testStartTime;
@@ -43,12 +50,13 @@ namespace Azure.Core.TestFramework
         protected override DateTime TestStartTime => _testStartTime;
 
         public const string SanitizeValue = "Sanitized";
+        public const string AssetsJson = "assets.json";
+        public virtual string AssetsJsonPath { get; }
 
         /// <summary>
         /// The list of JSON path sanitizers to use when sanitizing a JSON request or response body.
         /// </summary>
-        public List<string> JsonPathSanitizers { get; } =
-            new() { "$..primaryKey", "$..secondaryKey", "$..primaryConnectionString", "$..secondaryConnectionString", "$..connectionString" };
+        public List<string> JsonPathSanitizers { get; } = new();
 
         /// <summary>
         /// The list of <see cref="BodyKeySanitizer"/> to use while sanitizing request and response bodies. This is similar to
@@ -67,7 +75,11 @@ namespace Azure.Core.TestFramework
         /// a regex for matching on the URI. <seealso cref="SanitizedQueryParameters"/> is a convenience property that allows you to sanitize
         /// query parameters without constructing the <see cref="UriRegexSanitizer"/> yourself.
         /// </summary>
-        public List<UriRegexSanitizer> UriRegexSanitizers { get; } = new();
+        public List<UriRegexSanitizer> UriRegexSanitizers { get; } = new()
+        {
+            UriRegexSanitizer.CreateWithQueryParameter("skoid", EmptyGuid),
+            UriRegexSanitizer.CreateWithQueryParameter("sktid", EmptyGuid),
+        };
 
         /// <summary>
         /// The list of <see cref="HeaderTransform"/> to apply in Playback mode to the response headers.
@@ -85,18 +97,56 @@ namespace Azure.Core.TestFramework
         /// <summary>
         /// The list of headers that will be sanitized on the request and response. By default, the "Authorization" header is included.
         /// </summary>
-        public List<string> SanitizedHeaders { get; } = new() { "Authorization" };
+        public List<string> SanitizedHeaders { get; } = new();
 
         /// <summary>
         /// The list of query parameters that will be sanitized on the request and response URIs.
         /// </summary>
-        public List<string> SanitizedQueryParameters { get; } = new();
+        public List<string> SanitizedQueryParameters { get; } = new()
+        {
+            "sig",
+            "sip",
+            "client_id",
+            "client_secret"
+        };
 
         /// <summary>
         /// The list of header keys and query parameter tuples where the associated query parameter that should be sanitized from the corresponding
         /// request and response headers.
         /// </summary>
         public List<(string Header, string QueryParameter)> SanitizedQueryParametersInHeaders { get; } = new();
+
+        /// <summary>
+        /// The list of sanitizers to remove. Sanitizer IDs can be found in Test Proxy docs.
+        /// https://github.com/Azure/azure-sdk-tools/blob/main/tools/test-proxy/Azure.Sdk.Tools.TestProxy/README.md
+        /// </summary>
+        public List<string> SanitizersToRemove { get; } = new()
+        {
+            "AZSDK2003", // Location header
+            "AZSDK2006", // x-ms-rename-source
+            "AZSDK2007", // x-ms-file-rename-source
+            "AZSDK2008", // x-ms-copy-source
+            "AZSDK2020", // x-ms-request-id
+            "AZSDK2030", // Operation-location header
+            "AZSDK3420", // $..targetResourceId
+            "AZSDK3423", // $..source
+            "AZSDK3424", // $..to
+            "AZSDK3425", // $..from
+            "AZSDK3430", // $..id
+            "AZSDK3433", // $..userId
+            "AZSDK3447", // $.key - app config key - not a secret
+            "AZSDK3448", // $.value[*].key - search key - not a secret
+            "AZSDK3451", // $..storageContainerUri - used for mixed reality - no sas token
+            "AZSDK3478", // $..accountName
+            "AZSDK3488", // $..targetResourceRegion
+            "AZSDK3490", // $..etag
+            "AZSDK3491", // $..functionUri
+            "AZSDK3493", // $..name
+            "AZSDK3494", // $..friendlyName
+            "AZSDK3495", // $..targetModelLocation
+            "AZSDK3496", // $..resourceLocation
+            "AZSDK4001", // host name regex
+        };
 
         /// <summary>
         /// Flag you can (temporarily) enable to save failed test recordings
@@ -127,9 +177,10 @@ namespace Azure.Core.TestFramework
             {
                 _replacementHost = value;
                 UriRegexSanitizers.Add(
-                    new UriRegexSanitizer(@"https://(?<host>[^/]+)/", _replacementHost)
+                    new UriRegexSanitizer(@"https://(?<host>[^/]+)/")
                     {
-                        GroupForReplace = "host"
+                        GroupForReplace = "host",
+                        Value = _replacementHost
                     });
             }
         }
@@ -141,6 +192,13 @@ namespace Azure.Core.TestFramework
         /// The default value is <value>true</value>.
         /// </summary>
         public bool CompareBodies { get; set; } = true;
+
+        /// <summary>
+        /// Determines if the ClientRequestId that is sent as part of a request while in Record mode
+        /// should use the default Guid format. The default Guid format contains hyphens.
+        /// The default value is <value>false</value>.
+        /// </summary>
+        public bool UseDefaultGuidFormatForClientRequestId { get; set; } = false;
 
         /// <summary>
         /// Request headers whose values can change between recording and playback without causing request matching
@@ -177,6 +235,25 @@ namespace Azure.Core.TestFramework
         {
         };
 
+        private bool _useLocalDebugProxy;
+
+        /// <summary>
+        /// If set to true, the proxy will be configured to connect on ports 5000 and 5001. This is useful when running the proxy locally for debugging recorded test issues.
+        /// </summary>
+        protected bool UseLocalDebugProxy
+        {
+            get => _useLocalDebugProxy;
+
+            set
+            {
+                if (value && TestEnvironment.GlobalIsRunningInCI)
+                {
+                    throw new AssertionException($"Setting {nameof(UseLocalDebugProxy)} must not be merged");
+                }
+                _useLocalDebugProxy = value;
+            }
+        }
+
         /// <summary>
         /// Creats a new instance of <see cref="RecordedTestBase"/>.
         /// </summary>
@@ -185,6 +262,7 @@ namespace Azure.Core.TestFramework
         protected RecordedTestBase(bool isAsync, RecordedTestMode? mode = null) : base(isAsync)
         {
             Mode = mode ?? TestEnvironment.GlobalTestMode;
+            AssetsJsonPath = GetAssetsJson();
         }
 
         protected async Task<TestRecording> CreateTestRecordingAsync(RecordedTestMode mode, string sessionFile) =>
@@ -200,8 +278,11 @@ namespace Azure.Core.TestFramework
                 clientOptions.Retry.Delay = TimeSpan.FromMilliseconds(10);
                 clientOptions.Retry.Mode = RetryMode.Fixed;
             }
-
-            clientOptions.Transport = recording.CreateTransport(clientOptions.Transport);
+            // No need to set the transport if we are in Live mode
+            if (Mode != RecordedTestMode.Live)
+            {
+                clientOptions.Transport = recording.CreateTransport(clientOptions.Transport);
+            }
 
             return clientOptions;
         }
@@ -219,9 +300,46 @@ namespace Azure.Core.TestFramework
 
             string fileName = $"{name}{version}{async}.json";
 
-            return Path.Combine(
+            var repoRoot = TestEnvironment.RepositoryRoot;
+
+            // this needs to be updated to purely relative to repo root
+            var result = Path.Combine(
                 GetSessionFileDirectory(),
                 fileName);
+
+            if (!string.IsNullOrWhiteSpace(AssetsJsonPath))
+            {
+                return Regex.Replace(result.Replace(repoRoot, String.Empty), @"^[\\/]*", string.Empty);
+            }
+            else
+            {
+                return result;
+            }
+        }
+
+        private string GetAssetsJson()
+        {
+            var path = GetSessionFileDirectory();
+
+            while (true)
+            {
+                var assetsJsonPresent = File.Exists(Path.Combine(path, "assets.json"));
+
+                // Check for root .git directory or, less commonly, a .git file for git worktrees.
+                string gitRootPath = Path.Combine(path, ".git");
+                var isGitRoot = Directory.Exists(gitRootPath) || File.Exists(gitRootPath);
+
+                if (assetsJsonPresent)
+                {
+                    return Path.Combine(path, AssetsJson);
+                }
+                else if (isGitRoot)
+                {
+                    return null;
+                }
+
+                path = Path.GetDirectoryName(path);
+            }
         }
 
         private string GetSessionFileDirectory()
@@ -270,7 +388,7 @@ namespace Azure.Core.TestFramework
 
             if (Mode != RecordedTestMode.Live)
             {
-                _proxy = TestProxy.Start();
+                _proxy = TestProxy.Start(UseLocalDebugProxy);
             }
         }
 
@@ -287,6 +405,12 @@ namespace Azure.Core.TestFramework
             // Clean up unused test files
             if (Mode == RecordedTestMode.Record)
             {
+                var testClassDirectory = new DirectoryInfo(GetSessionFileDirectory());
+                if (!testClassDirectory.Exists)
+                {
+                    return;
+                }
+
                 var knownMethods = new HashSet<string>();
 
                 // Management tests record in ctor
@@ -299,7 +423,7 @@ namespace Azure.Core.TestFramework
                     // TestCase attribute allows specifying a test name
                     foreach (var attribute in method.GetCustomAttributes(true))
                     {
-                        if (attribute is ITestData { TestName: { } name})
+                        if (attribute is ITestData { TestName: { } name })
                         {
                             knownMethods.Add(name);
                         }
@@ -308,7 +432,7 @@ namespace Azure.Core.TestFramework
                     knownMethods.Add(method.Name);
                 }
 
-                foreach (var fileInfo in new DirectoryInfo(GetSessionFileDirectory()).EnumerateFiles())
+                foreach (var fileInfo in testClassDirectory.EnumerateFiles())
                 {
                     bool used = knownMethods.Any(knownMethod => fileInfo.Name.StartsWith(knownMethod, StringComparison.CurrentCulture));
 
@@ -327,6 +451,14 @@ namespace Azure.Core.TestFramework
             }
         }
 
+        protected async Task SetProxyOptionsAsync(ProxyOptions options)
+        {
+            if (Mode == RecordedTestMode.Record && options != null)
+            {
+                await _proxy.Client.SetRecordingTransportOptionsAsync(Recording.RecordingId, options).ConfigureAwait(false);
+            }
+        }
+
         [SetUp]
         public virtual async Task StartTestRecordingAsync()
         {
@@ -338,13 +470,13 @@ namespace Azure.Core.TestFramework
             if (Mode != RecordedTestMode.Live &&
                 test.Properties.ContainsKey("_SkipRecordings"))
             {
-                throw new IgnoreException((string) test.Properties.Get("_SkipRecordings"));
+                throw new IgnoreException((string)test.Properties.Get("_SkipRecordings"));
             }
 
             if (Mode == RecordedTestMode.Live &&
                 test.Properties.ContainsKey("_SkipLive"))
             {
-                throw new IgnoreException((string) test.Properties.Get("_SkipLive"));
+                throw new IgnoreException((string)test.Properties.Get("_SkipLive"));
             }
 
             Recording = await CreateTestRecordingAsync(Mode, GetSessionFilePath());
@@ -370,9 +502,17 @@ namespace Azure.Core.TestFramework
             if (Recording != null)
             {
                 await Recording.DisposeAsync(save);
+
+                if (Mode == RecordedTestMode.Record && save)
+                {
+                    AssertTestProxyToolIsInstalled();
+                }
             }
 
-            _proxy?.CheckForErrors();
+            if (_proxy != null)
+            {
+                await _proxy.CheckProxyOutputAsync();
+            }
         }
 
         protected internal override object InstrumentClient(Type clientType, object client, IEnumerable<IInterceptor> preInterceptors)
@@ -432,6 +572,76 @@ namespace Azure.Core.TestFramework
                 return Task.Delay(playbackDelayMilliseconds.Value);
             }
             return Task.CompletedTask;
+        }
+
+        private void AssertTestProxyToolIsInstalled()
+        {
+            if (s_ranTestProxyValidation ||
+                TestEnvironment.GlobalIsRunningInCI ||
+                !TestEnvironment.IsWindows ||
+                AssetsJsonPath == null)
+            {
+                return;
+            }
+
+            lock (s_syncLock)
+            {
+                if (s_ranTestProxyValidation)
+                {
+                    return;
+                }
+
+                s_ranTestProxyValidation = true;
+
+                try
+                {
+                    if (IsTestProxyToolInstalled())
+                    {
+                        return;
+                    }
+
+                    string path = Path.Combine(
+                        TestEnvironment.RepositoryRoot,
+                        "eng",
+                        "scripts",
+                        "Install-TestProxyTool.ps1");
+
+                    var processInfo = new ProcessStartInfo("pwsh.exe", path)
+                    {
+                        UseShellExecute = true
+                    };
+
+                    var process = Process.Start(processInfo);
+
+                    if (process != null)
+                    {
+                        process.WaitForExit();
+                    }
+                }
+                catch (Exception)
+                {
+                    // Ignore
+                }
+            }
+        }
+
+        private bool IsTestProxyToolInstalled()
+        {
+            var processInfo = new ProcessStartInfo("dotnet.exe", "tool list --global")
+            {
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            };
+
+            var process = Process.Start(processInfo);
+            var output = process.StandardOutput.ReadToEnd();
+
+            if (process != null)
+            {
+                process.WaitForExit();
+            }
+
+            return output != null && output.Contains("azure.sdk.tools.testproxy");
         }
 
         protected TestRetryHelper TestRetryHelper => new TestRetryHelper(Mode == RecordedTestMode.Playback);

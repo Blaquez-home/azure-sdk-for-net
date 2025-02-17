@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Azure.Core.Cryptography;
 using Azure.Core.Pipeline;
 using Azure.Storage.Cryptography.Models;
+using static Azure.Storage.Cryptography.Models.ClientSideEncryptionVersionExtensions;
 
 namespace Azure.Storage.Cryptography
 {
@@ -74,7 +75,8 @@ namespace Azure.Storage.Cryptography
         {
             switch (encryptionData.EncryptionAgent.EncryptionVersion)
             {
-                case ClientSideEncryptionVersion.V1_0:
+#pragma warning disable CS0618 // obsolete
+                case ClientSideEncryptionVersionInternal.V1_0:
                     return await DecryptReadInternalV1_0(
                         ciphertext,
                         encryptionData,
@@ -82,7 +84,9 @@ namespace Azure.Storage.Cryptography
                         noPadding,
                         async,
                         cancellationToken).ConfigureAwait(false);
-                case ClientSideEncryptionVersion.V2_0:
+#pragma warning restore CS0618 // obsolete
+                case ClientSideEncryptionVersionInternal.V2_0:
+                case ClientSideEncryptionVersionInternal.V2_1:
                     return await DecryptInternalV2_0(
                         ciphertext,
                         encryptionData,
@@ -122,13 +126,16 @@ namespace Azure.Storage.Cryptography
         {
             switch (encryptionData.EncryptionAgent.EncryptionVersion)
             {
-                case ClientSideEncryptionVersion.V1_0:
+#pragma warning disable CS0618 // obsolete
+                case ClientSideEncryptionVersionInternal.V1_0:
                     return await DecryptWholeContentWriteInternalV1_0(
                         plaintextDestination,
                         encryptionData,
                         async,
                         cancellationToken).ConfigureAwait(false);
-                case ClientSideEncryptionVersion.V2_0:
+#pragma warning restore CS0618 // obsolete
+                case ClientSideEncryptionVersionInternal.V2_0:
+                case ClientSideEncryptionVersionInternal.V2_1:
                     return await DecryptInternalV2_0(
                         plaintextDestination,
                         encryptionData,
@@ -312,21 +319,25 @@ namespace Azure.Storage.Cryptography
         {
             if (encryptionData.EncryptionAgent.EncryptionAlgorithm == ClientSideEncryptionAlgorithm.AesCbc256)
             {
-                using (AesCryptoServiceProvider aesProvider = new AesCryptoServiceProvider())
+#if NET6_0_OR_GREATER
+                using (Aes aes = Aes.Create())
+#else
+                using (Aes aes = new AesCryptoServiceProvider())
+#endif
                 {
-                    aesProvider.IV = iv ?? encryptionData.ContentEncryptionIV;
-                    aesProvider.Key = contentEncryptionKey;
+                    aes.IV = iv ?? encryptionData.ContentEncryptionIV;
+                    aes.Key = contentEncryptionKey;
 
                     if (noPadding)
                     {
-                        aesProvider.Padding = PaddingMode.None;
+                        aes.Padding = PaddingMode.None;
                     }
 
                     // Buffer network stream. CryptoStream issues tiny (~16 byte) reads which can lead to resources churn.
                     // By default buffer is 4KB.
                     var bufferedContentStream = new BufferedStream(contentStream);
 
-                    return new CryptoStream(bufferedContentStream, aesProvider.CreateDecryptor(), mode);
+                    return new CryptoStream(bufferedContentStream, aes.CreateDecryptor(), mode);
                 }
             }
 
@@ -394,12 +405,15 @@ namespace Azure.Storage.Cryptography
             Memory<byte> unwrappedKey;
             switch (encryptionData.EncryptionAgent.EncryptionVersion)
             {
-                case ClientSideEncryptionVersion.V1_0:
+#pragma warning disable CS0618 // obsolete
+                case ClientSideEncryptionVersionInternal.V1_0:
                     unwrappedKey = unwrappedContent;
                     break;
+#pragma warning restore CS0618 // obsolete
                 // v2.0 binds content encryption key with content encryption algorithm under a single keywrap.
                 // Separate key from algorithm ID and validate ID match
-                case ClientSideEncryptionVersion.V2_0:
+                case ClientSideEncryptionVersionInternal.V2_0:
+                case ClientSideEncryptionVersionInternal.V2_1:
                     string unwrappedProtocolString = Encoding.UTF8.GetString(
                         unwrappedContent,
                         index: 0,
