@@ -47,26 +47,6 @@ namespace Azure.Storage
         public Uri StorageAccountFileUri => new Uri(TestConfigurations.DefaultTargetTenant.FileServiceEndpoint);
 
         /// <summary>
-        /// Get an Active Directory Tenant ID to use from our test settings.
-        /// </summary>
-        public string ActiveDirectoryTenantId => TestConfigurations.DefaultTargetOAuthTenant.ActiveDirectoryTenantId;
-
-        /// <summary>
-        /// Get an Active Directory Application ID to use from our test settings.
-        /// </summary>
-        public string ActiveDirectoryApplicationId => TestConfigurations.DefaultTargetOAuthTenant.ActiveDirectoryApplicationId;
-
-        /// <summary>
-        /// Get an Active Directory Application Secret to use from our test settings.
-        /// </summary>
-        public string ActiveDirectoryApplicationSecret => TestConfigurations.DefaultTargetOAuthTenant.ActiveDirectoryApplicationSecret;
-
-        /// <summary>
-        /// Get an Active Directory Auth Endpoint to use from our test settings.
-        /// </summary>
-        public Uri ActiveDirectoryAuthEndpoint => new Uri(TestConfigurations.DefaultTargetOAuthTenant.ActiveDirectoryAuthEndpoint);
-
-        /// <summary>
         /// Get a blob endpoint associated with our AD application from our test settings.
         /// </summary>
         public Uri ActiveDirectoryBlobUri => new Uri(TestConfigurations.DefaultTargetOAuthTenant.BlobServiceEndpoint);
@@ -114,6 +94,13 @@ namespace Azure.Storage
             Path.ChangeExtension(Path.GetTempFileName(), extension);
 
         /// <summary>
+        /// Create a temporary path for directories
+        /// </summary>
+        /// <returns>A temporary path for creating files.</returns>
+        public string CreateTempDirectoryPath() =>
+            Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+
+        /// <summary>
         /// Create a temporary file on disk.
         /// </summary>
         /// <param name="content">Optional content for the file.</param>
@@ -122,6 +109,19 @@ namespace Azure.Storage
         {
             string path = CreateTempPath();
             File.WriteAllText(path, content);
+            return path;
+        }
+
+        /// <summary>
+        /// Create a temporary directory tree on disk.
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <returns></returns>
+        public string CreateSampleDirectoryTree()
+        {
+            // TODO: create directory tree
+            string path = CreateTempDirectoryPath();
+            Directory.CreateDirectory(path);
             return path;
         }
     }

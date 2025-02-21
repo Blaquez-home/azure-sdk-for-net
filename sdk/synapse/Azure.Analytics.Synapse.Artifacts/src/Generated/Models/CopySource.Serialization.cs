@@ -6,7 +6,6 @@
 #nullable disable
 
 using System;
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Core;
@@ -19,33 +18,37 @@ namespace Azure.Analytics.Synapse.Artifacts.Models
         void IUtf8JsonSerializable.Write(Utf8JsonWriter writer)
         {
             writer.WriteStartObject();
-            writer.WritePropertyName("type");
+            writer.WritePropertyName("type"u8);
             writer.WriteStringValue(Type);
             if (Optional.IsDefined(SourceRetryCount))
             {
-                writer.WritePropertyName("sourceRetryCount");
-                writer.WriteObjectValue(SourceRetryCount);
+                writer.WritePropertyName("sourceRetryCount"u8);
+                writer.WriteObjectValue<object>(SourceRetryCount);
             }
             if (Optional.IsDefined(SourceRetryWait))
             {
-                writer.WritePropertyName("sourceRetryWait");
-                writer.WriteObjectValue(SourceRetryWait);
+                writer.WritePropertyName("sourceRetryWait"u8);
+                writer.WriteObjectValue<object>(SourceRetryWait);
             }
             if (Optional.IsDefined(MaxConcurrentConnections))
             {
-                writer.WritePropertyName("maxConcurrentConnections");
-                writer.WriteObjectValue(MaxConcurrentConnections);
+                writer.WritePropertyName("maxConcurrentConnections"u8);
+                writer.WriteObjectValue<object>(MaxConcurrentConnections);
             }
             foreach (var item in AdditionalProperties)
             {
                 writer.WritePropertyName(item.Key);
-                writer.WriteObjectValue(item.Value);
+                writer.WriteObjectValue<object>(item.Value);
             }
             writer.WriteEndObject();
         }
 
         internal static CopySource DeserializeCopySource(JsonElement element)
         {
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
             if (element.TryGetProperty("type", out JsonElement discriminator))
             {
                 switch (discriminator.GetString())
@@ -56,9 +59,9 @@ namespace Azure.Analytics.Synapse.Artifacts.Models
                     case "AmazonRedshiftSource": return AmazonRedshiftSource.DeserializeAmazonRedshiftSource(element);
                     case "AvroSource": return AvroSource.DeserializeAvroSource(element);
                     case "AzureBlobFSSource": return AzureBlobFSSource.DeserializeAzureBlobFSSource(element);
+                    case "AzureDatabricksDeltaLakeSource": return AzureDatabricksDeltaLakeSource.DeserializeAzureDatabricksDeltaLakeSource(element);
                     case "AzureDataExplorerSource": return AzureDataExplorerSource.DeserializeAzureDataExplorerSource(element);
                     case "AzureDataLakeStoreSource": return AzureDataLakeStoreSource.DeserializeAzureDataLakeStoreSource(element);
-                    case "AzureDatabricksDeltaLakeSource": return AzureDatabricksDeltaLakeSource.DeserializeAzureDatabricksDeltaLakeSource(element);
                     case "AzureMariaDBSource": return AzureMariaDBSource.DeserializeAzureMariaDBSource(element);
                     case "AzureMySqlSource": return AzureMySqlSource.DeserializeAzureMySqlSource(element);
                     case "AzurePostgreSqlSource": return AzurePostgreSqlSource.DeserializeAzurePostgreSqlSource(element);
@@ -84,6 +87,7 @@ namespace Azure.Analytics.Synapse.Artifacts.Models
                     case "FileSystemSource": return FileSystemSource.DeserializeFileSystemSource(element);
                     case "GoogleAdWordsSource": return GoogleAdWordsSource.DeserializeGoogleAdWordsSource(element);
                     case "GoogleBigQuerySource": return GoogleBigQuerySource.DeserializeGoogleBigQuerySource(element);
+                    case "GoogleBigQueryV2Source": return GoogleBigQueryV2Source.DeserializeGoogleBigQueryV2Source(element);
                     case "GreenplumSource": return GreenplumSource.DeserializeGreenplumSource(element);
                     case "HBaseSource": return HBaseSource.DeserializeHBaseSource(element);
                     case "HdfsSource": return HdfsSource.DeserializeHdfsSource(element);
@@ -94,6 +98,7 @@ namespace Azure.Analytics.Synapse.Artifacts.Models
                     case "InformixSource": return InformixSource.DeserializeInformixSource(element);
                     case "JiraSource": return JiraSource.DeserializeJiraSource(element);
                     case "JsonSource": return JsonSource.DeserializeJsonSource(element);
+                    case "LakeHouseTableSource": return LakeHouseTableSource.DeserializeLakeHouseTableSource(element);
                     case "MagentoSource": return MagentoSource.DeserializeMagentoSource(element);
                     case "MariaDBSource": return MariaDBSource.DeserializeMariaDBSource(element);
                     case "MarketoSource": return MarketoSource.DeserializeMarketoSource(element);
@@ -113,6 +118,7 @@ namespace Azure.Analytics.Synapse.Artifacts.Models
                     case "PaypalSource": return PaypalSource.DeserializePaypalSource(element);
                     case "PhoenixSource": return PhoenixSource.DeserializePhoenixSource(element);
                     case "PostgreSqlSource": return PostgreSqlSource.DeserializePostgreSqlSource(element);
+                    case "PostgreSqlV2Source": return PostgreSqlV2Source.DeserializePostgreSqlV2Source(element);
                     case "PrestoSource": return PrestoSource.DeserializePrestoSource(element);
                     case "QuickBooksSource": return QuickBooksSource.DeserializeQuickBooksSource(element);
                     case "RelationalSource": return RelationalSource.DeserializeRelationalSource(element);
@@ -120,17 +126,22 @@ namespace Azure.Analytics.Synapse.Artifacts.Models
                     case "RestSource": return RestSource.DeserializeRestSource(element);
                     case "SalesforceMarketingCloudSource": return SalesforceMarketingCloudSource.DeserializeSalesforceMarketingCloudSource(element);
                     case "SalesforceServiceCloudSource": return SalesforceServiceCloudSource.DeserializeSalesforceServiceCloudSource(element);
+                    case "SalesforceServiceCloudV2Source": return SalesforceServiceCloudV2Source.DeserializeSalesforceServiceCloudV2Source(element);
                     case "SalesforceSource": return SalesforceSource.DeserializeSalesforceSource(element);
+                    case "SalesforceV2Source": return SalesforceV2Source.DeserializeSalesforceV2Source(element);
                     case "SapBwSource": return SapBwSource.DeserializeSapBwSource(element);
                     case "SapCloudForCustomerSource": return SapCloudForCustomerSource.DeserializeSapCloudForCustomerSource(element);
                     case "SapEccSource": return SapEccSource.DeserializeSapEccSource(element);
                     case "SapHanaSource": return SapHanaSource.DeserializeSapHanaSource(element);
+                    case "SapOdpSource": return SapOdpSource.DeserializeSapOdpSource(element);
                     case "SapOpenHubSource": return SapOpenHubSource.DeserializeSapOpenHubSource(element);
                     case "SapTableSource": return SapTableSource.DeserializeSapTableSource(element);
                     case "ServiceNowSource": return ServiceNowSource.DeserializeServiceNowSource(element);
+                    case "ServiceNowV2Source": return ServiceNowV2Source.DeserializeServiceNowV2Source(element);
                     case "SharePointOnlineListSource": return SharePointOnlineListSource.DeserializeSharePointOnlineListSource(element);
                     case "ShopifySource": return ShopifySource.DeserializeShopifySource(element);
                     case "SnowflakeSource": return SnowflakeSource.DeserializeSnowflakeSource(element);
+                    case "SnowflakeV2Source": return SnowflakeV2Source.DeserializeSnowflakeV2Source(element);
                     case "SparkSource": return SparkSource.DeserializeSparkSource(element);
                     case "SqlDWSource": return SqlDWSource.DeserializeSqlDWSource(element);
                     case "SqlMISource": return SqlMISource.DeserializeSqlMISource(element);
@@ -141,59 +152,30 @@ namespace Azure.Analytics.Synapse.Artifacts.Models
                     case "TabularSource": return TabularSource.DeserializeTabularSource(element);
                     case "TeradataSource": return TeradataSource.DeserializeTeradataSource(element);
                     case "VerticaSource": return VerticaSource.DeserializeVerticaSource(element);
+                    case "WarehouseSource": return WarehouseSource.DeserializeWarehouseSource(element);
                     case "WebSource": return WebSource.DeserializeWebSource(element);
                     case "XeroSource": return XeroSource.DeserializeXeroSource(element);
                     case "XmlSource": return XmlSource.DeserializeXmlSource(element);
                     case "ZohoSource": return ZohoSource.DeserializeZohoSource(element);
                 }
             }
-            string type = default;
-            Optional<object> sourceRetryCount = default;
-            Optional<object> sourceRetryWait = default;
-            Optional<object> maxConcurrentConnections = default;
-            IDictionary<string, object> additionalProperties = default;
-            Dictionary<string, object> additionalPropertiesDictionary = new Dictionary<string, object>();
-            foreach (var property in element.EnumerateObject())
-            {
-                if (property.NameEquals("type"))
-                {
-                    type = property.Value.GetString();
-                    continue;
-                }
-                if (property.NameEquals("sourceRetryCount"))
-                {
-                    if (property.Value.ValueKind == JsonValueKind.Null)
-                    {
-                        property.ThrowNonNullablePropertyIsNull();
-                        continue;
-                    }
-                    sourceRetryCount = property.Value.GetObject();
-                    continue;
-                }
-                if (property.NameEquals("sourceRetryWait"))
-                {
-                    if (property.Value.ValueKind == JsonValueKind.Null)
-                    {
-                        property.ThrowNonNullablePropertyIsNull();
-                        continue;
-                    }
-                    sourceRetryWait = property.Value.GetObject();
-                    continue;
-                }
-                if (property.NameEquals("maxConcurrentConnections"))
-                {
-                    if (property.Value.ValueKind == JsonValueKind.Null)
-                    {
-                        property.ThrowNonNullablePropertyIsNull();
-                        continue;
-                    }
-                    maxConcurrentConnections = property.Value.GetObject();
-                    continue;
-                }
-                additionalPropertiesDictionary.Add(property.Name, property.Value.GetObject());
-            }
-            additionalProperties = additionalPropertiesDictionary;
-            return new CopySource(type, sourceRetryCount.Value, sourceRetryWait.Value, maxConcurrentConnections.Value, additionalProperties);
+            return UnknownCopySource.DeserializeUnknownCopySource(element);
+        }
+
+        /// <summary> Deserializes the model from a raw response. </summary>
+        /// <param name="response"> The response to deserialize the model from. </param>
+        internal static CopySource FromResponse(Response response)
+        {
+            using var document = JsonDocument.Parse(response.Content);
+            return DeserializeCopySource(document.RootElement);
+        }
+
+        /// <summary> Convert into a <see cref="RequestContent"/>. </summary>
+        internal virtual RequestContent ToRequestContent()
+        {
+            var content = new Utf8JsonRequestContent();
+            content.JsonWriter.WriteObjectValue(this);
+            return content;
         }
 
         internal partial class CopySourceConverter : JsonConverter<CopySource>
@@ -202,6 +184,7 @@ namespace Azure.Analytics.Synapse.Artifacts.Models
             {
                 writer.WriteObjectValue(model);
             }
+
             public override CopySource Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
                 using var document = JsonDocument.ParseValue(ref reader);

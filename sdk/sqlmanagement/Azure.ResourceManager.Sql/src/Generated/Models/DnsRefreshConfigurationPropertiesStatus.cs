@@ -24,16 +24,19 @@ namespace Azure.ResourceManager.Sql.Models
 
         private const string SucceededValue = "Succeeded";
         private const string FailedValue = "Failed";
+        private const string InProgressValue = "InProgress";
 
         /// <summary> Succeeded. </summary>
         public static DnsRefreshConfigurationPropertiesStatus Succeeded { get; } = new DnsRefreshConfigurationPropertiesStatus(SucceededValue);
         /// <summary> Failed. </summary>
         public static DnsRefreshConfigurationPropertiesStatus Failed { get; } = new DnsRefreshConfigurationPropertiesStatus(FailedValue);
+        /// <summary> InProgress. </summary>
+        public static DnsRefreshConfigurationPropertiesStatus InProgress { get; } = new DnsRefreshConfigurationPropertiesStatus(InProgressValue);
         /// <summary> Determines if two <see cref="DnsRefreshConfigurationPropertiesStatus"/> values are the same. </summary>
         public static bool operator ==(DnsRefreshConfigurationPropertiesStatus left, DnsRefreshConfigurationPropertiesStatus right) => left.Equals(right);
         /// <summary> Determines if two <see cref="DnsRefreshConfigurationPropertiesStatus"/> values are not the same. </summary>
         public static bool operator !=(DnsRefreshConfigurationPropertiesStatus left, DnsRefreshConfigurationPropertiesStatus right) => !left.Equals(right);
-        /// <summary> Converts a string to a <see cref="DnsRefreshConfigurationPropertiesStatus"/>. </summary>
+        /// <summary> Converts a <see cref="string"/> to a <see cref="DnsRefreshConfigurationPropertiesStatus"/>. </summary>
         public static implicit operator DnsRefreshConfigurationPropertiesStatus(string value) => new DnsRefreshConfigurationPropertiesStatus(value);
 
         /// <inheritdoc />
@@ -44,7 +47,7 @@ namespace Azure.ResourceManager.Sql.Models
 
         /// <inheritdoc />
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+        public override int GetHashCode() => _value != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(_value) : 0;
         /// <inheritdoc />
         public override string ToString() => _value;
     }

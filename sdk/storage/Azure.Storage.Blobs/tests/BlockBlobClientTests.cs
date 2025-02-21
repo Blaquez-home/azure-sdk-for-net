@@ -89,7 +89,7 @@ namespace Azure.Storage.Blobs.Test
 
             // Act
             TestHelper.AssertExpectedException(
-                () => new BlockBlobClient(httpUri, Tenants.GetOAuthCredential()),
+                () => new BlockBlobClient(httpUri, TestEnvironment.Credential),
                  new ArgumentException("Cannot use TokenCredential without HTTPS."));
         }
 
@@ -284,7 +284,10 @@ namespace Azure.Storage.Blobs.Test
                 blockBlobClient.StageBlockAsync(
                     base64BlockId: string.Empty,
                     content: new MemoryStream(),
-                    conditions: conditions),
+                    options: new BlockBlobStageBlockOptions
+                    {
+                        Conditions = conditions
+                    }),
                 e =>
                 {
                     Assert.IsTrue(e.Message.Contains($"StageBlock does not support the {invalidCondition} condition(s)."));
@@ -293,6 +296,7 @@ namespace Azure.Storage.Blobs.Test
         }
 
         [RecordedTest]
+        [LiveOnly(Reason = "Encryption Key cannot be stored in recordings.")]
         public async Task StageBlockAsync_CPK()
         {
             await using DisposingContainer test = await GetTestContainerAsync();
@@ -374,9 +378,12 @@ namespace Azure.Storage.Blobs.Test
                 Response<BlockInfo> response = await blob.StageBlockAsync(
                     base64BlockId: ToBase64(GetNewBlockName()),
                     content: stream,
-                    conditions: new BlobRequestConditions
+                    options: new BlockBlobStageBlockOptions
                     {
-                        LeaseId = leaseId
+                        Conditions = new BlobRequestConditions
+                        {
+                            LeaseId = leaseId
+                        }
                     });
 
                 // Assert
@@ -407,9 +414,12 @@ namespace Azure.Storage.Blobs.Test
                     blob.StageBlockAsync(
                         base64BlockId: ToBase64(GetNewBlockName()),
                         content: stream,
-                        conditions: new BlobRequestConditions
+                        options: new BlockBlobStageBlockOptions
                         {
-                            LeaseId = garbageLeaseId
+                            Conditions = new BlobRequestConditions
+                            {
+                                LeaseId = garbageLeaseId
+                            }
                         }),
                     e => Assert.AreEqual("LeaseNotPresentWithBlobOperation", e.ErrorCode));
             }
@@ -446,7 +456,7 @@ namespace Azure.Storage.Blobs.Test
                 new IOException("Simulated stream fault"),
                 () => timesFaulted++))
             {
-                await blobFaulty.StageBlockAsync(ToBase64(blockName), stream, null, null, progressHandler: progressHandler);
+                await blobFaulty.StageBlockAsync(ToBase64(blockName), stream, null, null, progressHandler: progressHandler, default);
 
                 await WaitForProgressAsync(progressBag, data.LongLength);
                 Assert.IsTrue(progressBag.Count > 1, "Too few progress received");
@@ -509,7 +519,10 @@ namespace Azure.Storage.Blobs.Test
                 Response<BlockInfo> response = await blob.StageBlockAsync(
                     base64BlockId: ToBase64(GetNewBlockName()),
                     content: stream,
-                    progressHandler: progress);
+                    options: new BlockBlobStageBlockOptions
+                    {
+                        ProgressHandler = progress
+                    });
             }
 
             // Assert
@@ -597,8 +610,32 @@ namespace Azure.Storage.Blobs.Test
 
             // Act
             await RetryAsync(
-                async () => await destBlob.StageBlockFromUriAsync(sourceBlob.Uri, ToBase64(GetNewBlockName())),
+                async () => await destBlob.StageBlockFromUriAsync(
+                    sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                    ToBase64(GetNewBlockName())),
                 _retryStageBlockFromUri);
+        }
+
+        [Ignore("https://github.com/Azure/azure-sdk-for-net/issues/44324")]
+        [RecordedTest]
+        [ServiceVersion(Min = BlobClientOptions.ServiceVersion.V2024_08_04)]
+        public async Task StageBlobFromUriAsync_SourceErrorAndStatusCode()
+        {
+            // Arrange
+            var constants = TestConstants.Create(this);
+            await using DisposingContainer test = await GetTestContainerAsync(publicAccessType: PublicAccessType.None);
+            BlockBlobClient sourceBlob = InstrumentClient(test.Container.GetBlockBlobClient(GetNewBlobName()));
+            BlockBlobClient destBlob = InstrumentClient(test.Container.GetBlockBlobClient(GetNewBlobName()));
+
+            // Act
+            await TestHelper.AssertExpectedExceptionAsync<RequestFailedException>(
+                destBlob.StageBlockFromUriAsync(sourceBlob.Uri, ToBase64(GetNewBlockName())),
+                e =>
+                {
+                    Assert.IsTrue(e.Message.Contains("CopySourceStatusCode: 409"));
+                    Assert.IsTrue(e.Message.Contains("CopySourceErrorCode: PublicAccessNotPermitted"));
+                    Assert.IsTrue(e.Message.Contains("CopySourceErrorMessage: Public access is not permitted on this storage account."));
+                });
         }
 
         [RecordedTest]
@@ -673,7 +710,9 @@ namespace Azure.Storage.Blobs.Test
 
             // Act
             await RetryAsync(
-                async () => await destBlob.StageBlockFromUriAsync(sourceBlob.Uri, ToBase64(GetNewBlockName())),
+                async () => await destBlob.StageBlockFromUriAsync(
+                    sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                    ToBase64(GetNewBlockName())),
                 _retryStageBlockFromUri);
         }
 
@@ -698,7 +737,7 @@ namespace Azure.Storage.Blobs.Test
 
             // Act
             Response<BlockInfo> response = await destBlob.StageBlockFromUriAsync(
-                sourceBlob.Uri,
+                sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
                 ToBase64(GetNewBlockName()));
 
             // Assert
@@ -730,7 +769,7 @@ namespace Azure.Storage.Blobs.Test
             // Act
             await RetryAsync(
                 async () => await destBlob.StageBlockFromUriAsync(
-                    sourceUri: sourceBlob.Uri,
+                    sourceUri: sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
                     base64BlockId: ToBase64(GetNewBlockName()),
                     options: options),
                 _retryStageBlockFromUri);
@@ -765,7 +804,7 @@ namespace Azure.Storage.Blobs.Test
             // Act
             await RetryAsync(
                 async () => await destBlob.StageBlockFromUriAsync(
-                    sourceUri: sourceBlob.Uri,
+                    sourceUri: sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
                     base64BlockId: ToBase64(GetNewBlockName()),
                     options: options),
                 _retryStageBlockFromUri);
@@ -797,7 +836,7 @@ namespace Azure.Storage.Blobs.Test
             await TestHelper.AssertExpectedExceptionAsync<RequestFailedException>(
                 RetryAsync(
                     async () => await destBlob.StageBlockFromUriAsync(
-                        sourceUri: sourceBlob.Uri,
+                        sourceUri: sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
                         base64BlockId: ToBase64(GetNewBlockName()),
                         options: options),
                     _retryStageBlockFromUri),
@@ -838,7 +877,7 @@ namespace Azure.Storage.Blobs.Test
             // Act
             await RetryAsync(
                 async () => await destBlob.StageBlockFromUriAsync(
-                    sourceUri: sourceBlob.Uri,
+                    sourceUri: sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
                     base64BlockId: ToBase64(GetNewBlockName()),
                     options: options),
                 _retryStageBlockFromUri);
@@ -878,7 +917,7 @@ namespace Azure.Storage.Blobs.Test
             await TestHelper.AssertExpectedExceptionAsync<RequestFailedException>(
                 RetryAsync(
                     async () => await destBlob.StageBlockFromUriAsync(
-                        sourceUri: sourceBlob.Uri,
+                        sourceUri: sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
                         base64BlockId: ToBase64(GetNewBlockName()),
                         options: options),
                     _retryStageBlockFromUri),
@@ -916,7 +955,7 @@ namespace Azure.Storage.Blobs.Test
                 // Act
                 await RetryAsync(
                     async () => await destBlob.StageBlockFromUriAsync(
-                        sourceUri: sourceBlob.Uri,
+                        sourceUri: sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
                         base64BlockId: ToBase64(GetNewBlockName()),
                         options: options),
                     _retryStageBlockFromUri);
@@ -963,6 +1002,9 @@ namespace Azure.Storage.Blobs.Test
         }
 
         [RecordedTest]
+        // Net462 is sending the source SAS expiry unencoded to the service, while net6 and net7 sending it encoded.
+        // Both are valid, but make this test non-recordable.
+        [LiveOnly]
         public async Task StageBlockFromUriAsync_NonAsciiSourceUri()
         {
             await using DisposingContainer test = await GetTestContainerAsync();
@@ -981,7 +1023,9 @@ namespace Azure.Storage.Blobs.Test
 
             // Act
             await RetryAsync(
-                async () => await destBlob.StageBlockFromUriAsync(sourceBlob.Uri, ToBase64(GetNewBlockName())),
+                async () => await destBlob.StageBlockFromUriAsync(
+                    sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                    ToBase64(GetNewBlockName())),
                 _retryStageBlockFromUri);
         }
 
@@ -990,7 +1034,7 @@ namespace Azure.Storage.Blobs.Test
         public async Task StageBlockFromUriAsync_SourceBearerToken()
         {
             // Arrange
-            BlobServiceClient serviceClient = BlobsClientBuilder.GetServiceClient_OAuth();
+            BlobServiceClient serviceClient = GetServiceClient_OAuth();
             await using DisposingContainer test = await GetTestContainerAsync(
                 service: serviceClient,
                 publicAccessType: PublicAccessType.None);
@@ -1029,7 +1073,7 @@ namespace Azure.Storage.Blobs.Test
         public async Task StageBlockFromUriAsync_SourceBearerTokenFail()
         {
             // Arrange
-            BlobServiceClient serviceClient = BlobsClientBuilder.GetServiceClient_OAuth();
+            BlobServiceClient serviceClient = BlobsClientBuilder.GetServiceClient_OAuth(TestEnvironment.Credential);
             await using DisposingContainer test = await GetTestContainerAsync(
                 service: serviceClient,
                 publicAccessType: PublicAccessType.None);
@@ -1204,6 +1248,7 @@ namespace Azure.Storage.Blobs.Test
         }
 
         [RecordedTest]
+        [LiveOnly(Reason = "Encryption Key cannot be stored in recordings.")]
         public async Task CommitBlockListAsync_CPK()
         {
             await using DisposingContainer test = await GetTestContainerAsync();
@@ -1689,6 +1734,31 @@ namespace Azure.Storage.Blobs.Test
         }
 
         [RecordedTest]
+        [ServiceVersion(Min = BlobClientOptions.ServiceVersion.V2021_12_02)]
+        public async Task CommitBlockListAsync_ColdTier()
+        {
+            // Arrange
+            await using DisposingContainer test = await GetTestContainerAsync();
+            BlockBlobClient blob = InstrumentClient(test.Container.GetBlockBlobClient(GetNewBlobName()));
+            byte[] data = GetRandomBuffer(Size);
+            string blockName = GetNewBlockName();
+
+            // Act
+            using Stream stream = new MemoryStream(data);
+            await blob.StageBlockAsync(ToBase64(blockName), stream);
+            string[] commitList = new string[]
+            {
+                ToBase64(blockName),
+            };
+
+            await blob.CommitBlockListAsync(commitList, accessTier: AccessTier.Cold);
+
+            // Assert
+            Response<BlobProperties> response = await blob.GetPropertiesAsync();
+            Assert.AreEqual("Cold", response.Value.AccessTier);
+        }
+
+        [RecordedTest]
         public async Task GetBlockListAsync()
         {
             await using DisposingContainer test = await GetTestContainerAsync();
@@ -2071,6 +2141,31 @@ namespace Azure.Storage.Blobs.Test
         }
 
         [RecordedTest]
+        [ServiceVersion(Min = BlobClientOptions.ServiceVersion.V2021_12_02)]
+        public async Task UploadAsync_AccessTier_Cold()
+        {
+            // Arrange
+            await using DisposingContainer test = await GetTestContainerAsync();
+
+            BlockBlobClient blob = InstrumentClient(test.Container.GetBlockBlobClient(GetNewBlobName()));
+            byte[] data = GetRandomBuffer(Size);
+
+            BlobUploadOptions options = new BlobUploadOptions
+            {
+                AccessTier = AccessTier.Cold
+            };
+
+            // Act
+            using Stream stream = new MemoryStream(data);
+            await blob.UploadAsync(content: stream, options: options);
+
+            // Assert
+            Response<BlobProperties> response = await blob.GetPropertiesAsync();
+            Assert.AreEqual("Cold", response.Value.AccessTier);
+        }
+
+        [RecordedTest]
+        [LiveOnly(Reason = "Encryption Key cannot be stored in recordings.")]
         public async Task UploadAsync_CPK()
         {
             await using DisposingContainer test = await GetTestContainerAsync();
@@ -2320,6 +2415,38 @@ namespace Azure.Storage.Blobs.Test
                     blob.UploadAsync(content: stream),
                     e => Assert.AreEqual("content", e.ParamName));
             }
+        }
+
+        [RecordedTest]
+        public async Task UploadAsync_NullOptions()
+        {
+            await using DisposingContainer test = await GetTestContainerAsync();
+
+            // Arrange
+            var blockBlobName = GetNewBlobName();
+            BlockBlobClient blob = InstrumentClient(test.Container.GetBlockBlobClient(blockBlobName));
+            var data = GetRandomBuffer(Size);
+
+            // Act
+            Response<BlobContentInfo> response;
+            using (var stream = new MemoryStream(data))
+            {
+                response = await blob.UploadAsync(
+                    content: stream,
+                    options: null);
+            }
+
+            // Assert
+            // Ensure that we grab the whole ETag value from the service without removing the quotes
+            Assert.AreEqual(response.Value.ETag.ToString(), $"\"{response.GetRawResponse().Headers.ETag}\"");
+            IList<BlobItem> blobs = await test.Container.GetBlobsAsync().ToListAsync();
+            Assert.AreEqual(1, blobs.Count);
+            Assert.AreEqual(blockBlobName, blobs.First().Name);
+
+            Response<BlobDownloadInfo> downloadResponse = await blob.DownloadAsync();
+            var actual = new MemoryStream();
+            await downloadResponse.Value.Content.CopyToAsync(actual);
+            TestHelper.AssertSequenceEqual(data, actual.ToArray());
         }
 
         [RecordedTest]
@@ -2649,7 +2776,8 @@ namespace Azure.Storage.Blobs.Test
             await sourceBlob.UploadAsync(stream, uploadOptions);
 
             // Act
-            Response<BlobContentInfo> uploadResponse = await destBlob.SyncUploadFromUriAsync(sourceBlob.Uri);
+            Response<BlobContentInfo> uploadResponse = await destBlob.SyncUploadFromUriAsync(
+                sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)));
 
             // Assert
             Assert.AreNotEqual(default(ETag), uploadResponse.Value.ETag);
@@ -2726,8 +2854,30 @@ namespace Azure.Storage.Blobs.Test
         }
 
         [RecordedTest]
+        [Ignore("https://github.com/Azure/azure-sdk-for-net/issues/44324")]
+        [ServiceVersion(Min = BlobClientOptions.ServiceVersion.V2024_08_04)]
+        public async Task SyncUploadFromUriAsync_SourceErrorAndStatusCode()
+        {
+            // Arrange
+            var constants = TestConstants.Create(this);
+            await using DisposingContainer test = await GetTestContainerAsync(publicAccessType: PublicAccessType.None);
+            BlockBlobClient sourceBlob = InstrumentClient(test.Container.GetBlockBlobClient(GetNewBlobName()));
+            BlockBlobClient destBlob = InstrumentClient(test.Container.GetBlockBlobClient(GetNewBlobName()));
+
+            // Act
+            await TestHelper.AssertExpectedExceptionAsync<RequestFailedException>(
+                destBlob.SyncUploadFromUriAsync(sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1))),
+                e =>
+                {
+                    Assert.IsTrue(e.Message.Contains("CopySourceStatusCode: 409"));
+                    Assert.IsTrue(e.Message.Contains("CopySourceErrorCode: PublicAccessNotPermitted"));
+                    Assert.IsTrue(e.Message.Contains("CopySourceErrorMessage: Public access is not permitted on this storage account."));
+                });
+        }
+
+        [RecordedTest]
         [ServiceVersion(Min = BlobClientOptions.ServiceVersion.V2020_04_08)]
-        public async Task SyncUploadFromUriAsync_OverwiteSourceBlobProperties()
+        public async Task SyncUploadFromUriAsync_OverwriteSourceBlobProperties()
         {
             // Arrange
             var constants = TestConstants.Create(this);
@@ -2753,14 +2903,15 @@ namespace Azure.Storage.Blobs.Test
                     ContentLanguage = constants.ContentLanguage,
                     ContentType = constants.ContentType
                 },
-                // TODO service bug.  https://github.com/Azure/azure-sdk-for-net/issues/15969
-                // Metadata = metadata,
+                Metadata = metadata,
                 Tags = tags,
                 AccessTier = AccessTier.Hot
             };
 
             // Act
-            await destBlob.SyncUploadFromUriAsync(sourceBlob.Uri, options: options);
+            await destBlob.SyncUploadFromUriAsync(
+                sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                options: options);
 
             // Assert
 
@@ -2778,8 +2929,7 @@ namespace Azure.Storage.Blobs.Test
             Assert.AreEqual(constants.ContentLanguage, response.Value.ContentLanguage);
             Assert.AreEqual(constants.ContentDisposition, response.Value.ContentDisposition);
             Assert.AreEqual(constants.CacheControl, response.Value.CacheControl);
-            // TODO service bug.  https://github.com/Azure/azure-sdk-for-net/issues/15969
-            //AssertDictionaryEquality(metadata, response.Value.Metadata);
+            AssertDictionaryEquality(metadata, response.Value.Metadata);
             Assert.AreEqual(tags.Count, response.Value.TagCount);
             Assert.AreEqual(AccessTier.Hot.ToString(), response.Value.AccessTier);
         }
@@ -2810,7 +2960,9 @@ namespace Azure.Storage.Blobs.Test
                 };
 
                 // Act
-                await destBlob.SyncUploadFromUriAsync(sourceBlob.Uri, options: options);
+                await destBlob.SyncUploadFromUriAsync(
+                    sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                    options: options);
 
                 // Assert
 
@@ -2850,7 +3002,9 @@ namespace Azure.Storage.Blobs.Test
 
                 // Act
                 await TestHelper.AssertExpectedExceptionAsync<RequestFailedException>(
-                    destBlob.SyncUploadFromUriAsync(sourceBlob.Uri, options: options),
+                    destBlob.SyncUploadFromUriAsync(
+                        sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                        options: options),
                     e => Assert.IsTrue(BlobErrorCode.TargetConditionNotMet.ToString() == e.ErrorCode
                         || BlobErrorCode.ConditionNotMet.ToString() == e.ErrorCode));
             }
@@ -2881,7 +3035,9 @@ namespace Azure.Storage.Blobs.Test
                 };
 
                 // Act
-                await destBlob.SyncUploadFromUriAsync(sourceBlob.Uri, options: options);
+                await destBlob.SyncUploadFromUriAsync(
+                    sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                    options: options);
 
                 // Assert
 
@@ -2960,7 +3116,9 @@ namespace Azure.Storage.Blobs.Test
             };
 
             // Act
-            await destBlob.SyncUploadFromUriAsync(sourceBlob.Uri, options: options);
+            await destBlob.SyncUploadFromUriAsync(
+                sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                options: options);
 
             // Assert
 
@@ -2999,7 +3157,9 @@ namespace Azure.Storage.Blobs.Test
 
             // Act
             await TestHelper.AssertExpectedExceptionAsync<RequestFailedException>(
-                destBlob.SyncUploadFromUriAsync(sourceBlob.Uri, options: options),
+                destBlob.SyncUploadFromUriAsync(
+                    sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                    options: options),
                 e => Assert.AreEqual(BlobErrorCode.ConditionNotMet.ToString(), e.ErrorCode));
         }
 
@@ -3032,7 +3192,9 @@ namespace Azure.Storage.Blobs.Test
             };
 
             // Act
-            await destBlob.SyncUploadFromUriAsync(sourceBlob.Uri, options: options);
+            await destBlob.SyncUploadFromUriAsync(
+                sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                options: options);
 
             // Assert
 
@@ -3070,12 +3232,15 @@ namespace Azure.Storage.Blobs.Test
 
             // Act
             await TestHelper.AssertExpectedExceptionAsync<RequestFailedException>(
-                destBlob.SyncUploadFromUriAsync(sourceBlob.Uri, options: options),
+                destBlob.SyncUploadFromUriAsync(
+                    sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                    options: options),
                 e => Assert.AreEqual(BlobErrorCode.LeaseNotPresentWithBlobOperation.ToString(), e.ErrorCode));
         }
 
         [RecordedTest]
         [ServiceVersion(Min = BlobClientOptions.ServiceVersion.V2020_04_08)]
+        [LiveOnly(Reason = "Encryption Key cannot be stored in recordings.")]
         public async Task SyncUploadFromUriAsync_CPK()
         {
             // Arrange
@@ -3092,7 +3257,8 @@ namespace Azure.Storage.Blobs.Test
             await sourceBlob.UploadAsync(stream);
 
             // Act
-            Response<BlobContentInfo> response = await destBlob.SyncUploadFromUriAsync(sourceBlob.Uri);
+            Response<BlobContentInfo> response = await destBlob.SyncUploadFromUriAsync(
+                sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)));
 
             // Assert
             Assert.AreEqual(customerProvidedKey.EncryptionKeyHash, response.Value.EncryptionKeySha256);
@@ -3115,7 +3281,8 @@ namespace Azure.Storage.Blobs.Test
             await sourceBlob.UploadAsync(stream);
 
             // Act
-            Response<BlobContentInfo> response = await destBlob.SyncUploadFromUriAsync(sourceBlob.Uri);
+            Response<BlobContentInfo> response = await destBlob.SyncUploadFromUriAsync(
+                sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)));
 
             // Assert
             Assert.AreEqual(TestConfigDefault.EncryptionScope, response.Value.EncryptionScope);
@@ -3143,7 +3310,8 @@ namespace Azure.Storage.Blobs.Test
             };
 
             // Act
-            Response<BlobContentInfo> response = await destBlob.SyncUploadFromUriAsync(sourceBlob.Uri, options: options);
+            Response<BlobContentInfo> response = await destBlob.SyncUploadFromUriAsync(
+                sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)), options: options);
 
             // Assert
             Assert.AreEqual(sourceContentMd5, response.Value.ContentHash);
@@ -3173,7 +3341,9 @@ namespace Azure.Storage.Blobs.Test
 
             // Act
             await TestHelper.AssertExpectedExceptionAsync<RequestFailedException>(
-                destBlob.SyncUploadFromUriAsync(sourceBlob.Uri, options: options),
+                destBlob.SyncUploadFromUriAsync(
+                    sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                    options: options),
                 e => Assert.AreEqual(BlobErrorCode.Md5Mismatch.ToString(), e.ErrorCode));
         }
 
@@ -3193,7 +3363,9 @@ namespace Azure.Storage.Blobs.Test
             await sourceBlob.UploadAsync(stream);
 
             // Act
-            await destBlob.SyncUploadFromUriAsync(sourceBlob.Uri, overwrite: true);
+            await destBlob.SyncUploadFromUriAsync(
+                sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                overwrite: true);
 
             // Assert
 
@@ -3222,7 +3394,9 @@ namespace Azure.Storage.Blobs.Test
 
             // Act
             await TestHelper.AssertExpectedExceptionAsync<RequestFailedException>(
-                destBlob.SyncUploadFromUriAsync(sourceBlob.Uri, overwrite: false),
+                destBlob.SyncUploadFromUriAsync(
+                    sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)),
+                    overwrite: false),
                 e => Assert.AreEqual(BlobErrorCode.BlobAlreadyExists.ToString(), e.ErrorCode));
         }
 
@@ -3231,7 +3405,7 @@ namespace Azure.Storage.Blobs.Test
         public async Task SyncUploadFromUriAsync_SourceBearerToken()
         {
             // Arrange
-            BlobServiceClient serviceClient = BlobsClientBuilder.GetServiceClient_OAuth();
+            BlobServiceClient serviceClient = BlobsClientBuilder.GetServiceClient_OAuth(TestEnvironment.Credential);
             await using DisposingContainer test = await GetTestContainerAsync(
                 service: serviceClient,
                 publicAccessType: PublicAccessType.None);
@@ -3266,7 +3440,7 @@ namespace Azure.Storage.Blobs.Test
         public async Task SyncUploadFromUriAsync_SourceBearerTokenFail()
         {
             // Arrange
-            BlobServiceClient serviceClient = BlobsClientBuilder.GetServiceClient_OAuth();
+            BlobServiceClient serviceClient = GetServiceClient_OAuth();
             await using DisposingContainer test = await GetTestContainerAsync(
                 service: serviceClient,
                 publicAccessType: PublicAccessType.None);
@@ -3360,6 +3534,35 @@ namespace Azure.Storage.Blobs.Test
         }
 
         [RecordedTest]
+        [ServiceVersion(Min = BlobClientOptions.ServiceVersion.V2021_12_02)]
+        public async Task SyncUploadFromUriAsync_AccessTier_Cold()
+        {
+            // Arrange
+            var constants = TestConstants.Create(this);
+            await using DisposingContainer test = await GetTestContainerAsync();
+            BlockBlobClient sourceBlob = InstrumentClient(test.Container.GetBlockBlobClient(GetNewBlobName()));
+            BlockBlobClient destBlob = InstrumentClient(test.Container.GetBlockBlobClient(GetNewBlobName()));
+
+            // Upload data to source blob
+            byte[] data = GetRandomBuffer(Constants.KB);
+            using Stream stream = new MemoryStream(data);
+            await sourceBlob.UploadAsync(stream);
+
+            BlobSyncUploadFromUriOptions options = new BlobSyncUploadFromUriOptions
+            {
+                AccessTier = AccessTier.Cold
+            };
+
+            // Act
+            await destBlob.SyncUploadFromUriAsync(
+                sourceBlob.GenerateSasUri(BlobSasPermissions.Read, Recording.UtcNow.AddHours(1)), options);
+
+            // Assert
+            Response<BlobProperties> response = await destBlob.GetPropertiesAsync();
+            Assert.AreEqual("Cold", response.Value.AccessTier);
+        }
+
+        [RecordedTest]
         public async Task WithCustomerProvidedKey()
         {
             // Arrange
@@ -3407,7 +3610,7 @@ namespace Azure.Storage.Blobs.Test
             mock = new Mock<BlockBlobClient>(new Uri("https://test/test"), new BlobClientOptions()).Object;
             mock = new Mock<BlockBlobClient>(new Uri("https://test/test"), Tenants.GetNewSharedKeyCredentials(), new BlobClientOptions()).Object;
             mock = new Mock<BlockBlobClient>(new Uri("https://test/test"), new AzureSasCredential("foo"), new BlobClientOptions()).Object;
-            mock = new Mock<BlockBlobClient>(new Uri("https://test/test"), Tenants.GetOAuthCredential(Tenants.TestConfigHierarchicalNamespace), new BlobClientOptions()).Object;
+            mock = new Mock<BlockBlobClient>(new Uri("https://test/test"), TestEnvironment.Credential, new BlobClientOptions()).Object;
         }
 
         private RequestConditions BuildRequestConditions(AccessConditionParameters parameters)

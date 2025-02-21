@@ -10,7 +10,7 @@ namespace Azure.Core.Amqp
     /// Represents the AMQP address.
     /// <seealso href="http://docs.oasis-open.org/amqp/core/v1.0/os/amqp-core-messaging-v1.0-os.html#type-address-string"/>.
     /// </summary>
-    public struct AmqpAddress : IEquatable<AmqpAddress>
+    public readonly struct AmqpAddress : IEquatable<AmqpAddress>
     {
         private readonly string _address;
 
@@ -44,7 +44,7 @@ namespace Azure.Core.Amqp
         /// <see langword="true" /> if the specified object is equal to the current object; otherwise, <see langword="false" />.
         /// </returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is AmqpAddress address)
             {

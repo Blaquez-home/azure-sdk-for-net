@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.AppService.Models;
@@ -33,8 +32,19 @@ namespace Azure.ResourceManager.AppService
         {
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
-            _apiVersion = apiVersion ?? "2021-02-01";
+            _apiVersion = apiVersion ?? "2024-04-01";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
+        }
+
+        internal RequestUriBuilder CreateListRequestUri(string subscriptionId)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Web/deletedSites", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListRequest(string subscriptionId)
@@ -59,7 +69,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DeletedWebAppCollection>> ListAsync(string subscriptionId, CancellationToken cancellationToken = default)
+        public async Task<Response<DeletedWebAppListResult>> ListAsync(string subscriptionId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
 
@@ -69,9 +79,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DeletedWebAppCollection value = default;
+                        DeletedWebAppListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DeletedWebAppCollection.DeserializeDeletedWebAppCollection(document.RootElement);
+                        value = DeletedWebAppListResult.DeserializeDeletedWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -84,7 +94,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DeletedWebAppCollection> List(string subscriptionId, CancellationToken cancellationToken = default)
+        public Response<DeletedWebAppListResult> List(string subscriptionId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
 
@@ -94,9 +104,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DeletedWebAppCollection value = default;
+                        DeletedWebAppListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DeletedWebAppCollection.DeserializeDeletedWebAppCollection(document.RootElement);
+                        value = DeletedWebAppListResult.DeserializeDeletedWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -104,7 +114,20 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
-        internal HttpMessage CreateListByLocationRequest(string subscriptionId, string location)
+        internal RequestUriBuilder CreateListByLocationRequestUri(string subscriptionId, AzureLocation location)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Web/locations/", false);
+            uri.AppendPath(location, true);
+            uri.AppendPath("/deletedSites", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateListByLocationRequest(string subscriptionId, AzureLocation location)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -125,14 +148,13 @@ namespace Azure.ResourceManager.AppService
 
         /// <summary> Description for Get all deleted apps for a subscription at location. </summary>
         /// <param name="subscriptionId"> Your Azure subscription ID. This is a GUID-formatted string (e.g. 00000000-0000-0000-0000-000000000000). </param>
-        /// <param name="location"> The String to use. </param>
+        /// <param name="location"> The <see cref="AzureLocation"/> to use. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DeletedWebAppCollection>> ListByLocationAsync(string subscriptionId, string location, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
+        public async Task<Response<DeletedWebAppListResult>> ListByLocationAsync(string subscriptionId, AzureLocation location, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateListByLocationRequest(subscriptionId, location);
             await _pipeline.SendAsync(message, cancellationToken).ConfigureAwait(false);
@@ -140,9 +162,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DeletedWebAppCollection value = default;
+                        DeletedWebAppListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DeletedWebAppCollection.DeserializeDeletedWebAppCollection(document.RootElement);
+                        value = DeletedWebAppListResult.DeserializeDeletedWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -152,14 +174,13 @@ namespace Azure.ResourceManager.AppService
 
         /// <summary> Description for Get all deleted apps for a subscription at location. </summary>
         /// <param name="subscriptionId"> Your Azure subscription ID. This is a GUID-formatted string (e.g. 00000000-0000-0000-0000-000000000000). </param>
-        /// <param name="location"> The String to use. </param>
+        /// <param name="location"> The <see cref="AzureLocation"/> to use. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DeletedWebAppCollection> ListByLocation(string subscriptionId, string location, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
+        public Response<DeletedWebAppListResult> ListByLocation(string subscriptionId, AzureLocation location, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateListByLocationRequest(subscriptionId, location);
             _pipeline.Send(message, cancellationToken);
@@ -167,9 +188,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DeletedWebAppCollection value = default;
+                        DeletedWebAppListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DeletedWebAppCollection.DeserializeDeletedWebAppCollection(document.RootElement);
+                        value = DeletedWebAppListResult.DeserializeDeletedWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -177,7 +198,21 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
-        internal HttpMessage CreateGetDeletedWebAppByLocationRequest(string subscriptionId, string location, string deletedSiteId)
+        internal RequestUriBuilder CreateGetDeletedWebAppByLocationRequestUri(string subscriptionId, AzureLocation location, string deletedSiteId)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Web/locations/", false);
+            uri.AppendPath(location, true);
+            uri.AppendPath("/deletedSites/", false);
+            uri.AppendPath(deletedSiteId, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateGetDeletedWebAppByLocationRequest(string subscriptionId, AzureLocation location, string deletedSiteId)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -199,15 +234,14 @@ namespace Azure.ResourceManager.AppService
 
         /// <summary> Description for Get deleted app for a subscription at location. </summary>
         /// <param name="subscriptionId"> Your Azure subscription ID. This is a GUID-formatted string (e.g. 00000000-0000-0000-0000-000000000000). </param>
-        /// <param name="location"> The String to use. </param>
+        /// <param name="location"> The <see cref="AzureLocation"/> to use. </param>
         /// <param name="deletedSiteId"> The numeric ID of the deleted app, e.g. 12345. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="location"/> or <paramref name="deletedSiteId"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="location"/> or <paramref name="deletedSiteId"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DeletedSiteData>> GetDeletedWebAppByLocationAsync(string subscriptionId, string location, string deletedSiteId, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="deletedSiteId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="deletedSiteId"/> is an empty string, and was expected to be non-empty. </exception>
+        public async Task<Response<DeletedSiteData>> GetDeletedWebAppByLocationAsync(string subscriptionId, AzureLocation location, string deletedSiteId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
             Argument.AssertNotNullOrEmpty(deletedSiteId, nameof(deletedSiteId));
 
             using var message = CreateGetDeletedWebAppByLocationRequest(subscriptionId, location, deletedSiteId);
@@ -228,15 +262,14 @@ namespace Azure.ResourceManager.AppService
 
         /// <summary> Description for Get deleted app for a subscription at location. </summary>
         /// <param name="subscriptionId"> Your Azure subscription ID. This is a GUID-formatted string (e.g. 00000000-0000-0000-0000-000000000000). </param>
-        /// <param name="location"> The String to use. </param>
+        /// <param name="location"> The <see cref="AzureLocation"/> to use. </param>
         /// <param name="deletedSiteId"> The numeric ID of the deleted app, e.g. 12345. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="location"/> or <paramref name="deletedSiteId"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="location"/> or <paramref name="deletedSiteId"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DeletedSiteData> GetDeletedWebAppByLocation(string subscriptionId, string location, string deletedSiteId, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="deletedSiteId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="deletedSiteId"/> is an empty string, and was expected to be non-empty. </exception>
+        public Response<DeletedSiteData> GetDeletedWebAppByLocation(string subscriptionId, AzureLocation location, string deletedSiteId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
             Argument.AssertNotNullOrEmpty(deletedSiteId, nameof(deletedSiteId));
 
             using var message = CreateGetDeletedWebAppByLocationRequest(subscriptionId, location, deletedSiteId);
@@ -253,6 +286,14 @@ namespace Azure.ResourceManager.AppService
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListNextPageRequestUri(string nextLink, string subscriptionId)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListNextPageRequest(string nextLink, string subscriptionId)
@@ -275,7 +316,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/> or <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DeletedWebAppCollection>> ListNextPageAsync(string nextLink, string subscriptionId, CancellationToken cancellationToken = default)
+        public async Task<Response<DeletedWebAppListResult>> ListNextPageAsync(string nextLink, string subscriptionId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -286,9 +327,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DeletedWebAppCollection value = default;
+                        DeletedWebAppListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DeletedWebAppCollection.DeserializeDeletedWebAppCollection(document.RootElement);
+                        value = DeletedWebAppListResult.DeserializeDeletedWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -302,7 +343,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/> or <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DeletedWebAppCollection> ListNextPage(string nextLink, string subscriptionId, CancellationToken cancellationToken = default)
+        public Response<DeletedWebAppListResult> ListNextPage(string nextLink, string subscriptionId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -313,9 +354,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DeletedWebAppCollection value = default;
+                        DeletedWebAppListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DeletedWebAppCollection.DeserializeDeletedWebAppCollection(document.RootElement);
+                        value = DeletedWebAppListResult.DeserializeDeletedWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -323,7 +364,15 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
-        internal HttpMessage CreateListByLocationNextPageRequest(string nextLink, string subscriptionId, string location)
+        internal RequestUriBuilder CreateListByLocationNextPageRequestUri(string nextLink, string subscriptionId, AzureLocation location)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
+        }
+
+        internal HttpMessage CreateListByLocationNextPageRequest(string nextLink, string subscriptionId, AzureLocation location)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -340,15 +389,14 @@ namespace Azure.ResourceManager.AppService
         /// <summary> Description for Get all deleted apps for a subscription at location. </summary>
         /// <param name="nextLink"> The URL to the next page of results. </param>
         /// <param name="subscriptionId"> Your Azure subscription ID. This is a GUID-formatted string (e.g. 00000000-0000-0000-0000-000000000000). </param>
-        /// <param name="location"> The String to use. </param>
+        /// <param name="location"> The <see cref="AzureLocation"/> to use. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DeletedWebAppCollection>> ListByLocationNextPageAsync(string nextLink, string subscriptionId, string location, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/> or <paramref name="subscriptionId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
+        public async Task<Response<DeletedWebAppListResult>> ListByLocationNextPageAsync(string nextLink, string subscriptionId, AzureLocation location, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateListByLocationNextPageRequest(nextLink, subscriptionId, location);
             await _pipeline.SendAsync(message, cancellationToken).ConfigureAwait(false);
@@ -356,9 +404,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DeletedWebAppCollection value = default;
+                        DeletedWebAppListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DeletedWebAppCollection.DeserializeDeletedWebAppCollection(document.RootElement);
+                        value = DeletedWebAppListResult.DeserializeDeletedWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -369,15 +417,14 @@ namespace Azure.ResourceManager.AppService
         /// <summary> Description for Get all deleted apps for a subscription at location. </summary>
         /// <param name="nextLink"> The URL to the next page of results. </param>
         /// <param name="subscriptionId"> Your Azure subscription ID. This is a GUID-formatted string (e.g. 00000000-0000-0000-0000-000000000000). </param>
-        /// <param name="location"> The String to use. </param>
+        /// <param name="location"> The <see cref="AzureLocation"/> to use. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/> or <paramref name="location"/> is null. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="location"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DeletedWebAppCollection> ListByLocationNextPage(string nextLink, string subscriptionId, string location, CancellationToken cancellationToken = default)
+        /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/> or <paramref name="subscriptionId"/> is null. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
+        public Response<DeletedWebAppListResult> ListByLocationNextPage(string nextLink, string subscriptionId, AzureLocation location, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
-            Argument.AssertNotNullOrEmpty(location, nameof(location));
 
             using var message = CreateListByLocationNextPageRequest(nextLink, subscriptionId, location);
             _pipeline.Send(message, cancellationToken);
@@ -385,9 +432,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DeletedWebAppCollection value = default;
+                        DeletedWebAppListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DeletedWebAppCollection.DeserializeDeletedWebAppCollection(document.RootElement);
+                        value = DeletedWebAppListResult.DeserializeDeletedWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:

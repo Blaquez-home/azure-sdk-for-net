@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.ServiceBus.Models;
@@ -33,8 +32,25 @@ namespace Azure.ResourceManager.ServiceBus
         {
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
-            _apiVersion = apiVersion ?? "2021-06-01-preview";
+            _apiVersion = apiVersion ?? "2024-01-01";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
+        }
+
+        internal RequestUriBuilder CreateListRequestUri(string subscriptionId, string resourceGroupName, string namespaceName, string queueName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.ServiceBus/namespaces/", false);
+            uri.AppendPath(namespaceName, true);
+            uri.AppendPath("/queues/", false);
+            uri.AppendPath(queueName, true);
+            uri.AppendPath("/authorizationRules", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListRequest(string subscriptionId, string resourceGroupName, string namespaceName, string queueName)
@@ -62,13 +78,13 @@ namespace Azure.ResourceManager.ServiceBus
 
         /// <summary> Gets all authorization rules for a queue. </summary>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/> or <paramref name="queueName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/> or <paramref name="queueName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ServiceBusAuthorizationRuleListResult>> ListAsync(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, CancellationToken cancellationToken = default)
+        public async Task<Response<SBAuthorizationRuleListResult>> ListAsync(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -81,9 +97,9 @@ namespace Azure.ResourceManager.ServiceBus
             {
                 case 200:
                     {
-                        ServiceBusAuthorizationRuleListResult value = default;
+                        SBAuthorizationRuleListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ServiceBusAuthorizationRuleListResult.DeserializeServiceBusAuthorizationRuleListResult(document.RootElement);
+                        value = SBAuthorizationRuleListResult.DeserializeSBAuthorizationRuleListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -93,13 +109,13 @@ namespace Azure.ResourceManager.ServiceBus
 
         /// <summary> Gets all authorization rules for a queue. </summary>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/> or <paramref name="queueName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/> or <paramref name="queueName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ServiceBusAuthorizationRuleListResult> List(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, CancellationToken cancellationToken = default)
+        public Response<SBAuthorizationRuleListResult> List(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -112,14 +128,32 @@ namespace Azure.ResourceManager.ServiceBus
             {
                 case 200:
                     {
-                        ServiceBusAuthorizationRuleListResult value = default;
+                        SBAuthorizationRuleListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ServiceBusAuthorizationRuleListResult.DeserializeServiceBusAuthorizationRuleListResult(document.RootElement);
+                        value = SBAuthorizationRuleListResult.DeserializeSBAuthorizationRuleListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateCreateOrUpdateRequestUri(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, ServiceBusAuthorizationRuleData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.ServiceBus/namespaces/", false);
+            uri.AppendPath(namespaceName, true);
+            uri.AppendPath("/queues/", false);
+            uri.AppendPath(queueName, true);
+            uri.AppendPath("/authorizationRules/", false);
+            uri.AppendPath(authorizationRuleName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateCreateOrUpdateRequest(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, ServiceBusAuthorizationRuleData data)
@@ -144,7 +178,7 @@ namespace Azure.ResourceManager.ServiceBus
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(data);
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -152,7 +186,7 @@ namespace Azure.ResourceManager.ServiceBus
 
         /// <summary> Creates an authorization rule for a queue. </summary>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="authorizationRuleName"> The authorization rule name. </param>
@@ -187,7 +221,7 @@ namespace Azure.ResourceManager.ServiceBus
 
         /// <summary> Creates an authorization rule for a queue. </summary>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="authorizationRuleName"> The authorization rule name. </param>
@@ -220,6 +254,24 @@ namespace Azure.ResourceManager.ServiceBus
             }
         }
 
+        internal RequestUriBuilder CreateDeleteRequestUri(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.ServiceBus/namespaces/", false);
+            uri.AppendPath(namespaceName, true);
+            uri.AppendPath("/queues/", false);
+            uri.AppendPath(queueName, true);
+            uri.AppendPath("/authorizationRules/", false);
+            uri.AppendPath(authorizationRuleName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateDeleteRequest(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName)
         {
             var message = _pipeline.CreateMessage();
@@ -246,7 +298,7 @@ namespace Azure.ResourceManager.ServiceBus
 
         /// <summary> Deletes a queue authorization rule. </summary>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="authorizationRuleName"> The authorization rule name. </param>
@@ -275,7 +327,7 @@ namespace Azure.ResourceManager.ServiceBus
 
         /// <summary> Deletes a queue authorization rule. </summary>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="authorizationRuleName"> The authorization rule name. </param>
@@ -300,6 +352,24 @@ namespace Azure.ResourceManager.ServiceBus
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetRequestUri(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.ServiceBus/namespaces/", false);
+            uri.AppendPath(namespaceName, true);
+            uri.AppendPath("/queues/", false);
+            uri.AppendPath(queueName, true);
+            uri.AppendPath("/authorizationRules/", false);
+            uri.AppendPath(authorizationRuleName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetRequest(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName)
@@ -328,7 +398,7 @@ namespace Azure.ResourceManager.ServiceBus
 
         /// <summary> Gets an authorization rule for a queue by rule name. </summary>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="authorizationRuleName"> The authorization rule name. </param>
@@ -363,7 +433,7 @@ namespace Azure.ResourceManager.ServiceBus
 
         /// <summary> Gets an authorization rule for a queue by rule name. </summary>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="authorizationRuleName"> The authorization rule name. </param>
@@ -396,6 +466,25 @@ namespace Azure.ResourceManager.ServiceBus
             }
         }
 
+        internal RequestUriBuilder CreateListKeysRequestUri(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.ServiceBus/namespaces/", false);
+            uri.AppendPath(namespaceName, true);
+            uri.AppendPath("/queues/", false);
+            uri.AppendPath(queueName, true);
+            uri.AppendPath("/authorizationRules/", false);
+            uri.AppendPath(authorizationRuleName, true);
+            uri.AppendPath("/ListKeys", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListKeysRequest(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName)
         {
             var message = _pipeline.CreateMessage();
@@ -423,14 +512,14 @@ namespace Azure.ResourceManager.ServiceBus
 
         /// <summary> Primary and secondary connection strings to the queue. </summary>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="authorizationRuleName"> The authorization rule name. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/>, <paramref name="queueName"/> or <paramref name="authorizationRuleName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/>, <paramref name="queueName"/> or <paramref name="authorizationRuleName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AccessKeys>> ListKeysAsync(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, CancellationToken cancellationToken = default)
+        public async Task<Response<ServiceBusAccessKeys>> ListKeysAsync(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -444,9 +533,9 @@ namespace Azure.ResourceManager.ServiceBus
             {
                 case 200:
                     {
-                        AccessKeys value = default;
+                        ServiceBusAccessKeys value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AccessKeys.DeserializeAccessKeys(document.RootElement);
+                        value = ServiceBusAccessKeys.DeserializeServiceBusAccessKeys(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -456,14 +545,14 @@ namespace Azure.ResourceManager.ServiceBus
 
         /// <summary> Primary and secondary connection strings to the queue. </summary>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="authorizationRuleName"> The authorization rule name. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/>, <paramref name="queueName"/> or <paramref name="authorizationRuleName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/>, <paramref name="queueName"/> or <paramref name="authorizationRuleName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AccessKeys> ListKeys(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, CancellationToken cancellationToken = default)
+        public Response<ServiceBusAccessKeys> ListKeys(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -477,9 +566,9 @@ namespace Azure.ResourceManager.ServiceBus
             {
                 case 200:
                     {
-                        AccessKeys value = default;
+                        ServiceBusAccessKeys value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AccessKeys.DeserializeAccessKeys(document.RootElement);
+                        value = ServiceBusAccessKeys.DeserializeServiceBusAccessKeys(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -487,7 +576,26 @@ namespace Azure.ResourceManager.ServiceBus
             }
         }
 
-        internal HttpMessage CreateRegenerateKeysRequest(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, RegenerateAccessKeyContent content)
+        internal RequestUriBuilder CreateRegenerateKeysRequestUri(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, ServiceBusRegenerateAccessKeyContent content)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.ServiceBus/namespaces/", false);
+            uri.AppendPath(namespaceName, true);
+            uri.AppendPath("/queues/", false);
+            uri.AppendPath(queueName, true);
+            uri.AppendPath("/authorizationRules/", false);
+            uri.AppendPath(authorizationRuleName, true);
+            uri.AppendPath("/regenerateKeys", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateRegenerateKeysRequest(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, ServiceBusRegenerateAccessKeyContent content)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -510,7 +618,7 @@ namespace Azure.ResourceManager.ServiceBus
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content0 = new Utf8JsonRequestContent();
-            content0.JsonWriter.WriteObjectValue(content);
+            content0.JsonWriter.WriteObjectValue(content, ModelSerializationExtensions.WireOptions);
             request.Content = content0;
             _userAgent.Apply(message);
             return message;
@@ -518,7 +626,7 @@ namespace Azure.ResourceManager.ServiceBus
 
         /// <summary> Regenerates the primary or secondary connection strings to the queue. </summary>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="authorizationRuleName"> The authorization rule name. </param>
@@ -526,7 +634,7 @@ namespace Azure.ResourceManager.ServiceBus
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/>, <paramref name="queueName"/>, <paramref name="authorizationRuleName"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/>, <paramref name="queueName"/> or <paramref name="authorizationRuleName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AccessKeys>> RegenerateKeysAsync(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, RegenerateAccessKeyContent content, CancellationToken cancellationToken = default)
+        public async Task<Response<ServiceBusAccessKeys>> RegenerateKeysAsync(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, ServiceBusRegenerateAccessKeyContent content, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -541,9 +649,9 @@ namespace Azure.ResourceManager.ServiceBus
             {
                 case 200:
                     {
-                        AccessKeys value = default;
+                        ServiceBusAccessKeys value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AccessKeys.DeserializeAccessKeys(document.RootElement);
+                        value = ServiceBusAccessKeys.DeserializeServiceBusAccessKeys(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -553,7 +661,7 @@ namespace Azure.ResourceManager.ServiceBus
 
         /// <summary> Regenerates the primary or secondary connection strings to the queue. </summary>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="authorizationRuleName"> The authorization rule name. </param>
@@ -561,7 +669,7 @@ namespace Azure.ResourceManager.ServiceBus
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/>, <paramref name="queueName"/>, <paramref name="authorizationRuleName"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/>, <paramref name="queueName"/> or <paramref name="authorizationRuleName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AccessKeys> RegenerateKeys(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, RegenerateAccessKeyContent content, CancellationToken cancellationToken = default)
+        public Response<ServiceBusAccessKeys> RegenerateKeys(string subscriptionId, string resourceGroupName, string namespaceName, string queueName, string authorizationRuleName, ServiceBusRegenerateAccessKeyContent content, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -576,14 +684,22 @@ namespace Azure.ResourceManager.ServiceBus
             {
                 case 200:
                     {
-                        AccessKeys value = default;
+                        ServiceBusAccessKeys value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AccessKeys.DeserializeAccessKeys(document.RootElement);
+                        value = ServiceBusAccessKeys.DeserializeServiceBusAccessKeys(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string namespaceName, string queueName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string namespaceName, string queueName)
@@ -603,13 +719,13 @@ namespace Azure.ResourceManager.ServiceBus
         /// <summary> Gets all authorization rules for a queue. </summary>
         /// <param name="nextLink"> The URL to the next page of results. </param>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/> or <paramref name="queueName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/> or <paramref name="queueName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ServiceBusAuthorizationRuleListResult>> ListNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string namespaceName, string queueName, CancellationToken cancellationToken = default)
+        public async Task<Response<SBAuthorizationRuleListResult>> ListNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string namespaceName, string queueName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -623,9 +739,9 @@ namespace Azure.ResourceManager.ServiceBus
             {
                 case 200:
                     {
-                        ServiceBusAuthorizationRuleListResult value = default;
+                        SBAuthorizationRuleListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ServiceBusAuthorizationRuleListResult.DeserializeServiceBusAuthorizationRuleListResult(document.RootElement);
+                        value = SBAuthorizationRuleListResult.DeserializeSBAuthorizationRuleListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -636,13 +752,13 @@ namespace Azure.ResourceManager.ServiceBus
         /// <summary> Gets all authorization rules for a queue. </summary>
         /// <param name="nextLink"> The URL to the next page of results. </param>
         /// <param name="subscriptionId"> Subscription credentials that uniquely identify a Microsoft Azure subscription. The subscription ID forms part of the URI for every service call. </param>
-        /// <param name="resourceGroupName"> Name of the Resource group within the Azure subscription. </param>
+        /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="namespaceName"> The namespace name. </param>
         /// <param name="queueName"> The queue name. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/> or <paramref name="queueName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="namespaceName"/> or <paramref name="queueName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ServiceBusAuthorizationRuleListResult> ListNextPage(string nextLink, string subscriptionId, string resourceGroupName, string namespaceName, string queueName, CancellationToken cancellationToken = default)
+        public Response<SBAuthorizationRuleListResult> ListNextPage(string nextLink, string subscriptionId, string resourceGroupName, string namespaceName, string queueName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -656,9 +772,9 @@ namespace Azure.ResourceManager.ServiceBus
             {
                 case 200:
                     {
-                        ServiceBusAuthorizationRuleListResult value = default;
+                        SBAuthorizationRuleListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ServiceBusAuthorizationRuleListResult.DeserializeServiceBusAuthorizationRuleListResult(document.RootElement);
+                        value = SBAuthorizationRuleListResult.DeserializeSBAuthorizationRuleListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:

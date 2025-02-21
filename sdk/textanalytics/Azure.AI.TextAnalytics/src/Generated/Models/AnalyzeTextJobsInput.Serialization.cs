@@ -17,12 +17,12 @@ namespace Azure.AI.TextAnalytics.Models
             writer.WriteStartObject();
             if (Optional.IsDefined(DisplayName))
             {
-                writer.WritePropertyName("displayName");
+                writer.WritePropertyName("displayName"u8);
                 writer.WriteStringValue(DisplayName);
             }
-            writer.WritePropertyName("analysisInput");
+            writer.WritePropertyName("analysisInput"u8);
             writer.WriteObjectValue(AnalysisInput);
-            writer.WritePropertyName("tasks");
+            writer.WritePropertyName("tasks"u8);
             writer.WriteStartArray();
             foreach (var item in Tasks)
             {
@@ -30,6 +30,14 @@ namespace Azure.AI.TextAnalytics.Models
             }
             writer.WriteEndArray();
             writer.WriteEndObject();
+        }
+
+        /// <summary> Convert into a <see cref="RequestContent"/>. </summary>
+        internal virtual RequestContent ToRequestContent()
+        {
+            var content = new Utf8JsonRequestContent();
+            content.JsonWriter.WriteObjectValue(this);
+            return content;
         }
     }
 }

@@ -16,15 +16,17 @@ namespace Azure.Messaging.ServiceBus.Tests.Samples
             {
                 #region Snippet:ServiceBusCloudEvents
 #if SNIPPET
-                string connectionString = "<connection_string>";
+                string fullyQualifiedNamespace = "<fully_qualified_namespace>";
                 string queueName = "<queue_name>";
+                DefaultAzureCredential credential = new();
 #else
-                string connectionString = TestEnvironment.ServiceBusConnectionString;
+                string fullyQualifiedNamespace = TestEnvironment.FullyQualifiedNamespace;
                 string queueName = scope.QueueName;
+                var credential = TestEnvironment.Credential;
 #endif
 
                 // since ServiceBusClient implements IAsyncDisposable we create it with "await using"
-                await using var client = new ServiceBusClient(connectionString);
+                await using ServiceBusClient client = new(fullyQualifiedNamespace, credential);
 
                 // create the sender
                 ServiceBusSender sender = client.CreateSender(queueName);
@@ -34,7 +36,10 @@ namespace Azure.Messaging.ServiceBus.Tests.Samples
                     "/cloudevents/example/source",
                     "Example.Employee",
                     new Employee { Name = "Homer", Age = 39 });
-                ServiceBusMessage message = new ServiceBusMessage(new BinaryData(cloudEvent));
+                ServiceBusMessage message = new ServiceBusMessage(new BinaryData(cloudEvent))
+                {
+                    ContentType = "application/cloudevents+json"
+                };
 
                 // send the message
                 await sender.SendMessageAsync(message);
@@ -62,6 +67,7 @@ namespace Azure.Messaging.ServiceBus.Tests.Samples
                 #endregion
 
                 Assert.AreEqual("Homer", receivedEmployee.Name);
+                Assert.AreEqual("application/cloudevents+json", receivedMessage.ContentType);
                 Assert.AreEqual(39, receivedEmployee.Age);
                 Assert.IsNull(await CreateNoRetryClient().CreateReceiver(queueName).ReceiveMessageAsync());
             }

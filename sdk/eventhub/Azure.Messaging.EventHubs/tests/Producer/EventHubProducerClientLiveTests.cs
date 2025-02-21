@@ -51,9 +51,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var connection = new EventHubConnection(connectionString, new EventHubConnectionOptions { TransportType = transportType }))
+                await using (var connection = new EventHubConnection(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential, new EventHubConnectionOptions { TransportType = transportType }))
                 await using (var producer = new EventHubProducerClient(connection))
                 {
                     EventData[] events = new[] { new EventData(Encoding.UTF8.GetBytes("AWord")) };
@@ -74,15 +72,13 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
                 var producerOptions = new EventHubProducerClientOptions
                 {
                     RetryOptions = new EventHubsRetryOptions { MaximumRetries = 5 },
                     ConnectionOptions = new EventHubConnectionOptions { TransportType = transportType }
                 };
 
-                await using (var producer = new EventHubProducerClient(connectionString, producerOptions))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential, producerOptions))
                 {
                     EventData[] events = new[] { new EventData(Encoding.UTF8.GetBytes("AWord")) };
                     Assert.That(async () => await producer.SendAsync(events), Throws.Nothing);
@@ -102,8 +98,6 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
                 var producerOptions = new EventHubProducerClientOptions
                 {
                     ConnectionOptions = new EventHubConnectionOptions
@@ -113,7 +107,7 @@ namespace Azure.Messaging.EventHubs.Tests
                     }
                 };
 
-                await using (var producer = new EventHubProducerClient(connectionString, producerOptions))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential, producerOptions))
                 {
                     EventData[] events = new[] { new EventData(Encoding.UTF8.GetBytes("AWord")) };
                     Assert.That(async () => await producer.SendAsync(events), Throws.Nothing);
@@ -131,9 +125,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString, new EventHubProducerClientOptions { Identifier = "CustomIdentif13r!" }))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential, new EventHubProducerClientOptions { Identifier = "CustomIdentif13r!" }))
                 {
                     var events = new[] { new EventData(Encoding.UTF8.GetBytes("AWord")) };
                     Assert.That(async () => await producer.SendAsync(events), Throws.Nothing);
@@ -149,21 +141,127 @@ namespace Azure.Messaging.EventHubs.Tests
         [Test]
         public async Task ProducerCanSendToASpecificPartition()
         {
-            await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
+            await using EventHubScope scope = await EventHubScope.CreateAsync(4);
+            await using var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential);
+
+            using var cancellationSource = new CancellationTokenSource();
+            cancellationSource.CancelAfter(EventHubsTestEnvironment.Instance.TestExecutionTimeLimit);
+
+            var partition = (await producer.GetPartitionIdsAsync(cancellationSource.Token)).First();
+            var sendOptions = new SendEventOptions { PartitionId = partition };
+            var sendCount = 5;
+            var eventsPerSend = 100;
+
+            for (var sendIndex = 0; sendIndex < sendCount; ++sendIndex)
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
+                var events = Enumerable
+                    .Range(0, eventsPerSend)
+                    .Select(index => new EventData($"Batch-{ sendIndex }-Event-{ index }"));
 
-                await using (var connection = new EventHubConnection(connectionString))
+                await producer.SendAsync(events, sendOptions, cancellationSource.Token);
+            }
+
+            // Validate that events were sent to the correct partition..
+
+            var expectedEvents = (sendCount * eventsPerSend);
+            var readEvents = 0;
+
+           await using var consumer = new EventHubConsumerClient(
+               EventHubConsumerClient.DefaultConsumerGroupName,
+               EventHubsTestEnvironment.Instance.FullyQualifiedNamespace,
+               scope.EventHubName,
+               EventHubsTestEnvironment.Instance.Credential);
+
+            try
+            {
+                await foreach (var receivedEvent in consumer.ReadEventsAsync(cancellationSource.Token))
                 {
-                    var partition = (await connection.GetPartitionIdsAsync(DefaultRetryPolicy)).First();
+                    Assert.That(receivedEvent.Data, Is.Not.Null, "No read should have an empty event.");
+                    Assert.That(receivedEvent.Partition.PartitionId, Is.EqualTo(partition), $"The event with body [{ receivedEvent.Data.EventBody }] was not read from the correct partition.");
 
-                    await using (var producer = new EventHubProducerClient(connection))
+                    ++readEvents;
+
+                    if (readEvents >= expectedEvents)
                     {
-                        EventData[] events = new[] { new EventData(Encoding.UTF8.GetBytes("AWord")) };
-                        Assert.That(async () => await producer.SendAsync(events, new SendEventOptions { PartitionId = partition }), Throws.Nothing);
+                        break;
                     }
                 }
             }
+            catch (OperationCanceledException)
+            {
+            }
+
+            Assert.That(cancellationSource.IsCancellationRequested, Is.False, "Cancellation should not have been signaled.");
+            Assert.That(readEvents, Is.EqualTo(expectedEvents), "The expected number of events should have been read.");
+        }
+
+        /// <summary>
+        ///   Verifies that the <see cref="EventHubProducerClient" /> is able to
+        ///   connect to the Event Hubs service and perform operations.
+        /// </summary>
+        ///
+        [Test]
+        public async Task ProducerCanSendAnEventBatchToASpecificPartition()
+        {
+            await using EventHubScope scope = await EventHubScope.CreateAsync(4);
+            await using var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential);
+
+            using var cancellationSource = new CancellationTokenSource();
+            cancellationSource.CancelAfter(EventHubsTestEnvironment.Instance.TestExecutionTimeLimit);
+
+            var partition = (await producer.GetPartitionIdsAsync(cancellationSource.Token)).First();
+            var batchOptions = new CreateBatchOptions { PartitionId = partition };
+            var sendCount = 5;
+            var eventsPerSend = 100;
+
+            for (var sendIndex = 0; sendIndex < sendCount; ++sendIndex)
+            {
+                var batch = await producer.CreateBatchAsync(batchOptions, cancellationSource.Token);
+
+                var events = Enumerable
+                    .Range(0, eventsPerSend)
+                    .Select(index => new EventData($"Batch-{ sendIndex }-Event-{ index }"));
+
+                foreach (var eventData in events)
+                {
+                    Assert.That(batch.TryAdd(eventData), Is.True, $"The event with body [{ eventData.EventBody }] could not be added to the batch.");
+                }
+
+                await producer.SendAsync(batch, cancellationSource.Token);
+            }
+
+            // Validate that events were sent to the correct partition..
+
+            var expectedEvents = (sendCount * eventsPerSend);
+            var readEvents = 0;
+
+            await using var consumer = new EventHubConsumerClient(
+                EventHubConsumerClient.DefaultConsumerGroupName,
+                EventHubsTestEnvironment.Instance.FullyQualifiedNamespace,
+                scope.EventHubName,
+                EventHubsTestEnvironment.Instance.Credential);
+
+            try
+            {
+                await foreach (var receivedEvent in consumer.ReadEventsAsync(cancellationSource.Token))
+                {
+                    Assert.That(receivedEvent.Data, Is.Not.Null, "No read should have an empty event.");
+                    Assert.That(receivedEvent.Partition.PartitionId, Is.EqualTo(partition), $"The event with body [{ receivedEvent.Data.EventBody }] was not read from the correct partition.");
+
+                    ++readEvents;
+
+                    if (readEvents >= expectedEvents)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            Assert.That(cancellationSource.IsCancellationRequested, Is.False, "Cancellation should not have been signaled.");
+            Assert.That(readEvents, Is.EqualTo(expectedEvents), "The expected number of events should have been read.");
         }
 
         /// <summary>
@@ -190,9 +288,7 @@ namespace Azure.Messaging.EventHubs.Tests
                     events[index].Properties["Type"] = $"com.microsoft.test.Type{ index }";
                 }
 
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     Assert.That(async () => await producer.SendAsync(events), Throws.Nothing);
                 }
@@ -207,48 +303,63 @@ namespace Azure.Messaging.EventHubs.Tests
         [Test]
         public async Task ProducerCanSendEventsUsingAPartitionHashKey()
         {
-            await using (EventHubScope scope = await EventHubScope.CreateAsync(2))
+            await using EventHubScope scope = await EventHubScope.CreateAsync(4);
+            await using var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential);
+
+            using var cancellationSource = new CancellationTokenSource();
+            cancellationSource.CancelAfter(EventHubsTestEnvironment.Instance.TestExecutionTimeLimit);
+
+            var sendOptions = new SendEventOptions { PartitionKey = $"pkey={Guid.NewGuid() };" };
+            var sendCount = 5;
+            var eventsPerSend = 100;
+
+            for (var sendIndex = 0; sendIndex < sendCount; ++sendIndex)
             {
-                IEnumerable<EventData> events = Enumerable
-                    .Range(0, 25)
-                    .Select(index => new EventData(Encoding.UTF8.GetBytes(new string('X', index + 5))));
+                var events = Enumerable
+                    .Range(0, eventsPerSend)
+                    .Select(index => new EventData($"Batch-{ sendIndex }-Event-{ index }"));
 
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString))
-                {
-                    var batchOptions = new SendEventOptions { PartitionKey = "some123key-!d" };
-                    Assert.That(async () => await producer.SendAsync(events, batchOptions), Throws.Nothing);
-                }
+                await producer.SendAsync(events, sendOptions, cancellationSource.Token);
             }
-        }
 
-        /// <summary>
-        ///   Verifies that the <see cref="EventHubProducerClient" /> is able to
-        ///   connect to the Event Hubs service and perform operations.
-        /// </summary>
-        ///
-        [Test]
-        public async Task ProducerCanSendMultipleSetsOfEventsUsingAPartitionHashKey()
-        {
-            await using (EventHubScope scope = await EventHubScope.CreateAsync(2))
+            // Validate that events were sent to the correct partition..
+
+            var expectedEvents = (sendCount * eventsPerSend);
+            var readEvents = 0;
+            var firstReadPartition = default(string);
+
+            await using var consumer = new EventHubConsumerClient(
+                EventHubConsumerClient.DefaultConsumerGroupName,
+                EventHubsTestEnvironment.Instance.FullyQualifiedNamespace,
+                scope.EventHubName,
+                EventHubsTestEnvironment.Instance.Credential);
+
+            try
             {
-                var batchOptions = new SendEventOptions { PartitionKey = "some123key-!d" };
-
-                for (var index = 0; index < 5; ++index)
+                await foreach (var receivedEvent in consumer.ReadEventsAsync(cancellationSource.Token))
                 {
-                    IEnumerable<EventData> events = Enumerable
-                        .Range(0, 25)
-                        .Select(index => new EventData(Encoding.UTF8.GetBytes(new string((char)(65 + index), index + 5))));
+                    Assert.That(receivedEvent.Data, Is.Not.Null, "No read should have an empty event.");
 
-                    var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                    await using (var producer = new EventHubProducerClient(connectionString))
+                    if (firstReadPartition == null)
                     {
-                        Assert.That(async () => await producer.SendAsync(events, batchOptions), Throws.Nothing, $"Batch { index } should not have thrown an exception.");
+                        firstReadPartition = receivedEvent.Partition.PartitionId;
+                    }
+
+                    Assert.That(receivedEvent.Partition.PartitionId, Is.EqualTo(firstReadPartition), $"The event with body [{ receivedEvent.Data.EventBody }] was not read from the correct partition.");
+                    ++readEvents;
+
+                    if (readEvents >= expectedEvents)
+                    {
+                        break;
                     }
                 }
             }
+            catch (OperationCanceledException)
+            {
+            }
+
+            Assert.That(cancellationSource.IsCancellationRequested, Is.False, "Cancellation should not have been signaled.");
+            Assert.That(readEvents, Is.EqualTo(expectedEvents), "The expected number of events should have been read.");
         }
 
         /// <summary>
@@ -259,27 +370,70 @@ namespace Azure.Messaging.EventHubs.Tests
         [Test]
         public async Task ProducerCanSendAnEventBatchUsingAPartitionHashKey()
         {
-            await using (EventHubScope scope = await EventHubScope.CreateAsync(2))
+            await using EventHubScope scope = await EventHubScope.CreateAsync(4);
+            await using var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential);
+
+            using var cancellationSource = new CancellationTokenSource();
+            cancellationSource.CancelAfter(EventHubsTestEnvironment.Instance.TestExecutionTimeLimit);
+
+            var batchOptions = new CreateBatchOptions { PartitionKey = $"pkey={Guid.NewGuid() };" };
+            var sendCount = 5;
+            var eventsPerSend = 100;
+
+            for (var sendIndex = 0; sendIndex < sendCount; ++sendIndex)
             {
-                IEnumerable<EventData> events = Enumerable
-                    .Range(0, 25)
-                    .Select(index => new EventData(Encoding.UTF8.GetBytes(new string('X', index + 5))));
+                var batch = await producer.CreateBatchAsync(batchOptions, cancellationSource.Token);
 
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-                var batchOptions = new CreateBatchOptions { PartitionKey = "some123key-!d" };
+                var events = Enumerable
+                    .Range(0, eventsPerSend)
+                    .Select(index => new EventData($"Batch-{ sendIndex }-Event-{ index }"));
 
-                await using (var producer = new EventHubProducerClient(connectionString))
+                foreach (var eventData in events)
                 {
-                    using EventDataBatch batch = await producer.CreateBatchAsync(batchOptions);
+                    Assert.That(batch.TryAdd(eventData), Is.True, $"The event with body [{ eventData.EventBody }] could not be added to the batch.");
+                }
 
-                    foreach (EventData eventData in events)
+                await producer.SendAsync(batch, cancellationSource.Token);
+            }
+
+            // Validate that events were sent to the correct partition..
+
+            var expectedEvents = (sendCount * eventsPerSend);
+            var readEvents = 0;
+            var firstReadPartition = default(string);
+
+            await using var consumer = new EventHubConsumerClient(
+                EventHubConsumerClient.DefaultConsumerGroupName,
+                EventHubsTestEnvironment.Instance.FullyQualifiedNamespace,
+                scope.EventHubName,
+                EventHubsTestEnvironment.Instance.Credential);
+
+            try
+            {
+                await foreach (var receivedEvent in consumer.ReadEventsAsync(cancellationSource.Token))
+                {
+                    Assert.That(receivedEvent.Data, Is.Not.Null, "No read should have an empty event.");
+
+                    if (firstReadPartition == null)
                     {
-                        Assert.That(() => batch.TryAdd(eventData), Is.True, "An event was rejected by the batch; all events should be accepted.");
+                        firstReadPartition = receivedEvent.Partition.PartitionId;
                     }
 
-                    Assert.That(async () => await producer.SendAsync(batch), Throws.Nothing);
+                    Assert.That(receivedEvent.Partition.PartitionId, Is.EqualTo(firstReadPartition), $"The event with body [{ receivedEvent.Data.EventBody }] was not read from the correct partition.");
+                    ++readEvents;
+
+                    if (readEvents >= expectedEvents)
+                    {
+                        break;
+                    }
                 }
             }
+            catch (OperationCanceledException)
+            {
+            }
+
+            Assert.That(cancellationSource.IsCancellationRequested, Is.False, "Cancellation should not have been signaled.");
+            Assert.That(readEvents, Is.EqualTo(expectedEvents), "The expected number of events should have been read.");
         }
 
         /// <summary>
@@ -292,13 +446,14 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString, new EventHubProducerClientOptions { RetryOptions = new EventHubsRetryOptions { TryTimeout = TimeSpan.FromMinutes(5) } }))
+               await using (var producer = new EventHubProducerClient(
+                   EventHubsTestEnvironment.Instance.FullyQualifiedNamespace,
+                   scope.EventHubName,
+                   EventHubsTestEnvironment.Instance.Credential,
+                   new EventHubProducerClientOptions { RetryOptions = new EventHubsRetryOptions { TryTimeout = TimeSpan.FromMinutes(5) } }))
                 {
                     // Actual limit is 1046520 for a single event.
                     EventData[] eventSet = new[] { new EventData(new byte[100000]) };
-
                     Assert.That(async () => await producer.SendAsync(eventSet), Throws.Nothing);
                 }
             }
@@ -314,9 +469,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     EventData[] events = new[]
                     {
@@ -340,9 +493,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     EventData[] events = new[]
                     {
@@ -366,9 +517,11 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString, new EventHubProducerClientOptions { RetryOptions = new EventHubsRetryOptions { TryTimeout = TimeSpan.FromMinutes(5) } }))
+                await using (var producer = new EventHubProducerClient(
+                    EventHubsTestEnvironment.Instance.FullyQualifiedNamespace,
+                    scope.EventHubName,
+                    EventHubsTestEnvironment.Instance.Credential,
+                    new EventHubProducerClientOptions { RetryOptions = new EventHubsRetryOptions { TryTimeout = TimeSpan.FromMinutes(5) } }))
                 {
                     // Actual limit is 1046520 for a single event.
                     EventData[] events = new[]
@@ -393,9 +546,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     using EventDataBatch batch = await producer.CreateBatchAsync();
 
@@ -415,13 +566,13 @@ namespace Azure.Messaging.EventHubs.Tests
         /// </summary>
         ///
         [Test]
-        public async Task ProducerCanSendAnEventBatchUsingAnIdentityCredential()
+        public async Task ProducerCanSendAnEventBatchUsingAConnectionString()
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
                 var credential = EventHubsTestEnvironment.Instance.Credential;
 
-                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, credential))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.EventHubsConnectionString, scope.EventHubName))
                 {
                     using EventDataBatch batch = await producer.CreateBatchAsync();
 
@@ -506,9 +657,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     using EventDataBatch batch = await producer.CreateBatchAsync();
                     batch.TryAdd(new EventData(new BinaryData(Array.Empty<byte>())));
@@ -529,9 +678,11 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString, new EventHubProducerClientOptions { RetryOptions = new EventHubsRetryOptions { TryTimeout = TimeSpan.FromMinutes(5) } }))
+                await using (var producer = new EventHubProducerClient(
+                    EventHubsTestEnvironment.Instance.FullyQualifiedNamespace,
+                    scope.EventHubName,
+                    EventHubsTestEnvironment.Instance.Credential,
+                    new EventHubProducerClientOptions { RetryOptions = new EventHubsRetryOptions { TryTimeout = TimeSpan.FromMinutes(5) } }))
                 {
                     using EventDataBatch batch = await producer.CreateBatchAsync();
 
@@ -553,13 +704,31 @@ namespace Azure.Messaging.EventHubs.Tests
         /// </summary>
         ///
         [Test]
+        public async Task ProducerCanSendWithBinaryApplicationProperties()
+        {
+            await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
+            {
+                await using var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential);
+
+                var eventData = new EventData(Encoding.UTF8.GetBytes("AWord"));
+                eventData.Properties["TestByteArray"] = new byte[] { 0x12, 0x34, 0x56, 0x78 };
+                eventData.Properties["TestArraySegment"] = new ArraySegment<byte>(new byte[] { 0x23, 0x45, 0x67, 0x89 });
+
+                Assert.That(async () => await producer.SendAsync(new[] { eventData }), Throws.Nothing);
+            }
+        }
+
+        /// <summary>
+        ///   Verifies that the <see cref="EventHubProducerClient" /> is able to
+        ///   connect to the Event Hubs service and perform operations.
+        /// </summary>
+        ///
+        [Test]
         public async Task ProducerCannotSendSetLargerThanMaximumSize()
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     // Actual limit is 1046520 for a single event.
 
@@ -581,73 +750,11 @@ namespace Azure.Messaging.EventHubs.Tests
         /// </summary>
         ///
         [Test]
-        public async Task ProducerCanSendSetToASpecificPartition()
-        {
-            await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
-            {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var connection = new EventHubConnection(connectionString))
-                {
-                    var partition = (await connection.GetPartitionIdsAsync(DefaultRetryPolicy)).First();
-
-                    await using (var producer = new EventHubProducerClient(connection))
-                    {
-                        EventData[] events = new[]
-                        {
-                            new EventData(Encoding.UTF8.GetBytes("This is a message")),
-                            new EventData(Encoding.UTF8.GetBytes("This is another message")),
-                            new EventData(Encoding.UTF8.GetBytes("Do we need more messages"))
-                        };
-
-                        Assert.That(async () => await producer.SendAsync(events, new SendEventOptions { PartitionId = partition }), Throws.Nothing);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        ///   Verifies that the <see cref="EventHubProducerClient" /> is able to
-        ///   connect to the Event Hubs service and perform operations.
-        /// </summary>
-        ///
-        [Test]
-        public async Task ProducerCanSendBatchToASpecificPartition()
-        {
-            await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
-            {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var connection = new EventHubConnection(connectionString))
-                {
-                    var partition = (await connection.GetPartitionIdsAsync(DefaultRetryPolicy)).First();
-
-                    await using (var producer = new EventHubProducerClient(connection))
-                    {
-                        using EventDataBatch batch = await producer.CreateBatchAsync(new CreateBatchOptions { PartitionId = partition });
-                        batch.TryAdd(new EventData(Encoding.UTF8.GetBytes("This is a message")));
-                        batch.TryAdd(new EventData(Encoding.UTF8.GetBytes("This is another message")));
-                        batch.TryAdd(new EventData(Encoding.UTF8.GetBytes("Do we need more messages")));
-
-                        Assert.That(async () => await producer.SendAsync(batch), Throws.Nothing);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        ///   Verifies that the <see cref="EventHubProducerClient" /> is able to
-        ///   connect to the Event Hubs service and perform operations.
-        /// </summary>
-        ///
-        [Test]
         public async Task ProducerCanSendWhenPartitionIsNull()
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     EventData[] events = new[] { new EventData(Encoding.UTF8.GetBytes("Will it work")) };
                     Assert.That(async () => await producer.SendAsync(events, new SendEventOptions { PartitionId = null }), Throws.Nothing);
@@ -665,9 +772,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     EventData[] events = new[] { new EventData(Encoding.UTF8.GetBytes("Dummy event")) };
                     Assert.That(async () => await producer.SendAsync(events), Throws.Nothing);
@@ -688,9 +793,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var connection = new EventHubConnection(connectionString))
+                await using (var connection = new EventHubConnection(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 await using (var producer = new EventHubProducerClient(connection))
                 {
                     EventData[] events = new[] { new EventData(Encoding.UTF8.GetBytes("Dummy event")) };
@@ -716,9 +819,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var connection = new EventHubConnection(connectionString))
+                await using (var connection = new EventHubConnection(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     EventData[] events = new[] { new EventData(Encoding.UTF8.GetBytes("Lorem Ipsum")) };
 
@@ -740,9 +841,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var connection = new EventHubConnection(connectionString))
+                await using (var connection = new EventHubConnection(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     var partition = (await connection.GetPartitionIdsAsync(DefaultRetryPolicy)).First();
                     EventData[] events = new[] { new EventData(Encoding.UTF8.GetBytes("I should update stuff")) };
@@ -754,13 +853,11 @@ namespace Azure.Messaging.EventHubs.Tests
                         await producer.SendAsync(events, new SendEventOptions { PartitionId = partition });
 
                         PartitionProperties oldPartitionProperties = await producer.GetPartitionPropertiesAsync(partition);
-
                         Assert.That(oldPartitionProperties, Is.Not.Null, "A set of partition properties should have been returned.");
 
                         await producer.SendAsync(events);
 
                         PartitionProperties newPartitionProperties = await producer.GetPartitionPropertiesAsync(partition);
-
                         Assert.That(newPartitionProperties, Is.Not.Null, "A set of partition properties should have been returned.");
 
                         // The following properties should not have been altered.
@@ -772,7 +869,7 @@ namespace Azure.Messaging.EventHubs.Tests
                         // The following properties should have been updated.
 
                         Assert.That(newPartitionProperties.LastEnqueuedSequenceNumber, Is.GreaterThan(oldPartitionProperties.LastEnqueuedSequenceNumber));
-                        Assert.That(newPartitionProperties.LastEnqueuedOffset, Is.GreaterThan(oldPartitionProperties.LastEnqueuedOffset));
+                        Assert.That(newPartitionProperties.LastEnqueuedOffsetString, Is.GreaterThan(oldPartitionProperties.LastEnqueuedOffsetString));
                     }
                 }
             }
@@ -788,9 +885,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var connection = new EventHubConnection(connectionString))
+                await using (var connection = new EventHubConnection(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     var partition = (await connection.GetPartitionIdsAsync(DefaultRetryPolicy)).First();
 
@@ -825,7 +920,8 @@ namespace Azure.Messaging.EventHubs.Tests
                         // The following properties should have been updated.
 
                         Assert.That(newPartitionProperties.LastEnqueuedSequenceNumber, Is.GreaterThan(oldPartitionProperties.LastEnqueuedSequenceNumber));
-                        Assert.That(newPartitionProperties.LastEnqueuedOffset, Is.GreaterThan(oldPartitionProperties.LastEnqueuedOffset));
+                        Assert.That(newPartitionProperties.LastEnqueuedOffsetString, Is.Not.EqualTo(oldPartitionProperties.LastEnqueuedOffsetString));
+                        Assert.That(newPartitionProperties.LastEnqueuedOffsetString, Is.Not.Null.And.Not.Empty);
                     }
                 }
             }
@@ -841,9 +937,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(2))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var connection = new EventHubConnection(connectionString))
+                await using (var connection = new EventHubConnection(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     var partitionIds = await connection.GetPartitionIdsAsync(DefaultRetryPolicy);
                     EventData[] events = new[] { new EventData(Encoding.UTF8.GetBytes("I should not update stuff")) };
@@ -871,7 +965,7 @@ namespace Azure.Messaging.EventHubs.Tests
                         Assert.That(newPartitionProperties.EventHubName, Is.EqualTo(oldPartitionProperties.EventHubName));
                         Assert.That(newPartitionProperties.BeginningSequenceNumber, Is.EqualTo(oldPartitionProperties.BeginningSequenceNumber));
                         Assert.That(newPartitionProperties.LastEnqueuedSequenceNumber, Is.EqualTo(oldPartitionProperties.LastEnqueuedSequenceNumber));
-                        Assert.That(newPartitionProperties.LastEnqueuedOffset, Is.EqualTo(oldPartitionProperties.LastEnqueuedOffset));
+                        Assert.That(newPartitionProperties.LastEnqueuedOffsetString, Is.EqualTo(oldPartitionProperties.LastEnqueuedOffsetString));
                     }
                 }
             }
@@ -892,9 +986,7 @@ namespace Azure.Messaging.EventHubs.Tests
 
             await using (EventHubScope scope = await EventHubScope.CreateAsync(partitions))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var connection = new EventHubConnection(connectionString))
+                await using (var connection = new EventHubConnection(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     await using (var producer = new EventHubProducerClient(connection))
                     await using (var consumer = new EventHubConsumerClient(EventHubConsumerClient.DefaultConsumerGroupName, connection))
@@ -966,9 +1058,7 @@ namespace Azure.Messaging.EventHubs.Tests
 
             await using (EventHubScope scope = await EventHubScope.CreateAsync(partitions))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var connection = new EventHubConnection(connectionString))
+                await using (var connection = new EventHubConnection(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 await using (var producer = new EventHubProducerClient(connection))
                 await using (var consumer = new EventHubConsumerClient(EventHubConsumerClient.DefaultConsumerGroupName, connection))
                 {
@@ -1035,9 +1125,7 @@ namespace Azure.Messaging.EventHubs.Tests
 
             await using (EventHubScope scope = await EventHubScope.CreateAsync(partitions))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var connection = new EventHubConnection(connectionString))
+                await using (var connection = new EventHubConnection(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 await using (var producer = new EventHubProducerClient(connection))
                 await using (var consumer = new EventHubConsumerClient(EventHubConsumerClient.DefaultConsumerGroupName, connection))
                 {
@@ -1088,36 +1176,6 @@ namespace Azure.Messaging.EventHubs.Tests
 
                     Assert.That(partitionsCount, Is.EqualTo(1));
                     Assert.That(receivedEventsCount, Is.EqualTo(batches));
-                }
-            }
-        }
-
-        /// <summary>
-        ///   Verifies that the <see cref="EventHubProducerClient" /> is able to
-        ///   connect to the Event Hubs service and perform operations.
-        /// </summary>
-        ///
-        [Test]
-        public async Task ProducerCannotSendWhenProxyIsInvalid()
-        {
-            await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
-            {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                var producerOptions = new EventHubProducerClientOptions
-                {
-                    RetryOptions = new EventHubsRetryOptions { TryTimeout = TimeSpan.FromMinutes(2) },
-
-                    ConnectionOptions = new EventHubConnectionOptions
-                    {
-                        Proxy = new WebProxy("http://1.2.3.4:9999"),
-                        TransportType = EventHubsTransportType.AmqpWebSockets
-                    }
-                };
-
-                await using (var invalidProxyProducer = new EventHubProducerClient(connectionString, producerOptions))
-                {
-                    Assert.That(async () => await invalidProxyProducer.SendAsync(new[] { new EventData(new byte[1]) }), Throws.InstanceOf<WebSocketException>().Or.InstanceOf<TimeoutException>());
                 }
             }
         }
@@ -1181,7 +1239,7 @@ namespace Azure.Messaging.EventHubs.Tests
 
                 // Attempt to send and validate the operation was not rejected.
 
-                await using var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName));
+                await using var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential);
                 Assert.That(async () => await producer.SendAsync(new[] { eventData }), Throws.Nothing);
             }
         }
@@ -1202,7 +1260,7 @@ namespace Azure.Messaging.EventHubs.Tests
 
                 // Attempt to send and validate the operation was not rejected.
 
-                await using var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName));
+                await using var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential);
                 Assert.That(async () => await producer.SendAsync(new[] { eventData }), Throws.Nothing);
             }
         }
@@ -1223,7 +1281,7 @@ namespace Azure.Messaging.EventHubs.Tests
 
                 // Attempt to send and validate the operation was not rejected.
 
-                await using var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName));
+                await using var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential);
                 Assert.That(async () => await producer.SendAsync(new[] { eventData }), Throws.Nothing);
             }
         }
@@ -1245,7 +1303,7 @@ namespace Azure.Messaging.EventHubs.Tests
                 var connectionString = EventHubsTestEnvironment.Instance.EventHubsConnectionString;
                 var producerOptions = new EventHubProducerClientOptions { ConnectionOptions = new EventHubConnectionOptions { TransportType = transportType } };
 
-                await using (var producer = new EventHubProducerClient(connectionString, scope.EventHubName, producerOptions))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential, producerOptions))
                 {
                     EventHubProperties properties = await producer.GetEventHubPropertiesAsync();
 
@@ -1272,10 +1330,9 @@ namespace Azure.Messaging.EventHubs.Tests
             await using (EventHubScope scope = await EventHubScope.CreateAsync(partitionCount))
             {
                 var options = new EventHubConnectionOptions();
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
                 var producerOptions = new EventHubProducerClientOptions { ConnectionOptions = new EventHubConnectionOptions { TransportType = transportType } };
 
-                await using (var producer = new EventHubProducerClient(connectionString, scope.EventHubName, producerOptions))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential, producerOptions))
                 {
                     var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(20));
                     var properties = await producer.GetEventHubPropertiesAsync();
@@ -1287,7 +1344,7 @@ namespace Azure.Messaging.EventHubs.Tests
                     Assert.That(partitionProperties.EventHubName, Is.EqualTo(scope.EventHubName).Using((IEqualityComparer<string>)StringComparer.InvariantCultureIgnoreCase), "The Event Hub path should match.");
                     Assert.That(partitionProperties.BeginningSequenceNumber, Is.Not.EqualTo(default(long)), "The beginning sequence number should have been populated.");
                     Assert.That(partitionProperties.LastEnqueuedSequenceNumber, Is.Not.EqualTo(default(long)), "The last sequence number should have been populated.");
-                    Assert.That(partitionProperties.LastEnqueuedOffset, Is.Not.EqualTo(default(long)), "The last offset should have been populated.");
+                    Assert.That(partitionProperties.LastEnqueuedOffsetString, Is.Not.Null.And.Not.Empty, "The last offset should have been populated.");
                 }
             }
         }
@@ -1302,9 +1359,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(4))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     EventHubProperties properties = await producer.GetEventHubPropertiesAsync();
                     var partitions = await producer.GetPartitionIdsAsync();
@@ -1327,9 +1382,7 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString))
+                await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     var partition = (await producer.GetPartitionIdsAsync()).First();
 
@@ -1360,46 +1413,9 @@ namespace Azure.Messaging.EventHubs.Tests
         {
             await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
             {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                await using (var producer = new EventHubProducerClient(connectionString))
+               await using (var producer = new EventHubProducerClient(EventHubsTestEnvironment.Instance.FullyQualifiedNamespace, scope.EventHubName, EventHubsTestEnvironment.Instance.Credential))
                 {
                     Assert.That(async () => await producer.GetPartitionPropertiesAsync(invalidPartition), Throws.TypeOf<ArgumentOutOfRangeException>());
-                }
-            }
-        }
-
-        /// <summary>
-        ///   Verifies that the <see cref="EventHubProducerClient" /> is able to
-        ///   connect to the Event Hubs service.
-        /// </summary>
-        ///
-        [Test]
-        public async Task ProducerCannotRetrieveMetadataWhenProxyIsInvalid()
-        {
-            await using (EventHubScope scope = await EventHubScope.CreateAsync(1))
-            {
-                var connectionString = EventHubsTestEnvironment.Instance.BuildConnectionStringForEventHub(scope.EventHubName);
-
-                var invalidProxyOptions = new EventHubProducerClientOptions
-                {
-                    RetryOptions = new EventHubsRetryOptions { TryTimeout = TimeSpan.FromMinutes(2) },
-
-                    ConnectionOptions = new EventHubConnectionOptions
-                    {
-                        Proxy = new WebProxy("http://1.2.3.4:9999"),
-                        TransportType = EventHubsTransportType.AmqpWebSockets
-                    }
-                };
-
-                await using (var producer = new EventHubProducerClient(connectionString))
-                await using (var invalidProxyProducer = new EventHubProducerClient(connectionString, invalidProxyOptions))
-                {
-                    var partition = (await producer.GetPartitionIdsAsync()).First();
-
-                    Assert.That(async () => await invalidProxyProducer.GetPartitionIdsAsync(), Throws.InstanceOf<WebSocketException>().Or.InstanceOf<TimeoutException>());
-                    Assert.That(async () => await invalidProxyProducer.GetEventHubPropertiesAsync(), Throws.InstanceOf<WebSocketException>().Or.InstanceOf<TimeoutException>());
-                    Assert.That(async () => await invalidProxyProducer.GetPartitionPropertiesAsync(partition), Throws.InstanceOf<WebSocketException>().Or.InstanceOf<TimeoutException>());
                 }
             }
         }

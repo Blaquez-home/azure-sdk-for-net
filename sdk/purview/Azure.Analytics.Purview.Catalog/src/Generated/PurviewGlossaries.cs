@@ -8,13 +8,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 
 namespace Azure.Analytics.Purview.Catalog
 {
-    /// <summary> The PurviewGlossaries service client. </summary>
+    // Data plane generated sub-client.
+    /// <summary> The PurviewGlossaries sub-client. </summary>
     public partial class PurviewGlossaries
     {
         private static readonly string[] AuthorizationScopes = new string[] { "https://purview.azure.net/.default" };
@@ -49,75 +49,25 @@ namespace Azure.Analytics.Purview.Catalog
             _apiVersion = apiVersion;
         }
 
-        /// <summary> Get all glossaries registered with Atlas. </summary>
+        /// <summary>
+        /// [Protocol Method] Get all glossaries registered with Atlas.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
         /// <param name="ignoreTermsAndCategories"> Whether ignore terms and categories. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetGlossariesAsync(int? limit = null, int? offset = null, string sort = null, bool? ignoreTermsAndCategories = null, RequestContext context = null)
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossariesAsync(int?,int?,string,bool?,RequestContext)']/*" />
+        public virtual async Task<Response> GetGlossariesAsync(int? limit, int? offset, string sort, bool? ignoreTermsAndCategories, RequestContext context)
         {
             using var scope = ClientDiagnostics.CreateScope("PurviewGlossaries.GetGlossaries");
             scope.Start();
@@ -133,75 +83,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get all glossaries registered with Atlas. </summary>
+        /// <summary>
+        /// [Protocol Method] Get all glossaries registered with Atlas.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
         /// <param name="ignoreTermsAndCategories"> Whether ignore terms and categories. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetGlossaries(int? limit = null, int? offset = null, string sort = null, bool? ignoreTermsAndCategories = null, RequestContext context = null)
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaries(int?,int?,string,bool?,RequestContext)']/*" />
+        public virtual Response GetGlossaries(int? limit, int? offset, string sort, bool? ignoreTermsAndCategories, RequestContext context)
         {
             using var scope = ClientDiagnostics.CreateScope("PurviewGlossaries.GetGlossaries");
             scope.Start();
@@ -217,124 +117,22 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Create a glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Create a glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='CreateGlossaryAsync(RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> CreateGlossaryAsync(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -353,124 +151,22 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Create a glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Create a glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='CreateGlossary(RequestContent,RequestContext)']/*" />
         public virtual Response CreateGlossary(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -489,132 +185,22 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Create glossary category in bulk. </summary>
+        /// <summary>
+        /// [Protocol Method] Create glossary category in bulk.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='CreateGlossaryCategoriesAsync(RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> CreateGlossaryCategoriesAsync(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -633,132 +219,22 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Create glossary category in bulk. </summary>
+        /// <summary>
+        /// [Protocol Method] Create glossary category in bulk.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='CreateGlossaryCategories(RequestContent,RequestContext)']/*" />
         public virtual Response CreateGlossaryCategories(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -777,132 +253,22 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Create a glossary category. </summary>
+        /// <summary>
+        /// [Protocol Method] Create a glossary category.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='CreateGlossaryCategoryAsync(RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> CreateGlossaryCategoryAsync(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -921,132 +287,22 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Create a glossary category. </summary>
+        /// <summary>
+        /// [Protocol Method] Create a glossary category.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='CreateGlossaryCategory(RequestContent,RequestContext)']/*" />
         public virtual Response CreateGlossaryCategory(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -1065,78 +321,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get specific glossary category by its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Get specific glossary category by its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="categoryGuid"> The globally unique identifier of the category. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="categoryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="categoryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetGlossaryCategoryAsync(string categoryGuid, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryCategoryAsync(string,RequestContext)']/*" />
+        public virtual async Task<Response> GetGlossaryCategoryAsync(string categoryGuid, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(categoryGuid, nameof(categoryGuid));
 
@@ -1154,78 +356,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get specific glossary category by its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Get specific glossary category by its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="categoryGuid"> The globally unique identifier of the category. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="categoryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="categoryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetGlossaryCategory(string categoryGuid, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryCategory(string,RequestContext)']/*" />
+        public virtual Response GetGlossaryCategory(string categoryGuid, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(categoryGuid, nameof(categoryGuid));
 
@@ -1243,134 +391,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update the given glossary category by its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Update the given glossary category by its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="categoryGuid"> The globally unique identifier of the category. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="categoryGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="categoryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='UpdateGlossaryCategoryAsync(string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> UpdateGlossaryCategoryAsync(string categoryGuid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(categoryGuid, nameof(categoryGuid));
@@ -1390,134 +428,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update the given glossary category by its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Update the given glossary category by its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="categoryGuid"> The globally unique identifier of the category. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="categoryGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="categoryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='UpdateGlossaryCategory(string,RequestContent,RequestContext)']/*" />
         public virtual Response UpdateGlossaryCategory(string categoryGuid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(categoryGuid, nameof(categoryGuid));
@@ -1537,21 +465,23 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete a glossary category. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete a glossary category.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="categoryGuid"> The globally unique identifier of the category. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="categoryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="categoryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='DeleteGlossaryCategoryAsync(string,RequestContext)']/*" />
         public virtual async Task<Response> DeleteGlossaryCategoryAsync(string categoryGuid, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(categoryGuid, nameof(categoryGuid));
@@ -1570,21 +500,23 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete a glossary category. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete a glossary category.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="categoryGuid"> The globally unique identifier of the category. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="categoryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="categoryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='DeleteGlossaryCategory(string,RequestContext)']/*" />
         public virtual Response DeleteGlossaryCategory(string categoryGuid, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(categoryGuid, nameof(categoryGuid));
@@ -1603,78 +535,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update the glossary category partially. </summary>
+        /// <summary>
+        /// [Protocol Method] Update the glossary category partially.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="categoryGuid"> The globally unique identifier of the category. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="categoryGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="categoryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='PartialUpdateGlossaryCategoryAsync(string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> PartialUpdateGlossaryCategoryAsync(string categoryGuid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(categoryGuid, nameof(categoryGuid));
@@ -1694,78 +572,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update the glossary category partially. </summary>
+        /// <summary>
+        /// [Protocol Method] Update the glossary category partially.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="categoryGuid"> The globally unique identifier of the category. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="categoryGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="categoryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='PartialUpdateGlossaryCategory(string,RequestContent,RequestContext)']/*" />
         public virtual Response PartialUpdateGlossaryCategory(string categoryGuid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(categoryGuid, nameof(categoryGuid));
@@ -1785,34 +609,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get all related categories (parent and children). Limit, offset, and sort parameters are currently not being enabled and won&apos;t work even they are passed. </summary>
+        /// <summary>
+        /// [Protocol Method] Get all related categories (parent and children). Limit, offset, and sort parameters are currently not being enabled and won't work even they are passed.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="categoryGuid"> The globally unique identifier of the category. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="categoryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="categoryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   categoryGuid: string,
-        ///   description: string,
-        ///   displayText: string,
-        ///   parentCategoryGuid: string,
-        ///   relationGuid: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetRelatedCategoriesAsync(string categoryGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetRelatedCategoriesAsync(string,int?,int?,string,RequestContext)']/*" />
+        public virtual async Task<Response> GetRelatedCategoriesAsync(string categoryGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(categoryGuid, nameof(categoryGuid));
 
@@ -1830,34 +647,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get all related categories (parent and children). Limit, offset, and sort parameters are currently not being enabled and won&apos;t work even they are passed. </summary>
+        /// <summary>
+        /// [Protocol Method] Get all related categories (parent and children). Limit, offset, and sort parameters are currently not being enabled and won't work even they are passed.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="categoryGuid"> The globally unique identifier of the category. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="categoryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="categoryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   categoryGuid: string,
-        ///   description: string,
-        ///   displayText: string,
-        ///   parentCategoryGuid: string,
-        ///   relationGuid: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetRelatedCategories(string categoryGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetRelatedCategories(string,int?,int?,string,RequestContext)']/*" />
+        public virtual Response GetRelatedCategories(string categoryGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(categoryGuid, nameof(categoryGuid));
 
@@ -1875,37 +685,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get all terms associated with the specific category. </summary>
+        /// <summary>
+        /// [Protocol Method] Get all terms associated with the specific category.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="categoryGuid"> The globally unique identifier of the category. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="categoryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="categoryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   description: string,
-        ///   displayText: string,
-        ///   expression: string,
-        ///   relationGuid: string,
-        ///   source: string,
-        ///   status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///   steward: string,
-        ///   termGuid: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetCategoryTermsAsync(string categoryGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetCategoryTermsAsync(string,int?,int?,string,RequestContext)']/*" />
+        public virtual async Task<Response> GetCategoryTermsAsync(string categoryGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(categoryGuid, nameof(categoryGuid));
 
@@ -1923,37 +723,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get all terms associated with the specific category. </summary>
+        /// <summary>
+        /// [Protocol Method] Get all terms associated with the specific category.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="categoryGuid"> The globally unique identifier of the category. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="categoryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="categoryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   description: string,
-        ///   displayText: string,
-        ///   expression: string,
-        ///   relationGuid: string,
-        ///   source: string,
-        ///   status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///   steward: string,
-        ///   termGuid: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetCategoryTerms(string categoryGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetCategoryTerms(string,int?,int?,string,RequestContext)']/*" />
+        public virtual Response GetCategoryTerms(string categoryGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(categoryGuid, nameof(categoryGuid));
 
@@ -1971,223 +761,23 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Create a glossary term. </summary>
+        /// <summary>
+        /// [Protocol Method] Create a glossary term.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='CreateGlossaryTermAsync(RequestContent,bool?,RequestContext)']/*" />
         public virtual async Task<Response> CreateGlossaryTermAsync(RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -2206,223 +796,23 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Create a glossary term. </summary>
+        /// <summary>
+        /// [Protocol Method] Create a glossary term.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='CreateGlossaryTerm(RequestContent,bool?,RequestContext)']/*" />
         public virtual Response CreateGlossaryTerm(RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -2441,125 +831,26 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get a specific glossary term by its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Get a specific glossary term by its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
         /// <param name="excludeRelationshipTypeList"> An array of relationship types which need to be excluded. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetGlossaryTermAsync(string termGuid, bool? includeTermHierarchy = null, IEnumerable<string> excludeRelationshipTypeList = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryTermAsync(string,bool?,IEnumerable{string},RequestContext)']/*" />
+        public virtual async Task<Response> GetGlossaryTermAsync(string termGuid, bool? includeTermHierarchy, IEnumerable<string> excludeRelationshipTypeList, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
 
@@ -2577,125 +868,26 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get a specific glossary term by its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Get a specific glossary term by its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
         /// <param name="excludeRelationshipTypeList"> An array of relationship types which need to be excluded. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetGlossaryTerm(string termGuid, bool? includeTermHierarchy = null, IEnumerable<string> excludeRelationshipTypeList = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryTerm(string,bool?,IEnumerable{string},RequestContext)']/*" />
+        public virtual Response GetGlossaryTerm(string termGuid, bool? includeTermHierarchy, IEnumerable<string> excludeRelationshipTypeList, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
 
@@ -2713,225 +905,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update the given glossary term by its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Update the given glossary term by its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='UpdateGlossaryTermAsync(string,RequestContent,bool?,RequestContext)']/*" />
         public virtual async Task<Response> UpdateGlossaryTermAsync(string termGuid, RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
@@ -2951,225 +943,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update the given glossary term by its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Update the given glossary term by its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='UpdateGlossaryTerm(string,RequestContent,bool?,RequestContext)']/*" />
         public virtual Response UpdateGlossaryTerm(string termGuid, RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
@@ -3189,21 +981,23 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete a glossary term. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete a glossary term.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='DeleteGlossaryTermAsync(string,RequestContext)']/*" />
         public virtual async Task<Response> DeleteGlossaryTermAsync(string termGuid, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
@@ -3222,21 +1016,23 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete a glossary term. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete a glossary term.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='DeleteGlossaryTerm(string,RequestContext)']/*" />
         public virtual Response DeleteGlossaryTerm(string termGuid, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
@@ -3255,124 +1051,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update the glossary term partially. </summary>
+        /// <summary>
+        /// [Protocol Method] Update the glossary term partially.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='PartialUpdateGlossaryTermAsync(string,RequestContent,bool?,RequestContext)']/*" />
         public virtual async Task<Response> PartialUpdateGlossaryTermAsync(string termGuid, RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
@@ -3392,124 +1089,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update the glossary term partially. </summary>
+        /// <summary>
+        /// [Protocol Method] Update the glossary term partially.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='PartialUpdateGlossaryTerm(string,RequestContent,bool?,RequestContext)']/*" />
         public virtual Response PartialUpdateGlossaryTerm(string termGuid, RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
@@ -3529,223 +1127,23 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Create glossary terms in bulk. </summary>
+        /// <summary>
+        /// [Protocol Method] Create glossary terms in bulk.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='CreateGlossaryTermsAsync(RequestContent,bool?,RequestContext)']/*" />
         public virtual async Task<Response> CreateGlossaryTermsAsync(RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -3764,223 +1162,23 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Create glossary terms in bulk. </summary>
+        /// <summary>
+        /// [Protocol Method] Create glossary terms in bulk.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='CreateGlossaryTerms(RequestContent,bool?,RequestContext)']/*" />
         public virtual Response CreateGlossaryTerms(RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -3999,42 +1197,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get all related objects assigned with the specified term. </summary>
+        /// <summary>
+        /// [Protocol Method] Get all related objects assigned with the specified term.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guid: string,
-        ///   typeName: string,
-        ///   uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   displayText: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   relationshipType: string,
-        ///   relationshipAttributes: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string
-        ///   },
-        ///   relationshipGuid: string,
-        ///   relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetEntitiesAssignedWithTermAsync(string termGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetEntitiesAssignedWithTermAsync(string,int?,int?,string,RequestContext)']/*" />
+        public virtual async Task<Response> GetEntitiesAssignedWithTermAsync(string termGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
 
@@ -4052,42 +1235,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get all related objects assigned with the specified term. </summary>
+        /// <summary>
+        /// [Protocol Method] Get all related objects assigned with the specified term.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guid: string,
-        ///   typeName: string,
-        ///   uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   displayText: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   relationshipType: string,
-        ///   relationshipAttributes: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string
-        ///   },
-        ///   relationshipGuid: string,
-        ///   relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetEntitiesAssignedWithTerm(string termGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetEntitiesAssignedWithTerm(string,int?,int?,string,RequestContext)']/*" />
+        public virtual Response GetEntitiesAssignedWithTerm(string termGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
 
@@ -4105,39 +1273,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Assign the given term to the provided list of related objects. </summary>
+        /// <summary>
+        /// [Protocol Method] Assign the given term to the provided list of related objects.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   guid: string,
-        ///   typeName: string,
-        ///   uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   displayText: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   relationshipType: string,
-        ///   relationshipAttributes: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string
-        ///   },
-        ///   relationshipGuid: string,
-        ///   relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='AssignTermToEntitiesAsync(string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> AssignTermToEntitiesAsync(string termGuid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
@@ -4157,39 +1310,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Assign the given term to the provided list of related objects. </summary>
+        /// <summary>
+        /// [Protocol Method] Assign the given term to the provided list of related objects.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   guid: string,
-        ///   typeName: string,
-        ///   uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   displayText: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   relationshipType: string,
-        ///   relationshipAttributes: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string
-        ///   },
-        ///   relationshipGuid: string,
-        ///   relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='AssignTermToEntities(string,RequestContent,RequestContext)']/*" />
         public virtual Response AssignTermToEntities(string termGuid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
@@ -4209,39 +1347,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete the term assignment for the given list of related objects. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete the term assignment for the given list of related objects.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   guid: string,
-        ///   typeName: string,
-        ///   uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   displayText: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   relationshipType: string,
-        ///   relationshipAttributes: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string
-        ///   },
-        ///   relationshipGuid: string,
-        ///   relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='RemoveTermAssignmentFromEntitiesAsync(string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> RemoveTermAssignmentFromEntitiesAsync(string termGuid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
@@ -4261,39 +1384,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete the term assignment for the given list of related objects. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete the term assignment for the given list of related objects.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   guid: string,
-        ///   typeName: string,
-        ///   uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   displayText: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   relationshipType: string,
-        ///   relationshipAttributes: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string
-        ///   },
-        ///   relationshipGuid: string,
-        ///   relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='RemoveTermAssignmentFromEntities(string,RequestContent,RequestContext)']/*" />
         public virtual Response RemoveTermAssignmentFromEntities(string termGuid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
@@ -4313,39 +1421,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete the term assignment for the given list of related objects. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete the term assignment for the given list of related objects.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   guid: string,
-        ///   typeName: string,
-        ///   uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   displayText: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   relationshipType: string,
-        ///   relationshipAttributes: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string
-        ///   },
-        ///   relationshipGuid: string,
-        ///   relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='DeleteTermAssignmentFromEntitiesAsync(string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> DeleteTermAssignmentFromEntitiesAsync(string termGuid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
@@ -4365,39 +1458,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete the term assignment for the given list of related objects. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete the term assignment for the given list of related objects.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   guid: string,
-        ///   typeName: string,
-        ///   uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   displayText: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   relationshipType: string,
-        ///   relationshipAttributes: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string
-        ///   },
-        ///   relationshipGuid: string,
-        ///   relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='DeleteTermAssignmentFromEntities(string,RequestContent,RequestContext)']/*" />
         public virtual Response DeleteTermAssignmentFromEntities(string termGuid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
@@ -4417,37 +1495,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get all related terms for a specific term by its GUID. Limit, offset, and sort parameters are currently not being enabled and won&apos;t work even they are passed. </summary>
+        /// <summary>
+        /// [Protocol Method] Get all related terms for a specific term by its GUID. Limit, offset, and sort parameters are currently not being enabled and won't work even they are passed.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   description: string,
-        ///   displayText: string,
-        ///   expression: string,
-        ///   relationGuid: string,
-        ///   source: string,
-        ///   status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///   steward: string,
-        ///   termGuid: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetRelatedTermsAsync(string termGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetRelatedTermsAsync(string,int?,int?,string,RequestContext)']/*" />
+        public virtual async Task<Response> GetRelatedTermsAsync(string termGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
 
@@ -4465,37 +1533,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get all related terms for a specific term by its GUID. Limit, offset, and sort parameters are currently not being enabled and won&apos;t work even they are passed. </summary>
+        /// <summary>
+        /// [Protocol Method] Get all related terms for a specific term by its GUID. Limit, offset, and sort parameters are currently not being enabled and won't work even they are passed.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="termGuid"> The globally unique identifier for glossary term. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="termGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="termGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   description: string,
-        ///   displayText: string,
-        ///   expression: string,
-        ///   relationGuid: string,
-        ///   source: string,
-        ///   status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///   steward: string,
-        ///   termGuid: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetRelatedTerms(string termGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetRelatedTerms(string,int?,int?,string,RequestContext)']/*" />
+        public virtual Response GetRelatedTerms(string termGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(termGuid, nameof(termGuid));
 
@@ -4513,74 +1571,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get a specific Glossary by its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Get a specific Glossary by its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetGlossaryAsync(string glossaryGuid, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryAsync(string,RequestContext)']/*" />
+        public virtual async Task<Response> GetGlossaryAsync(string glossaryGuid, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
 
@@ -4598,74 +1606,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get a specific Glossary by its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Get a specific Glossary by its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetGlossary(string glossaryGuid, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossary(string,RequestContext)']/*" />
+        public virtual Response GetGlossary(string glossaryGuid, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
 
@@ -4683,126 +1641,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update the given glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Update the given glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='UpdateGlossaryAsync(string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> UpdateGlossaryAsync(string glossaryGuid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
@@ -4822,126 +1678,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update the given glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Update the given glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='UpdateGlossary(string,RequestContent,RequestContext)']/*" />
         public virtual Response UpdateGlossary(string glossaryGuid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
@@ -4961,21 +1715,23 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete a glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete a glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='DeleteGlossaryAsync(string,RequestContext)']/*" />
         public virtual async Task<Response> DeleteGlossaryAsync(string glossaryGuid, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
@@ -4994,21 +1750,23 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete a glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete a glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='DeleteGlossary(string,RequestContext)']/*" />
         public virtual Response DeleteGlossary(string glossaryGuid, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
@@ -5027,81 +1785,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get the categories belonging to a specific glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Get the categories belonging to a specific glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetGlossaryCategoriesAsync(string glossaryGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryCategoriesAsync(string,int?,int?,string,RequestContext)']/*" />
+        public virtual async Task<Response> GetGlossaryCategoriesAsync(string glossaryGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
 
@@ -5119,81 +1823,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get the categories belonging to a specific glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Get the categories belonging to a specific glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   childrenCategories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   parentCategory: AtlasRelatedCategoryHeader,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetGlossaryCategories(string glossaryGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryCategories(string,int?,int?,string,RequestContext)']/*" />
+        public virtual Response GetGlossaryCategories(string glossaryGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
 
@@ -5211,34 +1861,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get the category headers belonging to a specific glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Get the category headers belonging to a specific glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   categoryGuid: string,
-        ///   description: string,
-        ///   displayText: string,
-        ///   parentCategoryGuid: string,
-        ///   relationGuid: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetGlossaryCategoriesHeadersAsync(string glossaryGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryCategoriesHeadersAsync(string,int?,int?,string,RequestContext)']/*" />
+        public virtual async Task<Response> GetGlossaryCategoriesHeadersAsync(string glossaryGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
 
@@ -5256,34 +1899,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get the category headers belonging to a specific glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Get the category headers belonging to a specific glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   categoryGuid: string,
-        ///   description: string,
-        ///   displayText: string,
-        ///   parentCategoryGuid: string,
-        ///   relationGuid: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetGlossaryCategoriesHeaders(string glossaryGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryCategoriesHeaders(string,int?,int?,string,RequestContext)']/*" />
+        public virtual Response GetGlossaryCategoriesHeaders(string glossaryGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
 
@@ -5301,77 +1937,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get a specific glossary with detailed information. </summary>
+        /// <summary>
+        /// [Protocol Method] Get a specific glossary with detailed information.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string,
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categoryInfo: Dictionary&lt;string, AtlasGlossaryCategory&gt;,
-        ///   termInfo: Dictionary&lt;string, AtlasGlossaryTerm&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetDetailedGlossaryAsync(string glossaryGuid, bool? includeTermHierarchy = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetDetailedGlossaryAsync(string,bool?,RequestContext)']/*" />
+        public virtual async Task<Response> GetDetailedGlossaryAsync(string glossaryGuid, bool? includeTermHierarchy, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
 
@@ -5389,77 +1973,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get a specific glossary with detailed information. </summary>
+        /// <summary>
+        /// [Protocol Method] Get a specific glossary with detailed information.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string,
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categoryInfo: Dictionary&lt;string, AtlasGlossaryCategory&gt;,
-        ///   termInfo: Dictionary&lt;string, AtlasGlossaryTerm&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetDetailedGlossary(string glossaryGuid, bool? includeTermHierarchy = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetDetailedGlossary(string,bool?,RequestContext)']/*" />
+        public virtual Response GetDetailedGlossary(string glossaryGuid, bool? includeTermHierarchy, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
 
@@ -5477,75 +2009,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update the glossary partially. Some properties such as qualifiedName are not allowed to be updated. </summary>
+        /// <summary>
+        /// [Protocol Method] Update the glossary partially. Some properties such as qualifiedName are not allowed to be updated.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='PartialUpdateGlossaryAsync(string,RequestContent,bool?,RequestContext)']/*" />
         public virtual async Task<Response> PartialUpdateGlossaryAsync(string glossaryGuid, RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
@@ -5565,75 +2047,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update the glossary partially. Some properties such as qualifiedName are not allowed to be updated. </summary>
+        /// <summary>
+        /// [Protocol Method] Update the glossary partially. Some properties such as qualifiedName are not allowed to be updated.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       parentCategoryGuid: string,
-        ///       relationGuid: string
-        ///     }
-        ///   ],
-        ///   language: string,
-        ///   terms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   usage: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='PartialUpdateGlossary(string,RequestContent,bool?,RequestContext)']/*" />
         public virtual Response PartialUpdateGlossary(string glossaryGuid, RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
@@ -5653,127 +2085,28 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get terms belonging to a specific glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Get terms belonging to a specific glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetGlossaryTermsAsync(string glossaryGuid, bool? includeTermHierarchy = null, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryTermsAsync(string,bool?,int?,int?,string,RequestContext)']/*" />
+        public virtual async Task<Response> GetGlossaryTermsAsync(string glossaryGuid, bool? includeTermHierarchy, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
 
@@ -5791,127 +2124,28 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get terms belonging to a specific glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Get terms belonging to a specific glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetGlossaryTerms(string glossaryGuid, bool? includeTermHierarchy = null, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryTerms(string,bool?,int?,int?,string,RequestContext)']/*" />
+        public virtual Response GetGlossaryTerms(string glossaryGuid, bool? includeTermHierarchy, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
 
@@ -5929,37 +2163,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get term headers belonging to a specific glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Get term headers belonging to a specific glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   description: string,
-        ///   displayText: string,
-        ///   expression: string,
-        ///   relationGuid: string,
-        ///   source: string,
-        ///   status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///   steward: string,
-        ///   termGuid: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetGlossaryTermHeadersAsync(string glossaryGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryTermHeadersAsync(string,int?,int?,string,RequestContext)']/*" />
+        public virtual async Task<Response> GetGlossaryTermHeadersAsync(string glossaryGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
 
@@ -5977,37 +2201,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get term headers belonging to a specific glossary. </summary>
+        /// <summary>
+        /// [Protocol Method] Get term headers belonging to a specific glossary.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="sort"> The sort order, ASC (default) or DESC. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   description: string,
-        ///   displayText: string,
-        ///   expression: string,
-        ///   relationGuid: string,
-        ///   source: string,
-        ///   status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///   steward: string,
-        ///   termGuid: string
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetGlossaryTermHeaders(string glossaryGuid, int? limit = null, int? offset = null, string sort = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetGlossaryTermHeaders(string,int?,int?,string,RequestContext)']/*" />
+        public virtual Response GetGlossaryTermHeaders(string glossaryGuid, int? limit, int? offset, string sort, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
 
@@ -6025,38 +2239,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get the status of import csv operation. </summary>
+        /// <summary>
+        /// [Protocol Method] Get the status of import csv operation
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="operationGuid"> The globally unique identifier for async operation/job. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="operationGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="operationGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   id: string,
-        ///   status: &quot;NotStarted&quot; | &quot;Succeeded&quot; | &quot;Failed&quot; | &quot;Running&quot;,
-        ///   createTime: string,
-        ///   lastUpdateTime: string,
-        ///   properties: {
-        ///     importedTerms: string,
-        ///     totalTermsDetected: string
-        ///   },
-        ///   error: {
-        ///     errorCode: number,
-        ///     errorMessage: string
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetImportCsvOperationStatusAsync(string operationGuid, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetImportCsvOperationStatusAsync(string,RequestContext)']/*" />
+        public virtual async Task<Response> GetImportCsvOperationStatusAsync(string operationGuid, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(operationGuid, nameof(operationGuid));
 
@@ -6074,38 +2274,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get the status of import csv operation. </summary>
+        /// <summary>
+        /// [Protocol Method] Get the status of import csv operation
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="operationGuid"> The globally unique identifier for async operation/job. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="operationGuid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="operationGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   id: string,
-        ///   status: &quot;NotStarted&quot; | &quot;Succeeded&quot; | &quot;Failed&quot; | &quot;Running&quot;,
-        ///   createTime: string,
-        ///   lastUpdateTime: string,
-        ///   properties: {
-        ///     importedTerms: string,
-        ///     totalTermsDetected: string
-        ///   },
-        ///   error: {
-        ///     errorCode: number,
-        ///     errorMessage: string
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetImportCsvOperationStatus(string operationGuid, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetImportCsvOperationStatus(string,RequestContext)']/*" />
+        public virtual Response GetImportCsvOperationStatus(string operationGuid, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(operationGuid, nameof(operationGuid));
 
@@ -6123,13 +2309,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Export Glossary Terms as csv file. </summary>
+        /// <summary>
+        /// [Protocol Method] Export Glossary Terms as csv file
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='ExportGlossaryTermsAsCsvAsync(string,RequestContent,bool?,RequestContext)']/*" />
         public virtual async Task<Response> ExportGlossaryTermsAsCsvAsync(string glossaryGuid, RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
@@ -6149,13 +2347,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Export Glossary Terms as csv file. </summary>
+        /// <summary>
+        /// [Protocol Method] Export Glossary Terms as csv file
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='ExportGlossaryTermsAsCsv(string,RequestContent,bool?,RequestContext)']/*" />
         public virtual Response ExportGlossaryTermsAsCsv(string glossaryGuid, RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
@@ -6175,126 +2385,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get terms by glossary name. </summary>
+        /// <summary>
+        /// [Protocol Method] Get terms by glossary name.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryName"> The name of the glossary. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetTermsByGlossaryNameAsync(string glossaryName, int? limit = null, int? offset = null, bool? includeTermHierarchy = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetTermsByGlossaryNameAsync(string,int?,int?,bool?,RequestContext)']/*" />
+        public virtual async Task<Response> GetTermsByGlossaryNameAsync(string glossaryName, int? limit, int? offset, bool? includeTermHierarchy, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryName, nameof(glossaryName));
 
@@ -6312,126 +2423,27 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get terms by glossary name. </summary>
+        /// <summary>
+        /// [Protocol Method] Get terms by glossary name.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="glossaryName"> The name of the glossary. </param>
         /// <param name="limit"> The page size - by default there is no paging. </param>
         /// <param name="offset"> The offset for pagination purpose. </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   longDescription: string,
-        ///   name: string,
-        ///   qualifiedName: string,
-        ///   shortDescription: string,
-        ///   lastModifiedTS: string,
-        ///   guid: string,
-        ///   abbreviation: string,
-        ///   templateName: [AnyObject],
-        ///   anchor: {
-        ///     displayText: string,
-        ///     glossaryGuid: string,
-        ///     relationGuid: string
-        ///   },
-        ///   antonyms: [
-        ///     {
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   createTime: number,
-        ///   createdBy: string,
-        ///   updateTime: number,
-        ///   updatedBy: string,
-        ///   status: &quot;Draft&quot; | &quot;Approved&quot; | &quot;Alert&quot; | &quot;Expired&quot;,
-        ///   resources: [
-        ///     {
-        ///       displayName: string,
-        ///       url: string
-        ///     }
-        ///   ],
-        ///   contacts: Dictionary&lt;string, ContactBasic[]&gt;,
-        ///   attributes: Dictionary&lt;string, Dictionary&lt;string, AnyObject&gt;&gt;,
-        ///   assignedEntities: [
-        ///     {
-        ///       guid: string,
-        ///       typeName: string,
-        ///       uniqueAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       displayText: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       relationshipType: string,
-        ///       relationshipAttributes: {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string
-        ///       },
-        ///       relationshipGuid: string,
-        ///       relationshipStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ],
-        ///   categories: [
-        ///     {
-        ///       categoryGuid: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       relationGuid: string,
-        ///       status: &quot;DRAFT&quot; | &quot;ACTIVE&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;
-        ///     }
-        ///   ],
-        ///   classifies: [AtlasRelatedTermHeader],
-        ///   examples: [string],
-        ///   isA: [AtlasRelatedTermHeader],
-        ///   preferredTerms: [AtlasRelatedTermHeader],
-        ///   preferredToTerms: [AtlasRelatedTermHeader],
-        ///   replacedBy: [AtlasRelatedTermHeader],
-        ///   replacementTerms: [AtlasRelatedTermHeader],
-        ///   seeAlso: [AtlasRelatedTermHeader],
-        ///   synonyms: [AtlasRelatedTermHeader],
-        ///   translatedTerms: [AtlasRelatedTermHeader],
-        ///   translationTerms: [AtlasRelatedTermHeader],
-        ///   usage: string,
-        ///   validValues: [AtlasRelatedTermHeader],
-        ///   validValuesFor: [AtlasRelatedTermHeader]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetTermsByGlossaryName(string glossaryName, int? limit = null, int? offset = null, bool? includeTermHierarchy = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='GetTermsByGlossaryName(string,int?,int?,bool?,RequestContext)']/*" />
+        public virtual Response GetTermsByGlossaryName(string glossaryName, int? limit, int? offset, bool? includeTermHierarchy, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(glossaryName, nameof(glossaryName));
 
@@ -6449,41 +2461,28 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Import Glossary Terms from local csv file. </summary>
+        /// <summary>
+        /// [Protocol Method] Import Glossary Terms from local csv file
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="waitUntil"> <see cref="WaitUntil.Completed"/> if the method should wait to return until the long-running operation has completed on the service; <see cref="WaitUntil.Started"/> if it should return after starting the operation. For more information on long-running operations, please see <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/LongRunningOperations.md"> Azure.Core Long-Running Operation samples</see>. </param>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
+        /// <param name="contentType"> Body Parameter content-type. Allowed values: "multipart/form-data". </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   id: string,
-        ///   status: &quot;NotStarted&quot; | &quot;Succeeded&quot; | &quot;Failed&quot; | &quot;Running&quot;,
-        ///   createTime: string,
-        ///   lastUpdateTime: string,
-        ///   properties: {
-        ///     importedTerms: string,
-        ///     totalTermsDetected: string
-        ///   },
-        ///   error: {
-        ///     errorCode: number,
-        ///     errorMessage: string
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Operation<BinaryData>> ImportGlossaryTermsViaCsvAsync(WaitUntil waitUntil, string glossaryGuid, RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The <see cref="Operation"/> representing an asynchronous operation on the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='ImportGlossaryTermsViaCsvAsync(WaitUntil,string,RequestContent,string,bool?,RequestContext)']/*" />
+        public virtual async Task<Operation<BinaryData>> ImportGlossaryTermsViaCsvAsync(WaitUntil waitUntil, string glossaryGuid, RequestContent content, string contentType, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
             Argument.AssertNotNull(content, nameof(content));
@@ -6492,7 +2491,7 @@ namespace Azure.Analytics.Purview.Catalog
             scope.Start();
             try
             {
-                using HttpMessage message = CreateImportGlossaryTermsViaCsvRequest(glossaryGuid, content, includeTermHierarchy, context);
+                using HttpMessage message = CreateImportGlossaryTermsViaCsvRequest(glossaryGuid, content, contentType, includeTermHierarchy, context);
                 return await ProtocolOperationHelpers.ProcessMessageAsync(_pipeline, message, ClientDiagnostics, "PurviewGlossaries.ImportGlossaryTermsViaCsv", OperationFinalStateVia.AzureAsyncOperation, context, waitUntil).ConfigureAwait(false);
             }
             catch (Exception e)
@@ -6502,41 +2501,28 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Import Glossary Terms from local csv file. </summary>
+        /// <summary>
+        /// [Protocol Method] Import Glossary Terms from local csv file
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="waitUntil"> <see cref="WaitUntil.Completed"/> if the method should wait to return until the long-running operation has completed on the service; <see cref="WaitUntil.Started"/> if it should return after starting the operation. For more information on long-running operations, please see <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/LongRunningOperations.md"> Azure.Core Long-Running Operation samples</see>. </param>
         /// <param name="glossaryGuid"> The globally unique identifier for glossary. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
+        /// <param name="contentType"> Body Parameter content-type. Allowed values: "multipart/form-data". </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryGuid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryGuid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   id: string,
-        ///   status: &quot;NotStarted&quot; | &quot;Succeeded&quot; | &quot;Failed&quot; | &quot;Running&quot;,
-        ///   createTime: string,
-        ///   lastUpdateTime: string,
-        ///   properties: {
-        ///     importedTerms: string,
-        ///     totalTermsDetected: string
-        ///   },
-        ///   error: {
-        ///     errorCode: number,
-        ///     errorMessage: string
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Operation<BinaryData> ImportGlossaryTermsViaCsv(WaitUntil waitUntil, string glossaryGuid, RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The <see cref="Operation"/> representing an asynchronous operation on the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='ImportGlossaryTermsViaCsv(WaitUntil,string,RequestContent,string,bool?,RequestContext)']/*" />
+        public virtual Operation<BinaryData> ImportGlossaryTermsViaCsv(WaitUntil waitUntil, string glossaryGuid, RequestContent content, string contentType, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(glossaryGuid, nameof(glossaryGuid));
             Argument.AssertNotNull(content, nameof(content));
@@ -6545,7 +2531,7 @@ namespace Azure.Analytics.Purview.Catalog
             scope.Start();
             try
             {
-                using HttpMessage message = CreateImportGlossaryTermsViaCsvRequest(glossaryGuid, content, includeTermHierarchy, context);
+                using HttpMessage message = CreateImportGlossaryTermsViaCsvRequest(glossaryGuid, content, contentType, includeTermHierarchy, context);
                 return ProtocolOperationHelpers.ProcessMessage(_pipeline, message, ClientDiagnostics, "PurviewGlossaries.ImportGlossaryTermsViaCsv", OperationFinalStateVia.AzureAsyncOperation, context, waitUntil);
             }
             catch (Exception e)
@@ -6555,41 +2541,28 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Import Glossary Terms from local csv file by glossaryName. </summary>
+        /// <summary>
+        /// [Protocol Method] Import Glossary Terms from local csv file by glossaryName
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="waitUntil"> <see cref="WaitUntil.Completed"/> if the method should wait to return until the long-running operation has completed on the service; <see cref="WaitUntil.Started"/> if it should return after starting the operation. For more information on long-running operations, please see <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/LongRunningOperations.md"> Azure.Core Long-Running Operation samples</see>. </param>
         /// <param name="glossaryName"> The name of the glossary. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
+        /// <param name="contentType"> Body Parameter content-type. Allowed values: "multipart/form-data". </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryName"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   id: string,
-        ///   status: &quot;NotStarted&quot; | &quot;Succeeded&quot; | &quot;Failed&quot; | &quot;Running&quot;,
-        ///   createTime: string,
-        ///   lastUpdateTime: string,
-        ///   properties: {
-        ///     importedTerms: string,
-        ///     totalTermsDetected: string
-        ///   },
-        ///   error: {
-        ///     errorCode: number,
-        ///     errorMessage: string
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Operation<BinaryData>> ImportGlossaryTermsViaCsvByGlossaryNameAsync(WaitUntil waitUntil, string glossaryName, RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The <see cref="Operation"/> representing an asynchronous operation on the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='ImportGlossaryTermsViaCsvByGlossaryNameAsync(WaitUntil,string,RequestContent,string,bool?,RequestContext)']/*" />
+        public virtual async Task<Operation<BinaryData>> ImportGlossaryTermsViaCsvByGlossaryNameAsync(WaitUntil waitUntil, string glossaryName, RequestContent content, string contentType, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(glossaryName, nameof(glossaryName));
             Argument.AssertNotNull(content, nameof(content));
@@ -6598,7 +2571,7 @@ namespace Azure.Analytics.Purview.Catalog
             scope.Start();
             try
             {
-                using HttpMessage message = CreateImportGlossaryTermsViaCsvByGlossaryNameRequest(glossaryName, content, includeTermHierarchy, context);
+                using HttpMessage message = CreateImportGlossaryTermsViaCsvByGlossaryNameRequest(glossaryName, content, contentType, includeTermHierarchy, context);
                 return await ProtocolOperationHelpers.ProcessMessageAsync(_pipeline, message, ClientDiagnostics, "PurviewGlossaries.ImportGlossaryTermsViaCsvByGlossaryName", OperationFinalStateVia.AzureAsyncOperation, context, waitUntil).ConfigureAwait(false);
             }
             catch (Exception e)
@@ -6608,41 +2581,28 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Import Glossary Terms from local csv file by glossaryName. </summary>
+        /// <summary>
+        /// [Protocol Method] Import Glossary Terms from local csv file by glossaryName
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="waitUntil"> <see cref="WaitUntil.Completed"/> if the method should wait to return until the long-running operation has completed on the service; <see cref="WaitUntil.Started"/> if it should return after starting the operation. For more information on long-running operations, please see <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/LongRunningOperations.md"> Azure.Core Long-Running Operation samples</see>. </param>
         /// <param name="glossaryName"> The name of the glossary. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
+        /// <param name="contentType"> Body Parameter content-type. Allowed values: "multipart/form-data". </param>
         /// <param name="includeTermHierarchy"> Whether include term hierarchy. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="glossaryName"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="glossaryName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   id: string,
-        ///   status: &quot;NotStarted&quot; | &quot;Succeeded&quot; | &quot;Failed&quot; | &quot;Running&quot;,
-        ///   createTime: string,
-        ///   lastUpdateTime: string,
-        ///   properties: {
-        ///     importedTerms: string,
-        ///     totalTermsDetected: string
-        ///   },
-        ///   error: {
-        ///     errorCode: number,
-        ///     errorMessage: string
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Operation<BinaryData> ImportGlossaryTermsViaCsvByGlossaryName(WaitUntil waitUntil, string glossaryName, RequestContent content, bool? includeTermHierarchy = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The <see cref="Operation"/> representing an asynchronous operation on the service. </returns>
+        /// <include file="Docs/PurviewGlossaries.xml" path="doc/members/member[@name='ImportGlossaryTermsViaCsvByGlossaryName(WaitUntil,string,RequestContent,string,bool?,RequestContext)']/*" />
+        public virtual Operation<BinaryData> ImportGlossaryTermsViaCsvByGlossaryName(WaitUntil waitUntil, string glossaryName, RequestContent content, string contentType, bool? includeTermHierarchy = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(glossaryName, nameof(glossaryName));
             Argument.AssertNotNull(content, nameof(content));
@@ -6651,7 +2611,7 @@ namespace Azure.Analytics.Purview.Catalog
             scope.Start();
             try
             {
-                using HttpMessage message = CreateImportGlossaryTermsViaCsvByGlossaryNameRequest(glossaryName, content, includeTermHierarchy, context);
+                using HttpMessage message = CreateImportGlossaryTermsViaCsvByGlossaryNameRequest(glossaryName, content, contentType, includeTermHierarchy, context);
                 return ProtocolOperationHelpers.ProcessMessage(_pipeline, message, ClientDiagnostics, "PurviewGlossaries.ImportGlossaryTermsViaCsvByGlossaryName", OperationFinalStateVia.AzureAsyncOperation, context, waitUntil);
             }
             catch (Exception e)
@@ -6894,7 +2854,7 @@ namespace Azure.Analytics.Purview.Catalog
             {
                 uri.AppendQuery("includeTermHierarchy", includeTermHierarchy.Value, true);
             }
-            if (excludeRelationshipTypeList != null)
+            if (excludeRelationshipTypeList != null && !(excludeRelationshipTypeList is ChangeTrackingList<string> changeTrackingList && changeTrackingList.IsUndefined))
             {
                 foreach (var param in excludeRelationshipTypeList)
                 {
@@ -7299,7 +3259,7 @@ namespace Azure.Analytics.Purview.Catalog
             return message;
         }
 
-        internal HttpMessage CreateImportGlossaryTermsViaCsvRequest(string glossaryGuid, RequestContent content, bool? includeTermHierarchy, RequestContext context)
+        internal HttpMessage CreateImportGlossaryTermsViaCsvRequest(string glossaryGuid, RequestContent content, string contentType, bool? includeTermHierarchy, RequestContext context)
         {
             var message = _pipeline.CreateMessage(context, ResponseClassifier202);
             var request = message.Request;
@@ -7317,12 +3277,12 @@ namespace Azure.Analytics.Purview.Catalog
             uri.AppendQuery("api-version", _apiVersion, true);
             request.Uri = uri;
             request.Headers.Add("Accept", "application/json");
-            request.Headers.Add("Content-Type", "multipart/form-data");
+            request.Headers.Add("Content-Type", contentType);
             request.Content = content;
             return message;
         }
 
-        internal HttpMessage CreateImportGlossaryTermsViaCsvByGlossaryNameRequest(string glossaryName, RequestContent content, bool? includeTermHierarchy, RequestContext context)
+        internal HttpMessage CreateImportGlossaryTermsViaCsvByGlossaryNameRequest(string glossaryName, RequestContent content, string contentType, bool? includeTermHierarchy, RequestContext context)
         {
             var message = _pipeline.CreateMessage(context, ResponseClassifier202);
             var request = message.Request;
@@ -7340,7 +3300,7 @@ namespace Azure.Analytics.Purview.Catalog
             uri.AppendQuery("api-version", _apiVersion, true);
             request.Uri = uri;
             request.Headers.Add("Accept", "application/json");
-            request.Headers.Add("Content-Type", "multipart/form-data");
+            request.Headers.Add("Content-Type", contentType);
             request.Content = content;
             return message;
         }

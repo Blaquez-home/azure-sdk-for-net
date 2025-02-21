@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Azure.Core;
 using Azure.Core.TestFramework;
 using Azure.ResourceManager.KeyVault.Models;
 using Azure.ResourceManager.Network;
@@ -14,21 +15,18 @@ namespace Azure.ResourceManager.KeyVault.Tests
     public class PrivateEndpointConnectionTests : VaultOperationsTestsBase
     {
         public PrivateEndpointConnectionTests(bool isAsync)
-            : base(isAsync)
+            : base(isAsync)//, RecordedTestMode.Record)
         {
         }
 
         [SetUp]
         public async Task ClearChallengeCacheforRecord()
         {
-            if (Mode == RecordedTestMode.Record || Mode == RecordedTestMode.Playback)
-            {
                 await Initialize().ConfigureAwait(false);
-            }
         }
 
-        [Test]
         [RecordedTest]
+        [PlaybackOnly("https://github.com/Azure/azure-sdk-for-net/issues/37421")]
         public async Task PrivateEndpointConnectionCreateAndUpdate()
         {
             IgnoreTestInLiveMode();
@@ -36,24 +34,26 @@ namespace Azure.ResourceManager.KeyVault.Tests
             CAUTION: all private endpoint methods do not work properly now, so just temporally use Network's private endpoint methods for testing.
             Will confirm service team that this is expected.
             */
-
+            //AssertName
+            var pec = Recording.GenerateAssetName("pec");
+            string privateEndpointName = Recording.GenerateAssetName("pe-");
             // Create a vault first
-            VaultResource vaultResource = (await CreateVault()).Value;
+            KeyVaultResource vaultResource = (await CreateVault()).Value;
             // Create a vnet
-            VirtualNetworkResource vnetResource = (await createVirtualNetwork()).Value;
+            ResourceIdentifier subnetID = await createVirtualNetwork();
 
             // Create the private endpoint
             PrivateEndpointData privateEndpointData = new PrivateEndpointData
             {
                 Location = Location,
-                Subnet = vnetResource.Data.Subnets[0],
+                Subnet = new SubnetData() { Id = subnetID },
                 ManualPrivateLinkServiceConnections = {
-                    new PrivateLinkServiceConnection
+                    new NetworkPrivateLinkServiceConnection
                     {
-                        Name = Recording.GenerateAssetName("pec"),
+                        Name = pec,
                         // TODO: externalize or create the service on-demand, like virtual network
                         //PrivateLinkServiceId = $"/subscriptions/{SubscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}",
-                        PrivateLinkServiceId = vaultResource.Data.Id.ToString(),
+                        PrivateLinkServiceId = vaultResource.Data.Id,
 
                         RequestMessage = "SDK test",
                         GroupIds = { "vault" }
@@ -61,7 +61,6 @@ namespace Azure.ResourceManager.KeyVault.Tests
                 },
             };
 
-            string privateEndpointName = Recording.GenerateAssetName("pe-");
             PrivateEndpointCollection privateEndpointCollection = ResourceGroupResource.GetPrivateEndpoints();
             PrivateEndpointResource privateEndpoint = (await privateEndpointCollection.CreateOrUpdateAsync(WaitUntil.Completed, privateEndpointName, privateEndpointData)).Value;
 
@@ -92,7 +91,7 @@ namespace Azure.ResourceManager.KeyVault.Tests
             Assert.That(privateEndpoints, Has.None.Matches<PrivateEndpointResource>(p => p.Data.Name == privateEndpointName));
         }
 
-        private async Task<ArmOperation<VirtualNetworkResource>> createVirtualNetwork()
+        private async Task<ResourceIdentifier> createVirtualNetwork()
         {
             var vnetName = Recording.GenerateAssetName("vnet-");
             var vnet = new VirtualNetworkData()
@@ -101,20 +100,25 @@ namespace Azure.ResourceManager.KeyVault.Tests
                 Subnets = { new SubnetData() {
                     Name = "default",
                     AddressPrefix = "10.0.1.0/24",
-                    PrivateEndpointNetworkPolicies = VirtualNetworkPrivateEndpointNetworkPolicies.Disabled
+                    PrivateEndpointNetworkPolicy = VirtualNetworkPrivateEndpointNetworkPolicy.Disabled
                 }}
             };
             vnet.AddressPrefixes.Add("10.0.0.0/16");
             vnet.DhcpOptionsDnsServers.Add("10.1.1.1");
             vnet.DhcpOptionsDnsServers.Add("10.1.2.4");
-            VirtualNetworkCollection networks = ResourceGroupResource.GetVirtualNetworks();
-            return await networks.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnet);
+            //VirtualNetworkCollection networks = ResourceGroupResource.GetVirtualNetworks();
+            //return await networks.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnet);
+            ResourceIdentifier subnetID;
+            var vnetResource = await ResourceGroupResource.GetVirtualNetworks().CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnet);
+            var subnetCollection = vnetResource.Value.GetSubnets();
+            subnetID = vnetResource.Value.Data.Subnets[0].Id;
+            return subnetID;
         }
 
-        private async Task<ArmOperation<VaultResource>> CreateVault()
+        private async Task<ArmOperation<KeyVaultResource>> CreateVault()
         {
             // Create a Vault first
-            VaultCreateOrUpdateContent parameters = new VaultCreateOrUpdateContent(Location, VaultProperties);
+            KeyVaultCreateOrUpdateContent parameters = new KeyVaultCreateOrUpdateContent(Location, VaultProperties);
             parameters.Tags.InitializeFrom(Tags);
             return await VaultCollection.CreateOrUpdateAsync(WaitUntil.Completed, VaultName, parameters).ConfigureAwait(false);
         }

@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.AppService.Models;
@@ -33,8 +32,19 @@ namespace Azure.ResourceManager.AppService
         {
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
-            _apiVersion = apiVersion ?? "2021-02-01";
+            _apiVersion = apiVersion ?? "2024-04-01";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
+        }
+
+        internal RequestUriBuilder CreateListRequestUri(string subscriptionId)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Web/resourceHealthMetadata", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListRequest(string subscriptionId)
@@ -59,7 +69,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ResourceHealthMetadataCollection>> ListAsync(string subscriptionId, CancellationToken cancellationToken = default)
+        public async Task<Response<ResourceHealthMetadataListResult>> ListAsync(string subscriptionId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
 
@@ -69,9 +79,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -84,7 +94,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ResourceHealthMetadataCollection> List(string subscriptionId, CancellationToken cancellationToken = default)
+        public Response<ResourceHealthMetadataListResult> List(string subscriptionId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
 
@@ -94,14 +104,27 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListByResourceGroupRequestUri(string subscriptionId, string resourceGroupName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/resourceHealthMetadata", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListByResourceGroupRequest(string subscriptionId, string resourceGroupName)
@@ -129,7 +152,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ResourceHealthMetadataCollection>> ListByResourceGroupAsync(string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
+        public async Task<Response<ResourceHealthMetadataListResult>> ListByResourceGroupAsync(string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -140,9 +163,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -156,7 +179,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ResourceHealthMetadataCollection> ListByResourceGroup(string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
+        public Response<ResourceHealthMetadataListResult> ListByResourceGroup(string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -167,14 +190,29 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListBySiteRequestUri(string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/resourceHealthMetadata", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListBySiteRequest(string subscriptionId, string resourceGroupName, string name)
@@ -205,7 +243,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ResourceHealthMetadataCollection>> ListBySiteAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public async Task<Response<ResourceHealthMetadataListResult>> ListBySiteAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -217,9 +255,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -234,7 +272,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ResourceHealthMetadataCollection> ListBySite(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public Response<ResourceHealthMetadataListResult> ListBySite(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -246,14 +284,29 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetBySiteRequestUri(string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/resourceHealthMetadata/default", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetBySiteRequest(string subscriptionId, string resourceGroupName, string name)
@@ -339,6 +392,23 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListBySiteSlotRequestUri(string subscriptionId, string resourceGroupName, string name, string slot)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/slots/", false);
+            uri.AppendPath(slot, true);
+            uri.AppendPath("/resourceHealthMetadata", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListBySiteSlotRequest(string subscriptionId, string resourceGroupName, string name, string slot)
         {
             var message = _pipeline.CreateMessage();
@@ -370,7 +440,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="slot"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="slot"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ResourceHealthMetadataCollection>> ListBySiteSlotAsync(string subscriptionId, string resourceGroupName, string name, string slot, CancellationToken cancellationToken = default)
+        public async Task<Response<ResourceHealthMetadataListResult>> ListBySiteSlotAsync(string subscriptionId, string resourceGroupName, string name, string slot, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -383,9 +453,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -401,7 +471,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="slot"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="slot"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ResourceHealthMetadataCollection> ListBySiteSlot(string subscriptionId, string resourceGroupName, string name, string slot, CancellationToken cancellationToken = default)
+        public Response<ResourceHealthMetadataListResult> ListBySiteSlot(string subscriptionId, string resourceGroupName, string name, string slot, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -414,14 +484,31 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetBySiteSlotRequestUri(string subscriptionId, string resourceGroupName, string name, string slot)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/slots/", false);
+            uri.AppendPath(slot, true);
+            uri.AppendPath("/resourceHealthMetadata/default", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetBySiteSlotRequest(string subscriptionId, string resourceGroupName, string name, string slot)
@@ -513,6 +600,14 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListNextPageRequestUri(string nextLink, string subscriptionId)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
+        }
+
         internal HttpMessage CreateListNextPageRequest(string nextLink, string subscriptionId)
         {
             var message = _pipeline.CreateMessage();
@@ -533,7 +628,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/> or <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ResourceHealthMetadataCollection>> ListNextPageAsync(string nextLink, string subscriptionId, CancellationToken cancellationToken = default)
+        public async Task<Response<ResourceHealthMetadataListResult>> ListNextPageAsync(string nextLink, string subscriptionId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -544,9 +639,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -560,7 +655,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/> or <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ResourceHealthMetadataCollection> ListNextPage(string nextLink, string subscriptionId, CancellationToken cancellationToken = default)
+        public Response<ResourceHealthMetadataListResult> ListNextPage(string nextLink, string subscriptionId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -571,14 +666,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListByResourceGroupNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListByResourceGroupNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName)
@@ -602,7 +705,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ResourceHealthMetadataCollection>> ListByResourceGroupNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
+        public async Task<Response<ResourceHealthMetadataListResult>> ListByResourceGroupNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -614,9 +717,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -631,7 +734,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ResourceHealthMetadataCollection> ListByResourceGroupNextPage(string nextLink, string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
+        public Response<ResourceHealthMetadataListResult> ListByResourceGroupNextPage(string nextLink, string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -643,14 +746,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListBySiteNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListBySiteNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string name)
@@ -675,7 +786,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ResourceHealthMetadataCollection>> ListBySiteNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public async Task<Response<ResourceHealthMetadataListResult>> ListBySiteNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -688,9 +799,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -706,7 +817,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ResourceHealthMetadataCollection> ListBySiteNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public Response<ResourceHealthMetadataListResult> ListBySiteNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -719,14 +830,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListBySiteSlotNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string name, string slot)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListBySiteSlotNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string name, string slot)
@@ -752,7 +871,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="slot"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="slot"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ResourceHealthMetadataCollection>> ListBySiteSlotNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, string slot, CancellationToken cancellationToken = default)
+        public async Task<Response<ResourceHealthMetadataListResult>> ListBySiteSlotNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, string slot, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -766,9 +885,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -785,7 +904,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="slot"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="slot"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ResourceHealthMetadataCollection> ListBySiteSlotNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, string slot, CancellationToken cancellationToken = default)
+        public Response<ResourceHealthMetadataListResult> ListBySiteSlotNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, string slot, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -799,9 +918,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceHealthMetadataCollection value = default;
+                        ResourceHealthMetadataListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ResourceHealthMetadataCollection.DeserializeResourceHealthMetadataCollection(document.RootElement);
+                        value = ResourceHealthMetadataListResult.DeserializeResourceHealthMetadataListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:

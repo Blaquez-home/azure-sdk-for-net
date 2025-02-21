@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.AppService.Models;
@@ -34,8 +33,23 @@ namespace Azure.ResourceManager.AppService
         {
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
-            _apiVersion = apiVersion ?? "2021-02-01";
+            _apiVersion = apiVersion ?? "2024-04-01";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
+        }
+
+        internal RequestUriBuilder CreateListRequestUri(string subscriptionId, bool? detailed)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms", false);
+            if (detailed != null)
+            {
+                uri.AppendQuery("detailed", detailed.Value, true);
+            }
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListRequest(string subscriptionId, bool? detailed)
@@ -68,7 +82,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<Models.AppServicePlanCollection>> ListAsync(string subscriptionId, bool? detailed = null, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServicePlanListResult>> ListAsync(string subscriptionId, bool? detailed = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
 
@@ -78,9 +92,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServicePlanCollection value = default;
+                        AppServicePlanListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = Models.AppServicePlanCollection.DeserializeAppServicePlanCollection(document.RootElement);
+                        value = AppServicePlanListResult.DeserializeAppServicePlanListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -97,7 +111,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<Models.AppServicePlanCollection> List(string subscriptionId, bool? detailed = null, CancellationToken cancellationToken = default)
+        public Response<AppServicePlanListResult> List(string subscriptionId, bool? detailed = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
 
@@ -107,14 +121,27 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServicePlanCollection value = default;
+                        AppServicePlanListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = Models.AppServicePlanCollection.DeserializeAppServicePlanCollection(document.RootElement);
+                        value = AppServicePlanListResult.DeserializeAppServicePlanListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListByResourceGroupRequestUri(string subscriptionId, string resourceGroupName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListByResourceGroupRequest(string subscriptionId, string resourceGroupName)
@@ -142,7 +169,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<Models.AppServicePlanCollection>> ListByResourceGroupAsync(string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServicePlanListResult>> ListByResourceGroupAsync(string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -153,9 +180,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServicePlanCollection value = default;
+                        AppServicePlanListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = Models.AppServicePlanCollection.DeserializeAppServicePlanCollection(document.RootElement);
+                        value = AppServicePlanListResult.DeserializeAppServicePlanListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -169,7 +196,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<Models.AppServicePlanCollection> ListByResourceGroup(string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
+        public Response<AppServicePlanListResult> ListByResourceGroup(string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -180,14 +207,28 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServicePlanCollection value = default;
+                        AppServicePlanListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = Models.AppServicePlanCollection.DeserializeAppServicePlanCollection(document.RootElement);
+                        value = AppServicePlanListResult.DeserializeAppServicePlanListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetRequestUri(string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetRequest(string subscriptionId, string resourceGroupName, string name)
@@ -272,6 +313,20 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateCreateOrUpdateRequestUri(string subscriptionId, string resourceGroupName, string name, AppServicePlanData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateCreateOrUpdateRequest(string subscriptionId, string resourceGroupName, string name, AppServicePlanData data)
         {
             var message = _pipeline.CreateMessage();
@@ -290,7 +345,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(data);
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -348,6 +403,20 @@ namespace Azure.ResourceManager.AppService
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateDeleteRequestUri(string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateDeleteRequest(string subscriptionId, string resourceGroupName, string name)
@@ -420,6 +489,20 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateUpdateRequestUri(string subscriptionId, string resourceGroupName, string name, AppServicePlanPatch patch)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateUpdateRequest(string subscriptionId, string resourceGroupName, string name, AppServicePlanPatch patch)
         {
             var message = _pipeline.CreateMessage();
@@ -438,7 +521,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(patch);
+            content.JsonWriter.WriteObjectValue(patch, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -508,6 +591,21 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListCapabilitiesRequestUri(string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/capabilities", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListCapabilitiesRequest(string subscriptionId, string resourceGroupName, string name)
         {
             var message = _pipeline.CreateMessage();
@@ -536,7 +634,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<IReadOnlyList<Capability>>> ListCapabilitiesAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public async Task<Response<IReadOnlyList<AppServiceSkuCapability>>> ListCapabilitiesAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -548,12 +646,12 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        IReadOnlyList<Capability> value = default;
+                        IReadOnlyList<AppServiceSkuCapability> value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        List<Capability> array = new List<Capability>();
+                        List<AppServiceSkuCapability> array = new List<AppServiceSkuCapability>();
                         foreach (var item in document.RootElement.EnumerateArray())
                         {
-                            array.Add(Capability.DeserializeCapability(item));
+                            array.Add(AppServiceSkuCapability.DeserializeAppServiceSkuCapability(item));
                         }
                         value = array;
                         return Response.FromValue(value, message.Response);
@@ -570,7 +668,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<IReadOnlyList<Capability>> ListCapabilities(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public Response<IReadOnlyList<AppServiceSkuCapability>> ListCapabilities(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -582,12 +680,12 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        IReadOnlyList<Capability> value = default;
+                        IReadOnlyList<AppServiceSkuCapability> value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        List<Capability> array = new List<Capability>();
+                        List<AppServiceSkuCapability> array = new List<AppServiceSkuCapability>();
                         foreach (var item in document.RootElement.EnumerateArray())
                         {
-                            array.Add(Capability.DeserializeCapability(item));
+                            array.Add(AppServiceSkuCapability.DeserializeAppServiceSkuCapability(item));
                         }
                         value = array;
                         return Response.FromValue(value, message.Response);
@@ -595,6 +693,24 @@ namespace Azure.ResourceManager.AppService
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetHybridConnectionRequestUri(string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/hybridConnectionNamespaces/", false);
+            uri.AppendPath(namespaceName, true);
+            uri.AppendPath("/relays/", false);
+            uri.AppendPath(relayName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetHybridConnectionRequest(string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName)
@@ -691,6 +807,24 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateDeleteHybridConnectionRequestUri(string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/hybridConnectionNamespaces/", false);
+            uri.AppendPath(namespaceName, true);
+            uri.AppendPath("/relays/", false);
+            uri.AppendPath(relayName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateDeleteHybridConnectionRequest(string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName)
         {
             var message = _pipeline.CreateMessage();
@@ -771,6 +905,25 @@ namespace Azure.ResourceManager.AppService
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListHybridConnectionKeysRequestUri(string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/hybridConnectionNamespaces/", false);
+            uri.AppendPath(namespaceName, true);
+            uri.AppendPath("/relays/", false);
+            uri.AppendPath(relayName, true);
+            uri.AppendPath("/listKeys", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListHybridConnectionKeysRequest(string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName)
@@ -864,6 +1017,25 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListWebAppsByHybridConnectionRequestUri(string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/hybridConnectionNamespaces/", false);
+            uri.AppendPath(namespaceName, true);
+            uri.AppendPath("/relays/", false);
+            uri.AppendPath(relayName, true);
+            uri.AppendPath("/sites", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListWebAppsByHybridConnectionRequest(string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName)
         {
             var message = _pipeline.CreateMessage();
@@ -898,7 +1070,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="namespaceName"/> or <paramref name="relayName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="namespaceName"/> or <paramref name="relayName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ResourceCollection>> ListWebAppsByHybridConnectionAsync(string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName, CancellationToken cancellationToken = default)
+        public async Task<Response<WebAppListResult>> ListWebAppsByHybridConnectionAsync(string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -912,9 +1084,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceCollection value = default;
+                        WebAppListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ResourceCollection.DeserializeResourceCollection(document.RootElement);
+                        value = WebAppListResult.DeserializeWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -931,7 +1103,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="namespaceName"/> or <paramref name="relayName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="namespaceName"/> or <paramref name="relayName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ResourceCollection> ListWebAppsByHybridConnection(string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName, CancellationToken cancellationToken = default)
+        public Response<WebAppListResult> ListWebAppsByHybridConnection(string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -945,14 +1117,29 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceCollection value = default;
+                        WebAppListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ResourceCollection.DeserializeResourceCollection(document.RootElement);
+                        value = WebAppListResult.DeserializeWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetHybridConnectionPlanLimitRequestUri(string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/hybridConnectionPlanLimits/limit", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetHybridConnectionPlanLimitRequest(string subscriptionId, string resourceGroupName, string name)
@@ -983,7 +1170,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<HybridConnectionLimitsData>> GetHybridConnectionPlanLimitAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public async Task<Response<HybridConnectionLimitData>> GetHybridConnectionPlanLimitAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -995,13 +1182,13 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        HybridConnectionLimitsData value = default;
+                        HybridConnectionLimitData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = HybridConnectionLimitsData.DeserializeHybridConnectionLimitsData(document.RootElement);
+                        value = HybridConnectionLimitData.DeserializeHybridConnectionLimitData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((HybridConnectionLimitsData)null, message.Response);
+                    return Response.FromValue((HybridConnectionLimitData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -1014,7 +1201,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<HybridConnectionLimitsData> GetHybridConnectionPlanLimit(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public Response<HybridConnectionLimitData> GetHybridConnectionPlanLimit(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1026,16 +1213,31 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        HybridConnectionLimitsData value = default;
+                        HybridConnectionLimitData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = HybridConnectionLimitsData.DeserializeHybridConnectionLimitsData(document.RootElement);
+                        value = HybridConnectionLimitData.DeserializeHybridConnectionLimitData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((HybridConnectionLimitsData)null, message.Response);
+                    return Response.FromValue((HybridConnectionLimitData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListHybridConnectionsRequestUri(string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/hybridConnectionRelays", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListHybridConnectionsRequest(string subscriptionId, string resourceGroupName, string name)
@@ -1066,7 +1268,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<HybridConnectionCollection>> ListHybridConnectionsAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public async Task<Response<HybridConnectionListResult>> ListHybridConnectionsAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1078,9 +1280,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        HybridConnectionCollection value = default;
+                        HybridConnectionListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = HybridConnectionCollection.DeserializeHybridConnectionCollection(document.RootElement);
+                        value = HybridConnectionListResult.DeserializeHybridConnectionListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -1095,7 +1297,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<HybridConnectionCollection> ListHybridConnections(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public Response<HybridConnectionListResult> ListHybridConnections(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1107,14 +1309,33 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        HybridConnectionCollection value = default;
+                        HybridConnectionListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = HybridConnectionCollection.DeserializeHybridConnectionCollection(document.RootElement);
+                        value = HybridConnectionListResult.DeserializeHybridConnectionListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateRestartWebAppsRequestUri(string subscriptionId, string resourceGroupName, string name, bool? softRestart)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/restartSites", false);
+            if (softRestart != null)
+            {
+                uri.AppendQuery("softRestart", softRestart.Value, true);
+            }
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateRestartWebAppsRequest(string subscriptionId, string resourceGroupName, string name, bool? softRestart)
@@ -1192,6 +1413,33 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListWebAppsRequestUri(string subscriptionId, string resourceGroupName, string name, string skipToken, string filter, string top)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/sites", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            if (skipToken != null)
+            {
+                uri.AppendQuery("$skipToken", skipToken, true);
+            }
+            if (filter != null)
+            {
+                uri.AppendQuery("$filter", filter, false);
+            }
+            if (top != null)
+            {
+                uri.AppendQuery("$top", top, true);
+            }
+            return uri;
+        }
+
         internal HttpMessage CreateListWebAppsRequest(string subscriptionId, string resourceGroupName, string name, string skipToken, string filter, string top)
         {
             var message = _pipeline.CreateMessage();
@@ -1235,7 +1483,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<WebAppCollection>> ListWebAppsAsync(string subscriptionId, string resourceGroupName, string name, string skipToken = null, string filter = null, string top = null, CancellationToken cancellationToken = default)
+        public async Task<Response<WebAppListResult>> ListWebAppsAsync(string subscriptionId, string resourceGroupName, string name, string skipToken = null, string filter = null, string top = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1247,9 +1495,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        WebAppCollection value = default;
+                        WebAppListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = WebAppCollection.DeserializeWebAppCollection(document.RootElement);
+                        value = WebAppListResult.DeserializeWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -1267,7 +1515,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<WebAppCollection> ListWebApps(string subscriptionId, string resourceGroupName, string name, string skipToken = null, string filter = null, string top = null, CancellationToken cancellationToken = default)
+        public Response<WebAppListResult> ListWebApps(string subscriptionId, string resourceGroupName, string name, string skipToken = null, string filter = null, string top = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1279,14 +1527,29 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        WebAppCollection value = default;
+                        WebAppListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = WebAppCollection.DeserializeWebAppCollection(document.RootElement);
+                        value = WebAppListResult.DeserializeWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetServerFarmSkusRequestUri(string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/skus", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetServerFarmSkusRequest(string subscriptionId, string resourceGroupName, string name)
@@ -1366,6 +1629,25 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListUsagesRequestUri(string subscriptionId, string resourceGroupName, string name, string filter)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/usages", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            if (filter != null)
+            {
+                uri.AppendQuery("$filter", filter, false);
+            }
+            return uri;
+        }
+
         internal HttpMessage CreateListUsagesRequest(string subscriptionId, string resourceGroupName, string name, string filter)
         {
             var message = _pipeline.CreateMessage();
@@ -1395,11 +1677,11 @@ namespace Azure.ResourceManager.AppService
         /// <param name="subscriptionId"> Your Azure subscription ID. This is a GUID-formatted string (e.g. 00000000-0000-0000-0000-000000000000). </param>
         /// <param name="resourceGroupName"> Name of the resource group to which the resource belongs. </param>
         /// <param name="name"> Name of App Service Plan. </param>
-        /// <param name="filter"> Return only usages/metrics specified in the filter. Filter conforms to odata syntax. Example: $filter=(name.value eq &apos;Metric1&apos; or name.value eq &apos;Metric2&apos;). </param>
+        /// <param name="filter"> Return only usages/metrics specified in the filter. Filter conforms to odata syntax. Example: $filter=(name.value eq 'Metric1' or name.value eq 'Metric2'). </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<CsmUsageQuotaCollection>> ListUsagesAsync(string subscriptionId, string resourceGroupName, string name, string filter = null, CancellationToken cancellationToken = default)
+        public async Task<Response<CsmUsageQuotaListResult>> ListUsagesAsync(string subscriptionId, string resourceGroupName, string name, string filter = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1411,9 +1693,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        CsmUsageQuotaCollection value = default;
+                        CsmUsageQuotaListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = CsmUsageQuotaCollection.DeserializeCsmUsageQuotaCollection(document.RootElement);
+                        value = CsmUsageQuotaListResult.DeserializeCsmUsageQuotaListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -1425,11 +1707,11 @@ namespace Azure.ResourceManager.AppService
         /// <param name="subscriptionId"> Your Azure subscription ID. This is a GUID-formatted string (e.g. 00000000-0000-0000-0000-000000000000). </param>
         /// <param name="resourceGroupName"> Name of the resource group to which the resource belongs. </param>
         /// <param name="name"> Name of App Service Plan. </param>
-        /// <param name="filter"> Return only usages/metrics specified in the filter. Filter conforms to odata syntax. Example: $filter=(name.value eq &apos;Metric1&apos; or name.value eq &apos;Metric2&apos;). </param>
+        /// <param name="filter"> Return only usages/metrics specified in the filter. Filter conforms to odata syntax. Example: $filter=(name.value eq 'Metric1' or name.value eq 'Metric2'). </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<CsmUsageQuotaCollection> ListUsages(string subscriptionId, string resourceGroupName, string name, string filter = null, CancellationToken cancellationToken = default)
+        public Response<CsmUsageQuotaListResult> ListUsages(string subscriptionId, string resourceGroupName, string name, string filter = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1441,14 +1723,29 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        CsmUsageQuotaCollection value = default;
+                        CsmUsageQuotaListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = CsmUsageQuotaCollection.DeserializeCsmUsageQuotaCollection(document.RootElement);
+                        value = CsmUsageQuotaListResult.DeserializeCsmUsageQuotaListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListVnetsRequestUri(string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/virtualNetworkConnections", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListVnetsRequest(string subscriptionId, string resourceGroupName, string name)
@@ -1479,7 +1776,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<IReadOnlyList<VnetInfoResourceData>>> ListVnetsAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public async Task<Response<IReadOnlyList<AppServiceVirtualNetworkData>>> ListVnetsAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1491,12 +1788,12 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        IReadOnlyList<VnetInfoResourceData> value = default;
+                        IReadOnlyList<AppServiceVirtualNetworkData> value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        List<VnetInfoResourceData> array = new List<VnetInfoResourceData>();
+                        List<AppServiceVirtualNetworkData> array = new List<AppServiceVirtualNetworkData>();
                         foreach (var item in document.RootElement.EnumerateArray())
                         {
-                            array.Add(VnetInfoResourceData.DeserializeVnetInfoResourceData(item));
+                            array.Add(AppServiceVirtualNetworkData.DeserializeAppServiceVirtualNetworkData(item));
                         }
                         value = array;
                         return Response.FromValue(value, message.Response);
@@ -1513,7 +1810,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<IReadOnlyList<VnetInfoResourceData>> ListVnets(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public Response<IReadOnlyList<AppServiceVirtualNetworkData>> ListVnets(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1525,12 +1822,12 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        IReadOnlyList<VnetInfoResourceData> value = default;
+                        IReadOnlyList<AppServiceVirtualNetworkData> value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        List<VnetInfoResourceData> array = new List<VnetInfoResourceData>();
+                        List<AppServiceVirtualNetworkData> array = new List<AppServiceVirtualNetworkData>();
                         foreach (var item in document.RootElement.EnumerateArray())
                         {
-                            array.Add(VnetInfoResourceData.DeserializeVnetInfoResourceData(item));
+                            array.Add(AppServiceVirtualNetworkData.DeserializeAppServiceVirtualNetworkData(item));
                         }
                         value = array;
                         return Response.FromValue(value, message.Response);
@@ -1538,6 +1835,22 @@ namespace Azure.ResourceManager.AppService
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetVnetFromServerFarmRequestUri(string subscriptionId, string resourceGroupName, string name, string vnetName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/virtualNetworkConnections/", false);
+            uri.AppendPath(vnetName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetVnetFromServerFarmRequest(string subscriptionId, string resourceGroupName, string name, string vnetName)
@@ -1570,7 +1883,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="vnetName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="vnetName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<VnetInfoResourceData>> GetVnetFromServerFarmAsync(string subscriptionId, string resourceGroupName, string name, string vnetName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceVirtualNetworkData>> GetVnetFromServerFarmAsync(string subscriptionId, string resourceGroupName, string name, string vnetName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1583,13 +1896,13 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        VnetInfoResourceData value = default;
+                        AppServiceVirtualNetworkData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = VnetInfoResourceData.DeserializeVnetInfoResourceData(document.RootElement);
+                        value = AppServiceVirtualNetworkData.DeserializeAppServiceVirtualNetworkData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((VnetInfoResourceData)null, message.Response);
+                    return Response.FromValue((AppServiceVirtualNetworkData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -1603,7 +1916,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="vnetName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="vnetName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<VnetInfoResourceData> GetVnetFromServerFarm(string subscriptionId, string resourceGroupName, string name, string vnetName, CancellationToken cancellationToken = default)
+        public Response<AppServiceVirtualNetworkData> GetVnetFromServerFarm(string subscriptionId, string resourceGroupName, string name, string vnetName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1616,16 +1929,34 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        VnetInfoResourceData value = default;
+                        AppServiceVirtualNetworkData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = VnetInfoResourceData.DeserializeVnetInfoResourceData(document.RootElement);
+                        value = AppServiceVirtualNetworkData.DeserializeAppServiceVirtualNetworkData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((VnetInfoResourceData)null, message.Response);
+                    return Response.FromValue((AppServiceVirtualNetworkData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetVnetGatewayRequestUri(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/virtualNetworkConnections/", false);
+            uri.AppendPath(vnetName, true);
+            uri.AppendPath("/gateways/", false);
+            uri.AppendPath(gatewayName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetVnetGatewayRequest(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName)
@@ -1657,11 +1988,11 @@ namespace Azure.ResourceManager.AppService
         /// <param name="resourceGroupName"> Name of the resource group to which the resource belongs. </param>
         /// <param name="name"> Name of the App Service plan. </param>
         /// <param name="vnetName"> Name of the Virtual Network. </param>
-        /// <param name="gatewayName"> Name of the gateway. Only the &apos;primary&apos; gateway is supported. </param>
+        /// <param name="gatewayName"> Name of the gateway. Only the 'primary' gateway is supported. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/> or <paramref name="gatewayName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/> or <paramref name="gatewayName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<VnetGatewayData>> GetVnetGatewayAsync(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceVirtualNetworkGatewayData>> GetVnetGatewayAsync(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1675,13 +2006,13 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        VnetGatewayData value = default;
+                        AppServiceVirtualNetworkGatewayData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = VnetGatewayData.DeserializeVnetGatewayData(document.RootElement);
+                        value = AppServiceVirtualNetworkGatewayData.DeserializeAppServiceVirtualNetworkGatewayData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((VnetGatewayData)null, message.Response);
+                    return Response.FromValue((AppServiceVirtualNetworkGatewayData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -1692,11 +2023,11 @@ namespace Azure.ResourceManager.AppService
         /// <param name="resourceGroupName"> Name of the resource group to which the resource belongs. </param>
         /// <param name="name"> Name of the App Service plan. </param>
         /// <param name="vnetName"> Name of the Virtual Network. </param>
-        /// <param name="gatewayName"> Name of the gateway. Only the &apos;primary&apos; gateway is supported. </param>
+        /// <param name="gatewayName"> Name of the gateway. Only the 'primary' gateway is supported. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/> or <paramref name="gatewayName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/> or <paramref name="gatewayName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<VnetGatewayData> GetVnetGateway(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName, CancellationToken cancellationToken = default)
+        public Response<AppServiceVirtualNetworkGatewayData> GetVnetGateway(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1710,19 +2041,37 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        VnetGatewayData value = default;
+                        AppServiceVirtualNetworkGatewayData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = VnetGatewayData.DeserializeVnetGatewayData(document.RootElement);
+                        value = AppServiceVirtualNetworkGatewayData.DeserializeAppServiceVirtualNetworkGatewayData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((VnetGatewayData)null, message.Response);
+                    return Response.FromValue((AppServiceVirtualNetworkGatewayData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
         }
 
-        internal HttpMessage CreateUpdateVnetGatewayRequest(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName, VnetGatewayData data)
+        internal RequestUriBuilder CreateUpdateVnetGatewayRequestUri(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName, AppServiceVirtualNetworkGatewayData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/virtualNetworkConnections/", false);
+            uri.AppendPath(vnetName, true);
+            uri.AppendPath("/gateways/", false);
+            uri.AppendPath(gatewayName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateUpdateVnetGatewayRequest(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName, AppServiceVirtualNetworkGatewayData data)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -1744,7 +2093,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(data);
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -1755,12 +2104,12 @@ namespace Azure.ResourceManager.AppService
         /// <param name="resourceGroupName"> Name of the resource group to which the resource belongs. </param>
         /// <param name="name"> Name of the App Service plan. </param>
         /// <param name="vnetName"> Name of the Virtual Network. </param>
-        /// <param name="gatewayName"> Name of the gateway. Only the &apos;primary&apos; gateway is supported. </param>
+        /// <param name="gatewayName"> Name of the gateway. Only the 'primary' gateway is supported. </param>
         /// <param name="data"> Definition of the gateway. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/>, <paramref name="gatewayName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/> or <paramref name="gatewayName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<VnetGatewayData>> UpdateVnetGatewayAsync(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName, VnetGatewayData data, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceVirtualNetworkGatewayData>> UpdateVnetGatewayAsync(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName, AppServiceVirtualNetworkGatewayData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1775,9 +2124,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        VnetGatewayData value = default;
+                        AppServiceVirtualNetworkGatewayData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = VnetGatewayData.DeserializeVnetGatewayData(document.RootElement);
+                        value = AppServiceVirtualNetworkGatewayData.DeserializeAppServiceVirtualNetworkGatewayData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -1790,12 +2139,12 @@ namespace Azure.ResourceManager.AppService
         /// <param name="resourceGroupName"> Name of the resource group to which the resource belongs. </param>
         /// <param name="name"> Name of the App Service plan. </param>
         /// <param name="vnetName"> Name of the Virtual Network. </param>
-        /// <param name="gatewayName"> Name of the gateway. Only the &apos;primary&apos; gateway is supported. </param>
+        /// <param name="gatewayName"> Name of the gateway. Only the 'primary' gateway is supported. </param>
         /// <param name="data"> Definition of the gateway. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/>, <paramref name="gatewayName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/> or <paramref name="gatewayName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<VnetGatewayData> UpdateVnetGateway(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName, VnetGatewayData data, CancellationToken cancellationToken = default)
+        public Response<AppServiceVirtualNetworkGatewayData> UpdateVnetGateway(string subscriptionId, string resourceGroupName, string name, string vnetName, string gatewayName, AppServiceVirtualNetworkGatewayData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1810,14 +2159,31 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        VnetGatewayData value = default;
+                        AppServiceVirtualNetworkGatewayData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = VnetGatewayData.DeserializeVnetGatewayData(document.RootElement);
+                        value = AppServiceVirtualNetworkGatewayData.DeserializeAppServiceVirtualNetworkGatewayData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListRoutesForVnetRequestUri(string subscriptionId, string resourceGroupName, string name, string vnetName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/virtualNetworkConnections/", false);
+            uri.AppendPath(vnetName, true);
+            uri.AppendPath("/routes", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListRoutesForVnetRequest(string subscriptionId, string resourceGroupName, string name, string vnetName)
@@ -1851,7 +2217,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="vnetName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="vnetName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<IReadOnlyList<VnetRoute>>> ListRoutesForVnetAsync(string subscriptionId, string resourceGroupName, string name, string vnetName, CancellationToken cancellationToken = default)
+        public async Task<Response<IReadOnlyList<AppServiceVirtualNetworkRoute>>> ListRoutesForVnetAsync(string subscriptionId, string resourceGroupName, string name, string vnetName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1864,12 +2230,12 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        IReadOnlyList<VnetRoute> value = default;
+                        IReadOnlyList<AppServiceVirtualNetworkRoute> value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        List<VnetRoute> array = new List<VnetRoute>();
+                        List<AppServiceVirtualNetworkRoute> array = new List<AppServiceVirtualNetworkRoute>();
                         foreach (var item in document.RootElement.EnumerateArray())
                         {
-                            array.Add(VnetRoute.DeserializeVnetRoute(item));
+                            array.Add(AppServiceVirtualNetworkRoute.DeserializeAppServiceVirtualNetworkRoute(item));
                         }
                         value = array;
                         return Response.FromValue(value, message.Response);
@@ -1887,7 +2253,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="vnetName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/> or <paramref name="vnetName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<IReadOnlyList<VnetRoute>> ListRoutesForVnet(string subscriptionId, string resourceGroupName, string name, string vnetName, CancellationToken cancellationToken = default)
+        public Response<IReadOnlyList<AppServiceVirtualNetworkRoute>> ListRoutesForVnet(string subscriptionId, string resourceGroupName, string name, string vnetName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1900,12 +2266,12 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        IReadOnlyList<VnetRoute> value = default;
+                        IReadOnlyList<AppServiceVirtualNetworkRoute> value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        List<VnetRoute> array = new List<VnetRoute>();
+                        List<AppServiceVirtualNetworkRoute> array = new List<AppServiceVirtualNetworkRoute>();
                         foreach (var item in document.RootElement.EnumerateArray())
                         {
-                            array.Add(VnetRoute.DeserializeVnetRoute(item));
+                            array.Add(AppServiceVirtualNetworkRoute.DeserializeAppServiceVirtualNetworkRoute(item));
                         }
                         value = array;
                         return Response.FromValue(value, message.Response);
@@ -1915,7 +2281,25 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
-        internal HttpMessage CreateCreateOrUpdateVnetRouteRequest(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, VnetRoute route)
+        internal RequestUriBuilder CreateCreateOrUpdateVnetRouteRequestUri(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, AppServiceVirtualNetworkRoute route)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/virtualNetworkConnections/", false);
+            uri.AppendPath(vnetName, true);
+            uri.AppendPath("/routes/", false);
+            uri.AppendPath(routeName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateCreateOrUpdateVnetRouteRequest(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, AppServiceVirtualNetworkRoute route)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -1937,7 +2321,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(route);
+            content.JsonWriter.WriteObjectValue(route, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -1953,7 +2337,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/>, <paramref name="routeName"/> or <paramref name="route"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/> or <paramref name="routeName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<VnetRoute>> CreateOrUpdateVnetRouteAsync(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, VnetRoute route, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceVirtualNetworkRoute>> CreateOrUpdateVnetRouteAsync(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, AppServiceVirtualNetworkRoute route, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1968,9 +2352,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        VnetRoute value = default;
+                        AppServiceVirtualNetworkRoute value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = VnetRoute.DeserializeVnetRoute(document.RootElement);
+                        value = AppServiceVirtualNetworkRoute.DeserializeAppServiceVirtualNetworkRoute(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -1988,7 +2372,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/>, <paramref name="routeName"/> or <paramref name="route"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/> or <paramref name="routeName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<VnetRoute> CreateOrUpdateVnetRoute(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, VnetRoute route, CancellationToken cancellationToken = default)
+        public Response<AppServiceVirtualNetworkRoute> CreateOrUpdateVnetRoute(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, AppServiceVirtualNetworkRoute route, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -2003,14 +2387,32 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        VnetRoute value = default;
+                        AppServiceVirtualNetworkRoute value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = VnetRoute.DeserializeVnetRoute(document.RootElement);
+                        value = AppServiceVirtualNetworkRoute.DeserializeAppServiceVirtualNetworkRoute(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateDeleteVnetRouteRequestUri(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/virtualNetworkConnections/", false);
+            uri.AppendPath(vnetName, true);
+            uri.AppendPath("/routes/", false);
+            uri.AppendPath(routeName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateDeleteVnetRouteRequest(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName)
@@ -2093,7 +2495,25 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
-        internal HttpMessage CreateUpdateVnetRouteRequest(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, VnetRoute route)
+        internal RequestUriBuilder CreateUpdateVnetRouteRequestUri(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, AppServiceVirtualNetworkRoute route)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/virtualNetworkConnections/", false);
+            uri.AppendPath(vnetName, true);
+            uri.AppendPath("/routes/", false);
+            uri.AppendPath(routeName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateUpdateVnetRouteRequest(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, AppServiceVirtualNetworkRoute route)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -2115,7 +2535,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(route);
+            content.JsonWriter.WriteObjectValue(route, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -2131,7 +2551,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/>, <paramref name="routeName"/> or <paramref name="route"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/> or <paramref name="routeName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<VnetRoute>> UpdateVnetRouteAsync(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, VnetRoute route, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceVirtualNetworkRoute>> UpdateVnetRouteAsync(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, AppServiceVirtualNetworkRoute route, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -2146,9 +2566,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        VnetRoute value = default;
+                        AppServiceVirtualNetworkRoute value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = VnetRoute.DeserializeVnetRoute(document.RootElement);
+                        value = AppServiceVirtualNetworkRoute.DeserializeAppServiceVirtualNetworkRoute(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2166,7 +2586,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/>, <paramref name="routeName"/> or <paramref name="route"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="vnetName"/> or <paramref name="routeName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<VnetRoute> UpdateVnetRoute(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, VnetRoute route, CancellationToken cancellationToken = default)
+        public Response<AppServiceVirtualNetworkRoute> UpdateVnetRoute(string subscriptionId, string resourceGroupName, string name, string vnetName, string routeName, AppServiceVirtualNetworkRoute route, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -2181,14 +2601,31 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        VnetRoute value = default;
+                        AppServiceVirtualNetworkRoute value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = VnetRoute.DeserializeVnetRoute(document.RootElement);
+                        value = AppServiceVirtualNetworkRoute.DeserializeAppServiceVirtualNetworkRoute(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateRebootWorkerRequestUri(string subscriptionId, string resourceGroupName, string name, string workerName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/serverfarms/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/workers/", false);
+            uri.AppendPath(workerName, true);
+            uri.AppendPath("/reboot", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateRebootWorkerRequest(string subscriptionId, string resourceGroupName, string name, string workerName)
@@ -2266,6 +2703,14 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListNextPageRequestUri(string nextLink, string subscriptionId, bool? detailed)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
+        }
+
         internal HttpMessage CreateListNextPageRequest(string nextLink, string subscriptionId, bool? detailed)
         {
             var message = _pipeline.CreateMessage();
@@ -2290,7 +2735,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/> or <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<Models.AppServicePlanCollection>> ListNextPageAsync(string nextLink, string subscriptionId, bool? detailed = null, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServicePlanListResult>> ListNextPageAsync(string nextLink, string subscriptionId, bool? detailed = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2301,9 +2746,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServicePlanCollection value = default;
+                        AppServicePlanListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = Models.AppServicePlanCollection.DeserializeAppServicePlanCollection(document.RootElement);
+                        value = AppServicePlanListResult.DeserializeAppServicePlanListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2321,7 +2766,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/> or <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<Models.AppServicePlanCollection> ListNextPage(string nextLink, string subscriptionId, bool? detailed = null, CancellationToken cancellationToken = default)
+        public Response<AppServicePlanListResult> ListNextPage(string nextLink, string subscriptionId, bool? detailed = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2332,14 +2777,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServicePlanCollection value = default;
+                        AppServicePlanListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = Models.AppServicePlanCollection.DeserializeAppServicePlanCollection(document.RootElement);
+                        value = AppServicePlanListResult.DeserializeAppServicePlanListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListByResourceGroupNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListByResourceGroupNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName)
@@ -2363,7 +2816,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<Models.AppServicePlanCollection>> ListByResourceGroupNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServicePlanListResult>> ListByResourceGroupNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2375,9 +2828,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServicePlanCollection value = default;
+                        AppServicePlanListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = Models.AppServicePlanCollection.DeserializeAppServicePlanCollection(document.RootElement);
+                        value = AppServicePlanListResult.DeserializeAppServicePlanListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2392,7 +2845,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<Models.AppServicePlanCollection> ListByResourceGroupNextPage(string nextLink, string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
+        public Response<AppServicePlanListResult> ListByResourceGroupNextPage(string nextLink, string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2404,14 +2857,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServicePlanCollection value = default;
+                        AppServicePlanListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = Models.AppServicePlanCollection.DeserializeAppServicePlanCollection(document.RootElement);
+                        value = AppServicePlanListResult.DeserializeAppServicePlanListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListWebAppsByHybridConnectionNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListWebAppsByHybridConnectionNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName)
@@ -2438,7 +2899,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="namespaceName"/> or <paramref name="relayName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="namespaceName"/> or <paramref name="relayName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ResourceCollection>> ListWebAppsByHybridConnectionNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName, CancellationToken cancellationToken = default)
+        public async Task<Response<WebAppListResult>> ListWebAppsByHybridConnectionNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2453,9 +2914,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceCollection value = default;
+                        WebAppListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ResourceCollection.DeserializeResourceCollection(document.RootElement);
+                        value = WebAppListResult.DeserializeWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2473,7 +2934,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="namespaceName"/> or <paramref name="relayName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="name"/>, <paramref name="namespaceName"/> or <paramref name="relayName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ResourceCollection> ListWebAppsByHybridConnectionNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName, CancellationToken cancellationToken = default)
+        public Response<WebAppListResult> ListWebAppsByHybridConnectionNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, string namespaceName, string relayName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2488,14 +2949,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        ResourceCollection value = default;
+                        WebAppListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ResourceCollection.DeserializeResourceCollection(document.RootElement);
+                        value = WebAppListResult.DeserializeWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListHybridConnectionsNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListHybridConnectionsNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string name)
@@ -2520,7 +2989,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<HybridConnectionCollection>> ListHybridConnectionsNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public async Task<Response<HybridConnectionListResult>> ListHybridConnectionsNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2533,9 +3002,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        HybridConnectionCollection value = default;
+                        HybridConnectionListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = HybridConnectionCollection.DeserializeHybridConnectionCollection(document.RootElement);
+                        value = HybridConnectionListResult.DeserializeHybridConnectionListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2551,7 +3020,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<HybridConnectionCollection> ListHybridConnectionsNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public Response<HybridConnectionListResult> ListHybridConnectionsNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2564,14 +3033,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        HybridConnectionCollection value = default;
+                        HybridConnectionListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = HybridConnectionCollection.DeserializeHybridConnectionCollection(document.RootElement);
+                        value = HybridConnectionListResult.DeserializeHybridConnectionListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListWebAppsNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string name, string skipToken, string filter, string top)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListWebAppsNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string name, string skipToken, string filter, string top)
@@ -2599,7 +3076,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<WebAppCollection>> ListWebAppsNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, string skipToken = null, string filter = null, string top = null, CancellationToken cancellationToken = default)
+        public async Task<Response<WebAppListResult>> ListWebAppsNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, string skipToken = null, string filter = null, string top = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2612,9 +3089,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        WebAppCollection value = default;
+                        WebAppListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = WebAppCollection.DeserializeWebAppCollection(document.RootElement);
+                        value = WebAppListResult.DeserializeWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2633,7 +3110,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<WebAppCollection> ListWebAppsNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, string skipToken = null, string filter = null, string top = null, CancellationToken cancellationToken = default)
+        public Response<WebAppListResult> ListWebAppsNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, string skipToken = null, string filter = null, string top = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2646,14 +3123,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        WebAppCollection value = default;
+                        WebAppListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = WebAppCollection.DeserializeWebAppCollection(document.RootElement);
+                        value = WebAppListResult.DeserializeWebAppListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListUsagesNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string name, string filter)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListUsagesNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string name, string filter)
@@ -2675,11 +3160,11 @@ namespace Azure.ResourceManager.AppService
         /// <param name="subscriptionId"> Your Azure subscription ID. This is a GUID-formatted string (e.g. 00000000-0000-0000-0000-000000000000). </param>
         /// <param name="resourceGroupName"> Name of the resource group to which the resource belongs. </param>
         /// <param name="name"> Name of App Service Plan. </param>
-        /// <param name="filter"> Return only usages/metrics specified in the filter. Filter conforms to odata syntax. Example: $filter=(name.value eq &apos;Metric1&apos; or name.value eq &apos;Metric2&apos;). </param>
+        /// <param name="filter"> Return only usages/metrics specified in the filter. Filter conforms to odata syntax. Example: $filter=(name.value eq 'Metric1' or name.value eq 'Metric2'). </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<CsmUsageQuotaCollection>> ListUsagesNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, string filter = null, CancellationToken cancellationToken = default)
+        public async Task<Response<CsmUsageQuotaListResult>> ListUsagesNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, string filter = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2692,9 +3177,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        CsmUsageQuotaCollection value = default;
+                        CsmUsageQuotaListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = CsmUsageQuotaCollection.DeserializeCsmUsageQuotaCollection(document.RootElement);
+                        value = CsmUsageQuotaListResult.DeserializeCsmUsageQuotaListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2707,11 +3192,11 @@ namespace Azure.ResourceManager.AppService
         /// <param name="subscriptionId"> Your Azure subscription ID. This is a GUID-formatted string (e.g. 00000000-0000-0000-0000-000000000000). </param>
         /// <param name="resourceGroupName"> Name of the resource group to which the resource belongs. </param>
         /// <param name="name"> Name of App Service Plan. </param>
-        /// <param name="filter"> Return only usages/metrics specified in the filter. Filter conforms to odata syntax. Example: $filter=(name.value eq &apos;Metric1&apos; or name.value eq &apos;Metric2&apos;). </param>
+        /// <param name="filter"> Return only usages/metrics specified in the filter. Filter conforms to odata syntax. Example: $filter=(name.value eq 'Metric1' or name.value eq 'Metric2'). </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<CsmUsageQuotaCollection> ListUsagesNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, string filter = null, CancellationToken cancellationToken = default)
+        public Response<CsmUsageQuotaListResult> ListUsagesNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, string filter = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2724,9 +3209,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        CsmUsageQuotaCollection value = default;
+                        CsmUsageQuotaListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = CsmUsageQuotaCollection.DeserializeCsmUsageQuotaCollection(document.RootElement);
+                        value = CsmUsageQuotaListResult.DeserializeCsmUsageQuotaListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:

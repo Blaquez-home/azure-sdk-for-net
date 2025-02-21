@@ -22,18 +22,18 @@ namespace Azure.ResourceManager.Sql.Models
             _value = value ?? throw new ArgumentNullException(nameof(value));
         }
 
-        private const string DTUValue = "DTU";
+        private const string DtuValue = "DTU";
         private const string VCoresValue = "VCores";
 
         /// <summary> DTU. </summary>
-        public static PerformanceLevelUnit DTU { get; } = new PerformanceLevelUnit(DTUValue);
+        public static PerformanceLevelUnit Dtu { get; } = new PerformanceLevelUnit(DtuValue);
         /// <summary> VCores. </summary>
         public static PerformanceLevelUnit VCores { get; } = new PerformanceLevelUnit(VCoresValue);
         /// <summary> Determines if two <see cref="PerformanceLevelUnit"/> values are the same. </summary>
         public static bool operator ==(PerformanceLevelUnit left, PerformanceLevelUnit right) => left.Equals(right);
         /// <summary> Determines if two <see cref="PerformanceLevelUnit"/> values are not the same. </summary>
         public static bool operator !=(PerformanceLevelUnit left, PerformanceLevelUnit right) => !left.Equals(right);
-        /// <summary> Converts a string to a <see cref="PerformanceLevelUnit"/>. </summary>
+        /// <summary> Converts a <see cref="string"/> to a <see cref="PerformanceLevelUnit"/>. </summary>
         public static implicit operator PerformanceLevelUnit(string value) => new PerformanceLevelUnit(value);
 
         /// <inheritdoc />
@@ -44,7 +44,7 @@ namespace Azure.ResourceManager.Sql.Models
 
         /// <inheritdoc />
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+        public override int GetHashCode() => _value != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(_value) : 0;
         /// <inheritdoc />
         public override string ToString() => _value;
     }

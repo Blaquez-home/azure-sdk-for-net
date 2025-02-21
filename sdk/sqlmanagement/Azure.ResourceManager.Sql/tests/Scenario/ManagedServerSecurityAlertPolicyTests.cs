@@ -10,14 +10,14 @@ using Azure.ResourceManager.Resources.Models;
 using Azure.ResourceManager.Sql.Models;
 using NUnit.Framework;
 
-namespace Azure.ResourceManager.Sql.Tests.Scenario
+namespace Azure.ResourceManager.Sql.Tests
 {
-    public class ManagedServerSecurityAlertPolicyTests : SqlManagementClientBase
+    public class ManagedServerSecurityAlertPolicyTests : SqlManagementTestBase
     {
         private ResourceGroupResource _resourceGroup;
         private ResourceIdentifier _resourceGroupIdentifier;
         public ManagedServerSecurityAlertPolicyTests(bool isAsync)
-            : base(isAsync)
+            : base(isAsync)//, RecordedTestMode.Record)
         {
         }
 
@@ -39,15 +39,12 @@ namespace Azure.ResourceManager.Sql.Tests.Scenario
 
         [Test]
         [RecordedTest]
-        [Ignore("Re-record before GA")]
         public async Task ManagedServerSecurityAlertPolicyApiTests()
         {
             // Create Managed Instance
             string managedInstanceName = Recording.GenerateAssetName("managed-instance-");
-            string networkSecurityGroupName = Recording.GenerateAssetName("network-security-group-");
-            string routeTableName = Recording.GenerateAssetName("route-table-");
             string vnetName = Recording.GenerateAssetName("vnet-");
-            var managedInstance = await CreateDefaultManagedInstance(managedInstanceName, networkSecurityGroupName, routeTableName, vnetName, AzureLocation.WestUS2, _resourceGroup);
+            var managedInstance = await CreateDefaultManagedInstance(managedInstanceName, vnetName, AzureLocation.WestUS2, _resourceGroup);
             Assert.IsNotNull(managedInstance.Data);
 
             string securityAlertPoliciesName = "Default";
@@ -59,7 +56,7 @@ namespace Azure.ResourceManager.Sql.Tests.Scenario
                 State = SecurityAlertsPolicyState.Enabled,
                 DisabledAlerts = { },
                 EmailAddresses = { },
-                EmailAccountAdmins = false,
+                SendToEmailAccountAdmins = false,
                 RetentionDays = 0,
             };
             var securityAlertPolicie = await collection.CreateOrUpdateAsync(WaitUntil.Completed, securityAlertPoliciesName, data);

@@ -13,9 +13,9 @@ namespace Azure.ResourceManager.CosmosDB.Tests
     public class PrivateEndpointConnectionTests : CosmosDBManagementClientBase
     {
         private ResourceIdentifier _databaseAccountIdentifier;
-        private DatabaseAccountResource _databaseAccount;
+        private CosmosDBAccountResource _databaseAccount;
 
-        public PrivateEndpointConnectionTests(bool isAsync) : base(isAsync)
+        public PrivateEndpointConnectionTests(bool isAsync) : base(isAsync)//, RecordedTestMode.Record)
         {
         }
 
@@ -26,16 +26,19 @@ namespace Azure.ResourceManager.CosmosDB.Tests
         {
             _resourceGroup = await GlobalClient.GetResourceGroupResource(_resourceGroupIdentifier).GetAsync();
 
-            _databaseAccountIdentifier = (await CreateDatabaseAccount(SessionRecording.GenerateAssetName("dbaccount-"), DatabaseAccountKind.MongoDB)).Id;
+            _databaseAccountIdentifier = (await CreateDatabaseAccount(SessionRecording.GenerateAssetName("dbaccount-"), CosmosDBAccountKind.MongoDB)).Id;
             await StopSessionRecordingAsync();
         }
 
         [OneTimeTearDown]
-        public virtual void GlobalTeardown()
+        public async Task GlobalTeardown()
         {
-            if (_databaseAccountIdentifier != null)
+            if (Mode != RecordedTestMode.Playback)
             {
-                ArmClient.GetDatabaseAccountResource(_databaseAccountIdentifier).Delete(WaitUntil.Completed);
+                if (_databaseAccountIdentifier != null)
+                {
+                    await ArmClient.GetCosmosDBAccountResource(_databaseAccountIdentifier).DeleteAsync(WaitUntil.Completed);
+                }
             }
         }
 
@@ -45,20 +48,22 @@ namespace Azure.ResourceManager.CosmosDB.Tests
             // need to overwrite with the resource group fetched by ArmClient, otherwise it won't be recorded
             _resourceGroup = await ArmClient.GetResourceGroupResource(_resourceGroupIdentifier).GetAsync();
 
-            _databaseAccount = await ArmClient.GetDatabaseAccountResource(_databaseAccountIdentifier).GetAsync();
+            _databaseAccount = await ArmClient.GetCosmosDBAccountResource(_databaseAccountIdentifier).GetAsync();
         }
 
         [TearDown]
         public async Task TearDown()
         {
-            var privateEndpointConnections = await PrivateEndpointConnectionCollection.GetAllAsync().ToEnumerableAsync();
-            foreach (var connection in privateEndpointConnections)
+            if (Mode != RecordedTestMode.Playback)
             {
-                await connection.DeleteAsync(WaitUntil.Completed);
+                var privateEndpointConnections = await PrivateEndpointConnectionCollection.GetAllAsync().ToEnumerableAsync();
+                foreach (var connection in privateEndpointConnections)
+                {
+                    await connection.DeleteAsync(WaitUntil.Completed);
+                }
             }
         }
 
-        [Test]
         [RecordedTest]
         public async Task PrivateEndpointConnectionCreateAndUpdate()
         {
@@ -84,7 +89,6 @@ namespace Azure.ResourceManager.CosmosDB.Tests
             Assert.AreEqual("Approved", privateEndpointConnection.Data.ConnectionState.Status);
         }
 
-        [Test]
         [RecordedTest]
         public async Task PrivateEndpointConnectionList()
         {
@@ -96,7 +100,6 @@ namespace Azure.ResourceManager.CosmosDB.Tests
             VerifyPrivateEndpointConnections(privateEndpoint.Data.ManualPrivateLinkServiceConnections[0], privateEndpointConnections[0]);
         }
 
-        [Test]
         [RecordedTest]
         public async Task PrivateEndpointConnectionDelete()
         {
@@ -117,29 +120,30 @@ namespace Azure.ResourceManager.CosmosDB.Tests
         protected async Task<PrivateEndpointResource> CreatePrivateEndpoint()
         {
             var vnetName = Recording.GenerateAssetName("vnet-");
+            var name = Recording.GenerateAssetName("pe-");
+            var pecName = Recording.GenerateAssetName("pec");
             var vnet = new VirtualNetworkData()
             {
                 Location = AzureLocation.WestUS,
                 Subnets = { new SubnetData() {
                     Name = "default",
                     AddressPrefix = "10.0.1.0/24",
-                    PrivateEndpointNetworkPolicies = VirtualNetworkPrivateEndpointNetworkPolicies.Disabled
+                    PrivateEndpointNetworkPolicy = VirtualNetworkPrivateEndpointNetworkPolicy.Disabled
                 }}
             };
             vnet.AddressPrefixes.Add("10.0.0.0/16");
             vnet.DhcpOptionsDnsServers.Add("10.1.1.1");
             vnet.DhcpOptionsDnsServers.Add("10.1.2.4");
-            VirtualNetworkResource virtualNetwork = (await _resourceGroup.GetVirtualNetworks().CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnet)).Value;
+            ResourceIdentifier subnetID = await GetSubnetId(vnetName, vnet);
 
-            var name = Recording.GenerateAssetName("pe-");
             var privateEndpointData = new PrivateEndpointData
             {
                 Location = AzureLocation.WestUS,
-                Subnet = virtualNetwork.Data.Subnets[0],
+                Subnet = new SubnetData() { Id = subnetID },
                 ManualPrivateLinkServiceConnections = {
-                    new PrivateLinkServiceConnection
+                    new NetworkPrivateLinkServiceConnection
                     {
-                        Name = Recording.GenerateAssetName("pec"),
+                        Name = pecName,
                         // TODO: externalize or create the service on-demand, like virtual network
                         //PrivateLinkServiceId = $"/subscriptions/{TestEnvironment.SubscriptionId}/resourceGroups/{resourceGroup.Data.Name}/providers/Microsoft.Storage/storageAccounts/{storageAccount.Name}",
                         PrivateLinkServiceId = _databaseAccountIdentifier,
@@ -153,7 +157,7 @@ namespace Azure.ResourceManager.CosmosDB.Tests
             return (await _resourceGroup.GetPrivateEndpoints().CreateOrUpdateAsync(WaitUntil.Completed, name, privateEndpointData)).Value;
         }
 
-        private void VerifyPrivateEndpointConnections(PrivateLinkServiceConnection expectedValue, CosmosDBPrivateEndpointConnectionResource actualValue)
+        private void VerifyPrivateEndpointConnections(NetworkPrivateLinkServiceConnection expectedValue, CosmosDBPrivateEndpointConnectionResource actualValue)
         {
             // Services will give diffferent ids and names for the incoming private endpoint connections, so comparing them is meaningless
             //Assert.AreEqual(expectedValue.Id, actualValue.Id);

@@ -7,34 +7,42 @@
 
 namespace Azure.Communication
 {
-    /// <summary> Identifies a participant in Azure Communication services. A participant is, for example, a phone number or an Azure communication user. This model must be interpreted as a union: Apart from rawId, at most one further property may be set. </summary>
+    /// <summary> The CommunicationIdentifierModel. </summary>
     internal partial class CommunicationIdentifierModel
     {
-        /// <summary> Initializes a new instance of CommunicationIdentifierModel. </summary>
+        /// <summary> Initializes a new instance of <see cref="CommunicationIdentifierModel"/>. </summary>
         public CommunicationIdentifierModel()
         {
         }
 
-        /// <summary> Initializes a new instance of CommunicationIdentifierModel. </summary>
-        /// <param name="rawId"> Raw Id of the identifier. Optional in requests, required in responses. </param>
+        /// <summary> Initializes a new instance of <see cref="CommunicationIdentifierModel"/>. </summary>
+        /// <param name="rawId"> Full ID of the identifier. </param>
+        /// <param name="kind"> Type of CommunicationIdentifierModel. </param>
         /// <param name="communicationUser"> The communication user. </param>
         /// <param name="phoneNumber"> The phone number. </param>
         /// <param name="microsoftTeamsUser"> The Microsoft Teams user. </param>
-        internal CommunicationIdentifierModel(string rawId, CommunicationUserIdentifierModel communicationUser, PhoneNumberIdentifierModel phoneNumber, MicrosoftTeamsUserIdentifierModel microsoftTeamsUser)
+        /// <param name="microsoftTeamsApp"> The Microsoft Teams application. </param>
+        internal CommunicationIdentifierModel(string rawId, CommunicationIdentifierModelKind? kind, CommunicationUserIdentifierModel communicationUser, PhoneNumberIdentifierModel phoneNumber, MicrosoftTeamsUserIdentifierModel microsoftTeamsUser, MicrosoftTeamsAppIdentifierModel microsoftTeamsApp)
         {
             RawId = rawId;
+            Kind = kind;
             CommunicationUser = communicationUser;
             PhoneNumber = phoneNumber;
             MicrosoftTeamsUser = microsoftTeamsUser;
+            MicrosoftTeamsApp = microsoftTeamsApp;
         }
 
-        /// <summary> Raw Id of the identifier. Optional in requests, required in responses. </summary>
+        /// <summary> Full ID of the identifier. </summary>
         public string RawId { get; set; }
+        /// <summary> Type of CommunicationIdentifierModel. </summary>
+        public CommunicationIdentifierModelKind? Kind { get; set; }
         /// <summary> The communication user. </summary>
         public CommunicationUserIdentifierModel CommunicationUser { get; set; }
         /// <summary> The phone number. </summary>
         public PhoneNumberIdentifierModel PhoneNumber { get; set; }
         /// <summary> The Microsoft Teams user. </summary>
         public MicrosoftTeamsUserIdentifierModel MicrosoftTeamsUser { get; set; }
+        /// <summary> The Microsoft Teams application. </summary>
+        public MicrosoftTeamsAppIdentifierModel MicrosoftTeamsApp { get; set; }
     }
 }

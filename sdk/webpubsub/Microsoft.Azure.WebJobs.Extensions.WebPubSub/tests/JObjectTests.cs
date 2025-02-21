@@ -183,10 +183,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub.Tests
             Assert.AreEqual("aaa", message.UserId);
         }
 
-        [TestCase]
-        public async Task ParseMessageResponse()
+        [TestCase(@"""binary""", Constants.ContentTypes.BinaryContentType)]
+        [TestCase("0", Constants.ContentTypes.BinaryContentType)]
+        [TestCase(@"""Json""", Constants.ContentTypes.JsonContentType)]
+        [TestCase("1", Constants.ContentTypes.JsonContentType)]
+        [TestCase(@"""text""", Constants.ContentTypes.PlainTextContentType)]
+        [TestCase("2", Constants.ContentTypes.PlainTextContentType)]
+        public async Task ParseMessageResponse(string dataType, string expectContentType)
         {
-            var test = @"{""data"":""test"", ""dataType"":""text""}";
+            var test = @"{""data"":""test"", ""dataType"":{0}}";
+            test = test.Replace("{0}", dataType);
 
             var result = BuildResponse(test, RequestType.User);
 
@@ -195,7 +201,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub.Tests
 
             var message = await result.Content.ReadAsStringAsync();
             Assert.AreEqual("test", message);
-            Assert.AreEqual(Constants.ContentTypes.PlainTextContentType, result.Content.Headers.ContentType.MediaType);
+            Assert.AreEqual(expectContentType, result.Content.Headers.ContentType.MediaType);
         }
 
         [TestCase]
@@ -228,9 +234,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub.Tests
             var test = @"{""test"":""test"",""errorMessage"":""not valid user.""}";
             var expected = JObject.FromObject(JsonConvert.DeserializeObject<ConnectEventResponse>(test));
 
-            // Will be formated to controlled class.
-            Assert.AreEqual("Success", expected["code"].Value<string>());
-
             var result = BuildResponse(test, RequestType.Connect);
             var content = await result.Content.ReadAsStringAsync();
             var actual = JObject.Parse(content);
@@ -249,9 +252,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub.Tests
 
             Assert.NotNull(serialize["request"]);
             Assert.NotNull(serialize["response"]);
-            Assert.AreEqual("", serialize["errorMessage"].ToString());
-            Assert.AreEqual("False", serialize["hasError"].ToString());
-            Assert.AreEqual("False", serialize["isPreflight"].ToString());
+            Assert.AreEqual(null, serialize["errorMessage"].Value<string>());
+            Assert.AreEqual(false, serialize["hasError"].Value<bool>());
+            Assert.AreEqual(false, serialize["isPreflight"].Value<bool>());
+            Assert.AreEqual("System", serialize["request"]["connectionContext"]["eventType"].Value<string>());
         }
 
         [TestCase]
@@ -273,9 +277,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub.Tests
             Assert.NotNull(request);
             Assert.AreEqual(subprotocol, request["subprotocols"].ToObject<string[]>());
             Assert.NotNull(serialize["response"]);
-            Assert.AreEqual("", serialize["errorMessage"].ToString());
-            Assert.AreEqual("False", serialize["hasError"].ToString());
-            Assert.AreEqual("False", serialize["isPreflight"].ToString());
+            Assert.AreEqual(null, serialize["errorMessage"].Value<string>());
+            Assert.AreEqual(false, serialize["hasError"].Value<bool>());
+            Assert.AreEqual(false, serialize["isPreflight"].Value<bool>());
         }
 
         [TestCase]
@@ -288,11 +292,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub.Tests
             var request = serialize["request"];
 
             Assert.NotNull(request);
-            Assert.AreEqual("test", request["data"].ToString());
+            Assert.AreEqual("test", request["data"].Value<string>());
             Assert.NotNull(serialize["response"]);
-            Assert.AreEqual("", serialize["errorMessage"].ToString());
-            Assert.AreEqual("False", serialize["hasError"].ToString());
-            Assert.AreEqual("False", serialize["isPreflight"].ToString());
+            Assert.AreEqual(null, serialize["errorMessage"].Value<string>());
+            Assert.AreEqual(false, serialize["hasError"].Value<bool>());
+            Assert.AreEqual(false, serialize["isPreflight"].Value<bool>());
         }
 
         [TestCase]
@@ -304,11 +308,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub.Tests
             var request = serialize["request"];
 
             Assert.NotNull(request);
-            Assert.AreEqual("dropped", request["reason"].ToString());
+            Assert.AreEqual("dropped", request["reason"].Value<string>());
             Assert.NotNull(serialize["response"]);
-            Assert.AreEqual("", serialize["errorMessage"].ToString());
-            Assert.AreEqual("False", serialize["hasError"].ToString());
-            Assert.AreEqual("False", serialize["isPreflight"].ToString());
+            Assert.AreEqual(null, serialize["errorMessage"].Value<string>());
+            Assert.AreEqual(false, serialize["hasError"].Value<bool>());
+            Assert.AreEqual(false, serialize["isPreflight"].Value<bool>());
         }
 
         [TestCase]
@@ -321,11 +325,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub.Tests
 
             Assert.Null(serialize["request"]);
             Assert.NotNull(response);
-            Assert.AreEqual("400", response["status"].ToString());
-            Assert.AreEqual("Invalid Request", response["body"].ToString());
-            Assert.AreEqual("Invalid Request", serialize["errorMessage"].ToString());
-            Assert.AreEqual("True", serialize["hasError"].ToString());
-            Assert.AreEqual("False", serialize["isPreflight"].ToString());
+            Assert.AreEqual(400, response["status"].Value<int>());
+            Assert.AreEqual("Invalid Request", response["body"].Value<string>());
+            Assert.AreEqual("Invalid Request", serialize["errorMessage"].Value<string>());
+            Assert.AreEqual(true, serialize["hasError"].Value<bool>());
+            Assert.AreEqual(false, serialize["isPreflight"].Value<bool>());
         }
 
         [TestCase]
@@ -338,9 +342,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub.Tests
 
             var json = JObject.FromObject(connection);
 
-            Assert.AreEqual(baseUrl, json["baseUrl"].ToString());
-            Assert.AreEqual(accessToken, json["accessToken"].ToString());
-            Assert.AreEqual(url, json["url"].ToString());
+            Assert.AreEqual(baseUrl, json["baseUrl"].Value<Uri>().ToString());
+            Assert.AreEqual(accessToken, json["accessToken"].Value<string>());
+            Assert.AreEqual(url, json["url"].Value<Uri>().ToString());
         }
 
         [TestCase]
@@ -371,11 +375,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub.Tests
             var request = jObj["request"];
 
             Assert.NotNull(request);
-            Assert.AreEqual("test", request["data"].ToString());
+            Assert.AreEqual("test", request["data"].Value<string>());
             Assert.NotNull(jObj["response"]);
-            Assert.AreEqual("", jObj["errorMessage"].ToString());
-            Assert.AreEqual("False", jObj["hasError"].ToString());
-            Assert.AreEqual("False", jObj["isPreflight"].ToString());
+            Assert.AreEqual(null, jObj["errorMessage"].Value<string>());
+            Assert.AreEqual(false, jObj["hasError"].Value<bool>());
+            Assert.AreEqual(false, jObj["isPreflight"].Value<bool>());
 
             var context1 = request["connectionContext"];
             Assert.NotNull(context1);
@@ -413,8 +417,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.WebPubSub.Tests
             Assert.AreEqual("test", request["data"].Value<string>());
             Assert.NotNull(jObj["response"]);
             Assert.AreEqual(null, jObj["errorMessage"].Value<string>());
-            Assert.AreEqual("False", jObj["hasError"].Value<string>());
-            Assert.AreEqual("False", jObj["isPreflight"].Value<string>());
+            Assert.AreEqual(false, jObj["hasError"].Value<bool>());
+            Assert.AreEqual(false, jObj["isPreflight"].Value<bool>());
             var context1 = request["connectionContext"];
             Assert.NotNull(context1);
             var states1 = context1["states"];

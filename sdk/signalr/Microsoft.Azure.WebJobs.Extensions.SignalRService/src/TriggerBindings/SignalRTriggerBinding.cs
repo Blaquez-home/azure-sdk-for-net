@@ -11,12 +11,13 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
 using Microsoft.Azure.WebJobs.Host.Triggers;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -28,16 +29,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly ParameterInfo _parameterInfo;
         private readonly SignalRTriggerAttribute _attribute;
         private readonly ISignalRTriggerDispatcher _dispatcher;
-        private readonly AccessKey[] _accessKeys;
+        private readonly IOptionsMonitor<SignatureValidationOptions> _signatureValidationOptions;
         private readonly ServiceHubContext _hubContext;
 
-        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, ISignalRTriggerDispatcher dispatcher, AccessKey[] accessKeys, ServiceHubContext hubContext)
+        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, ISignalRTriggerDispatcher dispatcher, IOptionsMonitor<SignatureValidationOptions> signatureValidationOptions, ServiceHubContext hubContext)
         {
             _parameterInfo = parameterInfo ?? throw new ArgumentNullException(nameof(parameterInfo));
             _attribute = attribute ?? throw new ArgumentNullException(nameof(attribute));
             _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
-            _accessKeys = accessKeys ?? throw new ArgumentNullException(nameof(accessKeys));
-            _hubContext = hubContext;
+            _signatureValidationOptions = signatureValidationOptions ?? throw new ArgumentNullException(nameof(signatureValidationOptions));
+            _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
             BindingDataContract = CreateBindingContract(_attribute, _parameterInfo);
         }
 
@@ -80,7 +81,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             // It's not a real listener, and it doesn't need a start or close.
             _dispatcher.Map((_attribute.HubName, _attribute.Category, _attribute.Event),
-                new ExecutionContext { Executor = context.Executor, AccessKeys = _accessKeys });
+                new ExecutionContext { Executor = context.Executor, SignatureValidationOptions = _signatureValidationOptions });
 
             return Task.FromResult<IListener>(new NullListener());
         }
@@ -201,6 +202,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 {
                     return Task.FromResult<object>(JObject.FromObject(_value));
                 }
+                // Isolated worker model
+                else if (_parameter.ParameterType == typeof(string))
+                {
+                    return Task.FromResult(JsonConvert.SerializeObject(_value) as object);
+                }
 
                 return Task.FromResult<object>(null);
             }
@@ -210,7 +216,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return _value.ToString();
             }
 
-            public Type Type => _parameter.GetType();
+            public Type Type => _parameter.ParameterType;
 
             // No use here
             public Task SetValueAsync(object value, CancellationToken cancellationToken)

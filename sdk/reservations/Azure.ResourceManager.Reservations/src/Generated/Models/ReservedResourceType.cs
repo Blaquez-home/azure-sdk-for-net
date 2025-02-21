@@ -25,7 +25,7 @@ namespace Azure.ResourceManager.Reservations.Models
         private const string VirtualMachinesValue = "VirtualMachines";
         private const string SqlDatabasesValue = "SqlDatabases";
         private const string SuseLinuxValue = "SuseLinux";
-        private const string CosmosDbValue = "CosmosDb";
+        private const string CosmosDBValue = "CosmosDb";
         private const string RedHatValue = "RedHat";
         private const string SqlDataWarehouseValue = "SqlDataWarehouse";
         private const string VMwareCloudSimpleValue = "VMwareCloudSimple";
@@ -37,12 +37,12 @@ namespace Azure.ResourceManager.Reservations.Models
         private const string RedisCacheValue = "RedisCache";
         private const string AzureDataExplorerValue = "AzureDataExplorer";
         private const string MySqlValue = "MySql";
-        private const string MariaDbValue = "MariaDb";
+        private const string MariaDBValue = "MariaDb";
         private const string PostgreSqlValue = "PostgreSql";
         private const string DedicatedHostValue = "DedicatedHost";
         private const string SapHanaValue = "SapHana";
         private const string SqlAzureHybridBenefitValue = "SqlAzureHybridBenefit";
-        private const string AVSValue = "AVS";
+        private const string AvsValue = "AVS";
         private const string DataFactoryValue = "DataFactory";
         private const string NetAppStorageValue = "NetAppStorage";
         private const string AzureFilesValue = "AzureFiles";
@@ -56,7 +56,7 @@ namespace Azure.ResourceManager.Reservations.Models
         /// <summary> SuseLinux. </summary>
         public static ReservedResourceType SuseLinux { get; } = new ReservedResourceType(SuseLinuxValue);
         /// <summary> CosmosDb. </summary>
-        public static ReservedResourceType CosmosDb { get; } = new ReservedResourceType(CosmosDbValue);
+        public static ReservedResourceType CosmosDB { get; } = new ReservedResourceType(CosmosDBValue);
         /// <summary> RedHat. </summary>
         public static ReservedResourceType RedHat { get; } = new ReservedResourceType(RedHatValue);
         /// <summary> SqlDataWarehouse. </summary>
@@ -80,7 +80,7 @@ namespace Azure.ResourceManager.Reservations.Models
         /// <summary> MySql. </summary>
         public static ReservedResourceType MySql { get; } = new ReservedResourceType(MySqlValue);
         /// <summary> MariaDb. </summary>
-        public static ReservedResourceType MariaDb { get; } = new ReservedResourceType(MariaDbValue);
+        public static ReservedResourceType MariaDB { get; } = new ReservedResourceType(MariaDBValue);
         /// <summary> PostgreSql. </summary>
         public static ReservedResourceType PostgreSql { get; } = new ReservedResourceType(PostgreSqlValue);
         /// <summary> DedicatedHost. </summary>
@@ -90,7 +90,7 @@ namespace Azure.ResourceManager.Reservations.Models
         /// <summary> SqlAzureHybridBenefit. </summary>
         public static ReservedResourceType SqlAzureHybridBenefit { get; } = new ReservedResourceType(SqlAzureHybridBenefitValue);
         /// <summary> AVS. </summary>
-        public static ReservedResourceType AVS { get; } = new ReservedResourceType(AVSValue);
+        public static ReservedResourceType Avs { get; } = new ReservedResourceType(AvsValue);
         /// <summary> DataFactory. </summary>
         public static ReservedResourceType DataFactory { get; } = new ReservedResourceType(DataFactoryValue);
         /// <summary> NetAppStorage. </summary>
@@ -105,7 +105,7 @@ namespace Azure.ResourceManager.Reservations.Models
         public static bool operator ==(ReservedResourceType left, ReservedResourceType right) => left.Equals(right);
         /// <summary> Determines if two <see cref="ReservedResourceType"/> values are not the same. </summary>
         public static bool operator !=(ReservedResourceType left, ReservedResourceType right) => !left.Equals(right);
-        /// <summary> Converts a string to a <see cref="ReservedResourceType"/>. </summary>
+        /// <summary> Converts a <see cref="string"/> to a <see cref="ReservedResourceType"/>. </summary>
         public static implicit operator ReservedResourceType(string value) => new ReservedResourceType(value);
 
         /// <inheritdoc />
@@ -116,7 +116,7 @@ namespace Azure.ResourceManager.Reservations.Models
 
         /// <inheritdoc />
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+        public override int GetHashCode() => _value != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(_value) : 0;
         /// <inheritdoc />
         public override string ToString() => _value;
     }

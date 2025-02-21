@@ -13,10 +13,11 @@ namespace Microsoft.Azure.WebPubSub.Common
     /// </summary>
     [DataContract]
     [JsonConverter(typeof(ConnectEventRequestJsonConverter))]
-    public sealed class ConnectEventRequest : WebPubSubEventRequest
+    public class ConnectEventRequest : WebPubSubEventRequest
     {
         internal const string ClaimsProperty = "claims";
         internal const string QueryProperty = "query";
+        internal const string HeadersProperty = "headers";
         internal const string SubprotocolsProperty = "subprotocols";
         internal const string ClientCertificatesProperty = "clientCertificates";
 
@@ -33,6 +34,13 @@ namespace Microsoft.Azure.WebPubSub.Common
         [JsonPropertyName(QueryProperty)]
         [DataMember(Name = QueryProperty)]
         public IReadOnlyDictionary<string, string[]> Query { get; }
+
+        /// <summary>
+        /// Request headers.
+        /// </summary>
+        [JsonPropertyName(HeadersProperty)]
+        [DataMember(Name = HeadersProperty)]
+        public IReadOnlyDictionary<string, string[]> Headers { get; }
 
         /// <summary>
         /// Supported subprotocols.
@@ -68,13 +76,13 @@ namespace Microsoft.Azure.WebPubSub.Common
         /// <param name="code"><see cref="WebPubSubErrorCode"/>.</param>
         /// <param name="message">Detail error message.</param>
         /// <returns>A error response to return caller and will drop connection.</returns>
-        public EventErrorResponse CreateErrorResponse(WebPubSubErrorCode code, string message)
+        public virtual EventErrorResponse CreateErrorResponse(WebPubSubErrorCode code, string message)
         {
             return new EventErrorResponse(code, message);
         }
 
         /// <summary>
-        /// The connect event request
+        /// The connect event request.
         /// </summary>
         /// <param name="context"></param>
         /// <param name="claims"></param>
@@ -95,6 +103,39 @@ namespace Microsoft.Azure.WebPubSub.Common
             if (query != null)
             {
                 Query = query;
+            }
+            Subprotocols = subprotocols?.ToArray();
+            ClientCertificates = certificates?.ToArray();
+        }
+
+        /// <summary>
+        /// The connect event request.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="claims"></param>
+        /// <param name="query"></param>
+        /// <param name="subprotocols"></param>
+        /// <param name="certificates"></param>
+        /// <param name="headers"></param>
+        public ConnectEventRequest(
+            WebPubSubConnectionContext context,
+            IReadOnlyDictionary<string, string[]> claims,
+            IReadOnlyDictionary<string, string[]> query,
+            IEnumerable<string> subprotocols,
+            IEnumerable<WebPubSubClientCertificate> certificates,
+            IReadOnlyDictionary<string, string[]> headers) : base(context)
+        {
+            if (claims != null)
+            {
+                Claims = claims;
+            }
+            if (query != null)
+            {
+                Query = query;
+            }
+            if (headers != null)
+            {
+                Headers = headers;
             }
             Subprotocols = subprotocols?.ToArray();
             ClientCertificates = certificates?.ToArray();

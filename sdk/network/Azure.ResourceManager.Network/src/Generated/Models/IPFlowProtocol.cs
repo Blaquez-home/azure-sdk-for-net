@@ -22,18 +22,18 @@ namespace Azure.ResourceManager.Network.Models
             _value = value ?? throw new ArgumentNullException(nameof(value));
         }
 
-        private const string TCPValue = "TCP";
-        private const string UDPValue = "UDP";
+        private const string TcpValue = "TCP";
+        private const string UdpValue = "UDP";
 
         /// <summary> TCP. </summary>
-        public static IPFlowProtocol TCP { get; } = new IPFlowProtocol(TCPValue);
+        public static IPFlowProtocol Tcp { get; } = new IPFlowProtocol(TcpValue);
         /// <summary> UDP. </summary>
-        public static IPFlowProtocol UDP { get; } = new IPFlowProtocol(UDPValue);
+        public static IPFlowProtocol Udp { get; } = new IPFlowProtocol(UdpValue);
         /// <summary> Determines if two <see cref="IPFlowProtocol"/> values are the same. </summary>
         public static bool operator ==(IPFlowProtocol left, IPFlowProtocol right) => left.Equals(right);
         /// <summary> Determines if two <see cref="IPFlowProtocol"/> values are not the same. </summary>
         public static bool operator !=(IPFlowProtocol left, IPFlowProtocol right) => !left.Equals(right);
-        /// <summary> Converts a string to a <see cref="IPFlowProtocol"/>. </summary>
+        /// <summary> Converts a <see cref="string"/> to a <see cref="IPFlowProtocol"/>. </summary>
         public static implicit operator IPFlowProtocol(string value) => new IPFlowProtocol(value);
 
         /// <inheritdoc />
@@ -44,7 +44,7 @@ namespace Azure.ResourceManager.Network.Models
 
         /// <inheritdoc />
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+        public override int GetHashCode() => _value != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(_value) : 0;
         /// <inheritdoc />
         public override string ToString() => _value;
     }

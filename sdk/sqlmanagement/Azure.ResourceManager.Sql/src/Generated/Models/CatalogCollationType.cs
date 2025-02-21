@@ -23,17 +23,17 @@ namespace Azure.ResourceManager.Sql.Models
         }
 
         private const string DatabaseDefaultValue = "DATABASE_DEFAULT";
-        private const string SQLLatin1GeneralCP1CIASValue = "SQL_Latin1_General_CP1_CI_AS";
+        private const string SqlLatin1GeneralCp1CiAsValue = "SQL_Latin1_General_CP1_CI_AS";
 
         /// <summary> DATABASE_DEFAULT. </summary>
         public static CatalogCollationType DatabaseDefault { get; } = new CatalogCollationType(DatabaseDefaultValue);
         /// <summary> SQL_Latin1_General_CP1_CI_AS. </summary>
-        public static CatalogCollationType SQLLatin1GeneralCP1CIAS { get; } = new CatalogCollationType(SQLLatin1GeneralCP1CIASValue);
+        public static CatalogCollationType SqlLatin1GeneralCp1CiAs { get; } = new CatalogCollationType(SqlLatin1GeneralCp1CiAsValue);
         /// <summary> Determines if two <see cref="CatalogCollationType"/> values are the same. </summary>
         public static bool operator ==(CatalogCollationType left, CatalogCollationType right) => left.Equals(right);
         /// <summary> Determines if two <see cref="CatalogCollationType"/> values are not the same. </summary>
         public static bool operator !=(CatalogCollationType left, CatalogCollationType right) => !left.Equals(right);
-        /// <summary> Converts a string to a <see cref="CatalogCollationType"/>. </summary>
+        /// <summary> Converts a <see cref="string"/> to a <see cref="CatalogCollationType"/>. </summary>
         public static implicit operator CatalogCollationType(string value) => new CatalogCollationType(value);
 
         /// <inheritdoc />
@@ -44,7 +44,7 @@ namespace Azure.ResourceManager.Sql.Models
 
         /// <inheritdoc />
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+        public override int GetHashCode() => _value != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(_value) : 0;
         /// <inheritdoc />
         public override string ToString() => _value;
     }

@@ -3,13 +3,14 @@
 
 using System;
 
-namespace Azure.Monitor.OpenTelemetry.Exporter
+namespace Azure.Monitor.OpenTelemetry.Exporter.Internals
 {
     /// <summary>
     /// This class encapsulates constant values from the Azure Monitor Swagger
     /// <see href="https://github.com/Azure/azure-rest-api-specs/blob/4eb2ae1846ac79a993cabc378436b6218baaa1ed/specification/applicationinsights/data-plane/Monitor.Exporters/preview/2020-09-15_Preview/swagger.json"/>
     /// and the Ingestion service data models
     /// <see href="https://docs.microsoft.com/azure/azure-monitor/app/data-model"/>.
+    /// NOTE: Some of these max lengths are not defined in the Swagger. Must refer to the internal service repo.
     /// </summary>
     /// <remarks>
     /// MaxLength (inclusive) defines the maximum number of characters.
@@ -111,7 +112,18 @@ namespace Azure.Monitor.OpenTelemetry.Exporter
         public const int StackFrame_Assembly_MaxLength = 1024;
         public const int StackFrame_FileName_MaxLength = 1024;
 
-        // TODO: Apply these rules
-        public const int TelemetryEnvelope_Seq_MaxLength = 64;
+        public const int TelemetryEnvelope_Seq_MaxLength = 64; // TODO: TelemetryItem.Sequence is currently not in use (2022-06-20).
+        public const int TelemetryEnvelope_Name_MaxLength = 1024;
+        public const int TelemetryEnvelope_Time_MaxLength = 64;
+        public const int TelemetryEnvelope_InstrumentationKey_MaxLength = 40;
+
+        public const int Tags_AiOperationId_MaxLength = 128;
+        public const int Tags_AiOperationName_MaxLength = 1024;
+        public const int Tags_AiOperationParentId_MaxLength = 512;
+        public const int Tags_AiUserAuthUserId_MaxLength = 1024;
+        public const int Tags_AiApplicationVer_MaxLength = 1024;
+        public const int Tags_AiCloudRole_MaxLength = 256;
+        public const int Tags_AiCloudRoleInstance_MaxLength = 256;
+        public const int Tags_AiInternalSdkVersion_MaxLength = 64;
     }
 }

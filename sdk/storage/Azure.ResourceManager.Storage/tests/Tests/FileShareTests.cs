@@ -5,20 +5,22 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Azure.Core.TestFramework;
 using Azure.ResourceManager.Resources;
-using Azure.ResourceManager.Storage.Tests.Helpers;
 using Azure.ResourceManager.Storage.Models;
 using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
+using Azure.Core;
 
 namespace Azure.ResourceManager.Storage.Tests
 {
-    public class FileShareTests : StorageTestBase
+    public class FileShareTests : StorageManagementTestBase
     {
         private ResourceGroupResource _resourceGroup;
         private StorageAccountResource _storageAccount;
         private FileServiceResource _fileService;
         private FileShareCollection _fileShareCollection;
 
-        public FileShareTests(bool async) : base(async)
+        public FileShareTests(bool async) : base(async)//, RecordedTestMode.Record)
         {
         }
 
@@ -54,6 +56,11 @@ namespace Azure.ResourceManager.Storage.Tests
         public async Task CreateDeleteFileShare()
         {
             //create file share
+            string accountName = Recording.GenerateAssetName("account");
+            var content = new StorageAccountCreateOrUpdateContent(new StorageSku(StorageSkuName.StandardGrs), StorageKind.StorageV2, AzureLocation.EastUS2);
+            var account = (await _resourceGroup.GetStorageAccounts().CreateOrUpdateAsync(WaitUntil.Completed, accountName, content)).Value;
+
+            _fileShareCollection = (await account.GetFileService().GetAsync()).Value.GetFileShares();
             string fileShareName = Recording.GenerateAssetName("testfileshare");
             FileShareResource share1 = (await _fileShareCollection.CreateOrUpdateAsync(WaitUntil.Completed, fileShareName, new FileShareData())).Value;
             Assert.AreEqual(share1.Id.Name, fileShareName);
@@ -65,6 +72,25 @@ namespace Azure.ResourceManager.Storage.Tests
             AssertFileShareEqual(share1, share2);
             Assert.IsTrue(await _fileShareCollection.ExistsAsync(fileShareName));
             Assert.IsFalse(await _fileShareCollection.ExistsAsync(fileShareName + "1"));
+
+            string shareName2 = Recording.GenerateAssetName("share");
+            var data = new FileShareData()
+            {
+                Metadata = { { "metadata1", "true" }, { "metadata2", "value2" } },
+                ShareQuota = 500,
+                AccessTier = FileShareAccessTier.Hot
+            };
+            share2 = (await _fileShareCollection.CreateOrUpdateAsync(WaitUntil.Completed, shareName2, data)).Value;
+            Assert.AreEqual(2, share2.Data.Metadata.Count);
+            Assert.AreEqual("metadata1", share2.Data.Metadata.FirstOrDefault().Key);
+            Assert.AreEqual(500, share2.Data.ShareQuota);
+            Assert.AreEqual(FileShareAccessTier.Hot, share2.Data.AccessTier);
+
+            share2 = (await _fileShareCollection.GetAsync(shareName2)).Value;
+            Assert.AreEqual(2, share2.Data.Metadata.Count);
+            Assert.AreEqual("metadata1", share2.Data.Metadata.FirstOrDefault().Key);
+            Assert.AreEqual(500, share2.Data.ShareQuota);
+            Assert.AreEqual(FileShareAccessTier.Hot, share2.Data.AccessTier);
 
             //delete file share
             await share1.DeleteAsync(WaitUntil.Completed);
@@ -92,7 +118,7 @@ namespace Azure.ResourceManager.Storage.Tests
             {
                 ShareDeleteRetentionPolicy = new DeleteRetentionPolicy()
                 {
-                    Enabled = true,
+                    IsEnabled = true,
                     Days = 5
                 }
             };
@@ -182,20 +208,63 @@ namespace Azure.ResourceManager.Storage.Tests
         [RecordedTest]
         public async Task UpdateFileService()
         {
+            //create file share
+            string accountName = Recording.GenerateAssetName("account");
+            var content = new StorageAccountCreateOrUpdateContent(new StorageSku(StorageSkuName.PremiumLrs), StorageKind.FileStorage, AzureLocation.EastUS2);
+            var account = (await _resourceGroup.GetStorageAccounts().CreateOrUpdateAsync(WaitUntil.Completed, accountName, content)).Value;
+            _fileService = account.GetFileService();
+
             //update service property
             FileServiceData parameter = new FileServiceData()
             {
                 ShareDeleteRetentionPolicy = new DeleteRetentionPolicy()
                 {
-                    Enabled = true,
+                    IsEnabled = true,
                     Days = 5
                 }
             };
             _fileService = (await _fileService.CreateOrUpdateAsync(WaitUntil.Completed, parameter)).Value;
 
             //validate
-            Assert.IsTrue(_fileService.Data.ShareDeleteRetentionPolicy.Enabled);
+            Assert.IsTrue(_fileService.Data.ShareDeleteRetentionPolicy.IsEnabled);
             Assert.AreEqual(_fileService.Data.ShareDeleteRetentionPolicy.Days, 5);
+
+            // Get after account create
+            var service = (await _fileService.GetAsync()).Value;
+            Assert.AreEqual(0, service.Data.Cors.CorsRules.Count);
+
+            //Set and validated
+            var data = new FileServiceData()
+            {
+                ProtocolSettings = new ProtocolSettings()
+                {
+                    SmbSetting = new SmbSetting()
+                    {
+                        Multichannel = new Multichannel()
+                        {
+                            IsMultiChannelEnabled = true
+                        },
+                        Versions = "SMB2.1;SMB3.0;SMB3.1.1",
+                        AuthenticationMethods = "NTLMv2;Kerberos",
+                        KerberosTicketEncryption = "RC4-HMAC;AES-256",
+                        ChannelEncryption = "AES-128-CCM;AES-128-GCM;AES-256-GCM"
+                    }
+                }
+            };
+            service = (await _fileService.CreateOrUpdateAsync(WaitUntil.Completed, data)).Value;
+            Assert.IsTrue(service.Data.ProtocolSettings.SmbSetting.Multichannel.IsMultiChannelEnabled);
+            Assert.AreEqual("SMB2.1;SMB3.0;SMB3.1.1", service.Data.ProtocolSettings.SmbSetting.Versions);
+            Assert.AreEqual("NTLMv2;Kerberos", service.Data.ProtocolSettings.SmbSetting.AuthenticationMethods);
+            Assert.AreEqual("RC4-HMAC;AES-256", service.Data.ProtocolSettings.SmbSetting.KerberosTicketEncryption);
+            Assert.AreEqual("AES-128-CCM;AES-128-GCM;AES-256-GCM", service.Data.ProtocolSettings.SmbSetting.ChannelEncryption);
+
+            // Get and validate
+            service = (await _fileService.GetAsync()).Value;
+            Assert.IsTrue(service.Data.ProtocolSettings.SmbSetting.Multichannel.IsMultiChannelEnabled);
+            Assert.AreEqual("SMB2.1;SMB3.0;SMB3.1.1", service.Data.ProtocolSettings.SmbSetting.Versions);
+            Assert.AreEqual("NTLMv2;Kerberos", service.Data.ProtocolSettings.SmbSetting.AuthenticationMethods);
+            Assert.AreEqual("RC4-HMAC;AES-256", service.Data.ProtocolSettings.SmbSetting.KerberosTicketEncryption);
+            Assert.AreEqual("AES-128-CCM;AES-128-GCM;AES-256-GCM", service.Data.ProtocolSettings.SmbSetting.ChannelEncryption);
         }
 
         [Test]
@@ -207,7 +276,7 @@ namespace Azure.ResourceManager.Storage.Tests
             {
                 ShareDeleteRetentionPolicy = new DeleteRetentionPolicy()
                 {
-                    Enabled = true,
+                    IsEnabled = true,
                     Days = 5
                 }
             };
@@ -256,21 +325,21 @@ namespace Azure.ResourceManager.Storage.Tests
             FileShareResource share = (await _fileShareCollection.CreateOrUpdateAsync(WaitUntil.Completed, fileShareName, new FileShareData())).Value;
 
             // Prepare signedIdentifiers to set
-            List<SignedIdentifier> sigs = new List<SignedIdentifier>();
+            var sigs = new List<StorageSignedIdentifier>();
             DateTimeOffset datenow = Recording.Now;
             DateTimeOffset start1 = datenow.ToUniversalTime();
             DateTimeOffset end1 = datenow.AddHours(2).ToUniversalTime();
             DateTimeOffset start2 = datenow.AddMinutes(1).ToUniversalTime();
             DateTimeOffset end2 = datenow.AddMinutes(40).ToUniversalTime();
             var updateParameters2 = new FileShareData();
-            SignedIdentifier sig1 = new SignedIdentifier("testSig1",
-                new AccessPolicy(startOn: start1,
-                    expiryOn: end1,
-                    permission: "rw"));
-            SignedIdentifier sig2 = new SignedIdentifier("testSig2",
-                new AccessPolicy(startOn: start2,
-                    expiryOn: end2,
-                    permission: "rwdl"));
+            var sig1 = new StorageSignedIdentifier("testSig1",
+                new StorageServiceAccessPolicy(startOn: start1,
+                    expireOn: end1,
+                    permission: "rw", null), null);
+            var sig2 = new StorageSignedIdentifier("testSig2",
+                new StorageServiceAccessPolicy(startOn: start2,
+                    expireOn: end2,
+                    permission: "rwdl", null), null);
             updateParameters2.SignedIdentifiers.Add(sig1);
             updateParameters2.SignedIdentifiers.Add(sig2);
 
@@ -307,9 +376,9 @@ namespace Azure.ResourceManager.Storage.Tests
             Assert.AreEqual(proposedLeaseID1, leaseResponse.LeaseId);
 
             share = await share.GetAsync();
-            Assert.AreEqual(LeaseDuration.Fixed, share.Data.LeaseDuration);
-            Assert.AreEqual(LeaseState.Leased, share.Data.LeaseState);
-            Assert.AreEqual(LeaseStatus.Locked, share.Data.LeaseStatus);
+            Assert.AreEqual(StorageLeaseDurationType.Fixed, share.Data.LeaseDuration);
+            Assert.AreEqual(StorageLeaseState.Leased, share.Data.LeaseState);
+            Assert.AreEqual(StorageLeaseStatus.Locked, share.Data.LeaseStatus);
 
             //renew lease share
             leaseResponse = await share.LeaseAsync(content: new LeaseShareContent(LeaseShareAction.Renew) { LeaseId = proposedLeaseID1 });
@@ -333,9 +402,9 @@ namespace Azure.ResourceManager.Storage.Tests
             Assert.AreEqual(proposedLeaseID1, leaseResponse.LeaseId);
 
             shareSnapshot = await shareSnapshot.GetAsync(xMsSnapshot: shareSnapshot.Data.SnapshotOn.Value.UtcDateTime.ToString("o"));
-            Assert.AreEqual(LeaseDuration.Fixed, share.Data.LeaseDuration);
-            Assert.AreEqual(LeaseState.Leased, share.Data.LeaseState);
-            Assert.AreEqual(LeaseStatus.Locked, share.Data.LeaseStatus);
+            Assert.AreEqual(StorageLeaseDurationType.Fixed, share.Data.LeaseDuration);
+            Assert.AreEqual(StorageLeaseState.Leased, share.Data.LeaseState);
+            Assert.AreEqual(StorageLeaseStatus.Locked, share.Data.LeaseStatus);
 
             bool DeleteFail = false;
             // try delete with include = none
@@ -371,32 +440,27 @@ namespace Azure.ResourceManager.Storage.Tests
         {
             FileServiceData properties1 = _fileService.Data;
             FileServiceData properties2 = new FileServiceData();
-            properties2.Cors = new CorsRules();
-            properties2.Cors.CorsRulesValue.Add(new CorsRule(new string[] { "http://www.contoso.com", "http://www.fabrikam.com" },
-                new CorsRuleAllowedMethodsItem[] { CorsRuleAllowedMethodsItem.GET, CorsRuleAllowedMethodsItem.PUT },
-                100, new string[] { "x-ms-meta-*" },
-                new string[] { "x-ms-meta-abc", "x-ms-meta-data*", "x-ms-meta-target*" }
-                ));
-            properties2.Cors.CorsRulesValue.Add(new CorsRule(new string[] { "*" },
-                new CorsRuleAllowedMethodsItem[] { CorsRuleAllowedMethodsItem.GET },
-                2, new string[] { "*" },
-                new string[] { "*" }
-                ));
-            properties2.Cors.CorsRulesValue.Add(new CorsRule(new string[] { "http://www.abc23.com", "https://www.fabrikam.com/*" },
-                new CorsRuleAllowedMethodsItem[] { CorsRuleAllowedMethodsItem.GET, CorsRuleAllowedMethodsItem.PUT, CorsRuleAllowedMethodsItem.Post },
-                2000, new string[] { "x-ms-meta-12345675754564*" },
-                new string[] { "x-ms-meta-abc", "x-ms-meta-data*", "x-ms-meta-target*" }
-                ));
+            properties2.Cors = new StorageCorsRules()
+            {
+                CorsRules =
+                {
+                    new StorageCorsRule(new string[] { "http://www.contoso.com", "http://www.fabrikam.com" },
+                        new[] { CorsRuleAllowedMethod.Get, CorsRuleAllowedMethod.Put },
+                        100,
+                        new string[] { "x-ms-meta-*" },
+                        new string[] { "x-ms-meta-abc", "x-ms-meta-data*", "x-ms-meta-target*" })
+                }
+            };
 
             _fileService = (await _fileService.CreateOrUpdateAsync(WaitUntil.Completed, properties2)).Value;
             FileServiceData properties3 = _fileService.Data;
 
             //validate CORS rules
-            Assert.AreEqual(properties2.Cors.CorsRulesValue.Count, properties3.Cors.CorsRulesValue.Count);
-            for (int i = 0; i < properties2.Cors.CorsRulesValue.Count; i++)
+            Assert.AreEqual(properties2.Cors.CorsRules.Count, properties3.Cors.CorsRules.Count);
+            for (int i = 0; i < properties2.Cors.CorsRules.Count; i++)
             {
-                CorsRule putRule = properties2.Cors.CorsRulesValue[i];
-                CorsRule getRule = properties3.Cors.CorsRulesValue[i];
+                var putRule = properties2.Cors.CorsRules[i];
+                var getRule = properties3.Cors.CorsRules[i];
 
                 Assert.AreEqual(putRule.AllowedHeaders, getRule.AllowedHeaders);
                 Assert.AreEqual(putRule.AllowedMethods, getRule.AllowedMethods);
@@ -410,11 +474,11 @@ namespace Azure.ResourceManager.Storage.Tests
             FileServiceData properties4 = _fileService.Data;
 
             //validate CORS rules
-            Assert.AreEqual(properties2.Cors.CorsRulesValue.Count, properties4.Cors.CorsRulesValue.Count);
-            for (int i = 0; i < properties2.Cors.CorsRulesValue.Count; i++)
+            Assert.AreEqual(properties2.Cors.CorsRules.Count, properties4.Cors.CorsRules.Count);
+            for (int i = 0; i < properties2.Cors.CorsRules.Count; i++)
             {
-                CorsRule putRule = properties2.Cors.CorsRulesValue[i];
-                CorsRule getRule = properties4.Cors.CorsRulesValue[i];
+                var putRule = properties2.Cors.CorsRules[i];
+                var getRule = properties4.Cors.CorsRules[i];
 
                 Assert.AreEqual(putRule.AllowedHeaders, getRule.AllowedHeaders);
                 Assert.AreEqual(putRule.AllowedMethods, getRule.AllowedMethods);
@@ -422,6 +486,162 @@ namespace Azure.ResourceManager.Storage.Tests
                 Assert.AreEqual(putRule.ExposedHeaders, getRule.ExposedHeaders);
                 Assert.AreEqual(putRule.MaxAgeInSeconds, getRule.MaxAgeInSeconds);
             }
+        }
+
+        [Test]
+        [RecordedTest]
+        public async Task ProvisionV2FileStorageAccount()
+        {
+            // Create PV2 account
+            string accountName = await CreateValidAccountNameAsync("teststoragemgmtpv2");
+            StorageAccountCollection storageAccountCollection = _resourceGroup.GetStorageAccounts();
+            _storageAccount = (await storageAccountCollection.CreateOrUpdateAsync(WaitUntil.Completed,
+                accountName,
+                GetDefaultStorageAccountParameters(
+                    sku: new StorageSku(StorageSkuName.StandardV2Lrs),
+                    StorageKind.FileStorage,
+                    AzureLocation.WestUS2)))
+                    //"eastus2euap")))
+                .Value;
+            _fileService = _storageAccount.GetFileService();
+            _fileService = await _fileService.GetAsync();
+            _fileShareCollection = _fileService.GetFileShares();
+
+            // Get share usage
+            var usage = (_fileService.GetFileServiceUsage()).GetAsync().Result.Value.Data;
+            Assert.IsNotNull(usage.Properties.FileShareLimits);
+            Assert.IsTrue(usage.Properties.FileShareLimits.MaxProvisionedBandwidthMiBPerSec.Value > 0);
+            Assert.IsTrue(usage.Properties.FileShareLimits.MaxProvisionedIops.Value > 0);
+            Assert.IsTrue(usage.Properties.FileShareLimits.MaxProvisionedStorageGiB.Value > 0);
+            Assert.IsTrue(usage.Properties.FileShareLimits.MinProvisionedBandwidthMiBPerSec.Value > 0);
+            Assert.IsTrue(usage.Properties.FileShareLimits.MinProvisionedIops.Value > 0);
+            Assert.IsTrue(usage.Properties.FileShareLimits.MinProvisionedStorageGiB.Value > 0);
+            Assert.IsNotNull(usage.Properties.BurstingConstants);
+            Assert.IsTrue(usage.Properties.FileShareRecommendations.BandwidthScalar.Value > 0);
+            Assert.IsTrue(usage.Properties.FileShareRecommendations.BaseBandwidthMiBPerSec.Value > 0);
+            Assert.IsTrue(usage.Properties.FileShareRecommendations.BaseIops.Value > 0);
+            Assert.IsTrue(usage.Properties.FileShareRecommendations.IoScalar.Value > 0);
+            Assert.IsTrue(usage.Properties.StorageAccountLimits.MaxFileShares.Value > 0);
+            Assert.IsTrue(usage.Properties.StorageAccountLimits.MaxProvisionedBandwidthMiBPerSec.Value > 0);
+            Assert.IsTrue(usage.Properties.StorageAccountLimits.MaxProvisionedIops.Value > 0);
+            Assert.IsTrue(usage.Properties.StorageAccountLimits.MaxProvisionedStorageGiB.Value > 0);
+            Assert.IsNotNull(usage.Properties.StorageAccountUsage);
+
+            //create file share
+            string fileShareName = Recording.GenerateAssetName("testfileshare");
+            var data = new FileShareData()
+            {
+                ProvisionedBandwidthMibps = usage.Properties.FileShareLimits.MaxProvisionedBandwidthMiBPerSec.Value - 1,
+                ProvisionedIops = usage.Properties.FileShareLimits.MaxProvisionedIops.Value - 1,
+                ShareQuota = usage.Properties.FileShareLimits.MaxProvisionedStorageGiB.Value - 1
+            };
+            FileShareResource share1 = (await _fileShareCollection.CreateOrUpdateAsync(WaitUntil.Completed, fileShareName, data)).Value;
+            Assert.AreEqual(share1.Id.Name, fileShareName);
+            Assert.AreEqual(data.ProvisionedBandwidthMibps, share1.Data.ProvisionedBandwidthMibps);
+            Assert.AreEqual(data.ProvisionedIops, share1.Data.ProvisionedIops);
+            Assert.AreEqual(data.ShareQuota, share1.Data.ShareQuota);
+
+            //validate if created successfully
+            FileShareResource share2 = await _fileShareCollection.GetAsync(fileShareName);
+            Assert.AreEqual(share1.Data.ProvisionedBandwidthMibps, share2.Data.ProvisionedBandwidthMibps);
+            Assert.AreEqual(share1.Data.ProvisionedIops, share2.Data.ProvisionedIops);
+            Assert.AreEqual(share1.Data.ShareQuota, share2.Data.ShareQuota);
+
+            // Update File share
+            data.ProvisionedBandwidthMibps = usage.Properties.FileShareLimits.MinProvisionedBandwidthMiBPerSec.Value + 1;
+            data.ProvisionedIops = usage.Properties.FileShareLimits.MinProvisionedIops.Value + 1;
+            data.ShareQuota = usage.Properties.FileShareLimits.MinProvisionedStorageGiB.Value + 1;
+
+            share1 = (await _fileShareCollection.CreateOrUpdateAsync(WaitUntil.Completed, fileShareName, data)).Value;
+            Assert.AreEqual(share1.Id.Name, fileShareName);
+            Assert.AreEqual(data.ProvisionedBandwidthMibps, share1.Data.ProvisionedBandwidthMibps);
+            Assert.AreEqual(data.ProvisionedIops, share1.Data.ProvisionedIops);
+            Assert.AreEqual(data.ShareQuota, share1.Data.ShareQuota);
+
+            share2 = (await _fileShareCollection.GetAsync(fileShareName)).Value;
+            Assert.AreEqual(share1.Data.ProvisionedBandwidthMibps, share2.Data.ProvisionedBandwidthMibps);
+            Assert.AreEqual(share1.Data.ProvisionedIops, share2.Data.ProvisionedIops);
+            Assert.AreEqual(share1.Data.ShareQuota, share2.Data.ShareQuota);
+
+            //delete file share
+            await share1.DeleteAsync(WaitUntil.Completed);
+
+            //validate if deleted successfully
+            var exception = Assert.ThrowsAsync<RequestFailedException>(async () => { await _fileShareCollection.GetAsync(fileShareName); });
+            Assert.AreEqual(404, exception.Status);
+            Assert.IsFalse(await _fileShareCollection.ExistsAsync(fileShareName));
+        }
+
+        [Test]
+        [RecordedTest]
+        public async Task PaidBursting()
+        {
+            // Create account
+            string accountName = Recording.GenerateAssetName("account");
+            var content = new StorageAccountCreateOrUpdateContent(new StorageSku(StorageSkuName.PremiumLrs), StorageKind.FileStorage, "eastus2euap");
+            var account = (await _resourceGroup.GetStorageAccounts().CreateOrUpdateAsync(WaitUntil.Completed, accountName, content)).Value;
+
+            //create file share
+            _fileShareCollection = (await account.GetFileService().GetAsync()).Value.GetFileShares();
+            string fileShareName = Recording.GenerateAssetName("testfileshare");
+            var data = new FileShareData();
+            data.FileSharePaidBursting = new FileSharePropertiesFileSharePaidBursting()
+            {
+                PaidBurstingEnabled = true,
+                PaidBurstingMaxBandwidthMibps = 129,
+                PaidBurstingMaxIops = 3230
+            };
+            FileShareResource share1 = (await _fileShareCollection.CreateOrUpdateAsync(WaitUntil.Completed, fileShareName, data)).Value;
+            Assert.AreEqual(share1.Id.Name, fileShareName);
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingEnabled, share1.Data.FileSharePaidBursting.PaidBurstingEnabled);
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingMaxBandwidthMibps, share1.Data.FileSharePaidBursting.PaidBurstingMaxBandwidthMibps);
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingMaxIops, share1.Data.FileSharePaidBursting.PaidBurstingMaxIops);
+
+            //validate if created successfully
+            FileShareResource share2 = await _fileShareCollection.GetAsync(fileShareName);
+            AssertFileShareEqual(share1, share2);
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingEnabled, share2.Data.FileSharePaidBursting.PaidBurstingEnabled);
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingMaxBandwidthMibps, share2.Data.FileSharePaidBursting.PaidBurstingMaxBandwidthMibps);
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingMaxIops, share2.Data.FileSharePaidBursting.PaidBurstingMaxIops);
+
+            // update file share - disable PaidBursting
+            data = new FileShareData();
+            data.FileSharePaidBursting = new FileSharePropertiesFileSharePaidBursting()
+            {
+                PaidBurstingEnabled = false
+            };
+            share1 = (await share1.UpdateAsync(data)).Value;
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingEnabled, share1.Data.FileSharePaidBursting.PaidBurstingEnabled);
+
+            share2 = (await _fileShareCollection.GetAsync(fileShareName)).Value;
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingEnabled, share2.Data.FileSharePaidBursting.PaidBurstingEnabled);
+
+            // update file share - enable PaidBursting
+            data.FileSharePaidBursting = new FileSharePropertiesFileSharePaidBursting()
+            {
+                PaidBurstingEnabled = true,
+                PaidBurstingMaxBandwidthMibps = 128,
+                PaidBurstingMaxIops = 3229
+            };
+            share1 = (await share1.UpdateAsync(data)).Value;
+            Assert.AreEqual(share1.Id.Name, fileShareName);
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingEnabled, share1.Data.FileSharePaidBursting.PaidBurstingEnabled);
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingMaxBandwidthMibps, share1.Data.FileSharePaidBursting.PaidBurstingMaxBandwidthMibps);
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingMaxIops, share1.Data.FileSharePaidBursting.PaidBurstingMaxIops);
+
+            share2 = await _fileShareCollection.GetAsync(fileShareName);
+            AssertFileShareEqual(share1, share2);
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingEnabled, share2.Data.FileSharePaidBursting.PaidBurstingEnabled);
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingMaxBandwidthMibps, share2.Data.FileSharePaidBursting.PaidBurstingMaxBandwidthMibps);
+            Assert.AreEqual(data.FileSharePaidBursting.PaidBurstingMaxIops, share2.Data.FileSharePaidBursting.PaidBurstingMaxIops);
+
+            //delete file share
+            await share1.DeleteAsync(WaitUntil.Completed);
+
+            //validate if deleted successfully
+            var exception = Assert.ThrowsAsync<RequestFailedException>(async () => { await _fileShareCollection.GetAsync(fileShareName); });
+            Assert.AreEqual(404, exception.Status);
+            Assert.IsFalse(await _fileShareCollection.ExistsAsync(fileShareName));
         }
     }
 }

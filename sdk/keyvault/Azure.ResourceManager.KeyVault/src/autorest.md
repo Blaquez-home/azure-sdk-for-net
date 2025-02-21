@@ -4,26 +4,46 @@ Run `dotnet build /t:GenerateCode` to generate code.
 
 ``` yaml
 azure-arm: true
+csharp: true
 library-name: KeyVault
 namespace: Azure.ResourceManager.KeyVault
-tag: package-2021-10
+require: https://github.com/Azure/azure-rest-api-specs/blob/d1296700aa6cd650970e9891dd58eef5698327fd/specification/keyvault/resource-manager/readme.md
+#tag: package-2023-07
 output-folder: $(this-folder)/Generated
 clear-output-folder: true
+sample-gen:
+  output-folder: $(this-folder)/../samples/Generated
+  clear-output-folder: true
 skip-csproj: true
 modelerfour:
   flatten-payloads: false
+use-model-reader-writer: true
+enable-bicep-serialization: true
+
 override-operation-name:
-  Vaults_CheckNameAvailability: CheckVaultNameAvailability
-  MHSMPrivateLinkResources_ListByMhsmResource: GetMhsmPrivateLinkResources
+  Vaults_CheckNameAvailability: CheckKeyVaultNameAvailability
+  MHSMPrivateLinkResources_ListByMhsmResource: GetManagedHsmPrivateLinkResources
+  ManagedHsms_CheckManagedHsmNameAvailability: CheckManagedHsmNameAvailability
 list-exception:
 - /subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/locations/{location}/deletedVaults/{vaultName}
 - /subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/locations/{location}/deletedManagedHSMs/{name}
-rename-rules:
+
+format-by-name-rules:
+  'tenantId': 'uuid'
+  'ETag': 'etag'
+  'location': 'azure-location'
+  '*Uri': 'Uri'
+  '*Uris': 'Uri'
+
+no-property-type-replacement:
+- ManagedHsmVirtualNetworkRule
+
+acronym-mapping:
   CPU: Cpu
   CPUs: Cpus
   Os: OS
   Ip: IP
-  Ips: IPs
+  Ips: IPs|ips
   ID: Id
   IDs: Ids
   VM: Vm
@@ -34,11 +54,12 @@ rename-rules:
   VPN: Vpn
   NAT: Nat
   WAN: Wan
-  Ipv4: IPv4
-  Ipv6: IPv6
-  Ipsec: IPsec
+  Ipv4: IPv4|ipv4
+  Ipv6: IPv6|ipv6
+  Ipsec: IPsec|ipsec
   SSO: Sso
   URI: Uri
+  Etag: ETag|etag
   Managecontacts: ManageContacts
   Getissuers: GetIssuers
   Listissuers: ListIssuers
@@ -51,7 +72,68 @@ rename-rules:
   Listsas: ListSas
   Setsas: SetSas
   Mhsm: ManagedHsm
+
+rename-mapping:
+  CheckMhsmNameAvailabilityResult: ManagedHsmNameAvailabilityResult
+  CheckMhsmNameAvailabilityResult.nameAvailable : IsNameAvailable
+  CheckMhsmNameAvailabilityParameters: MhsmNameAvailabilityParameters
+  Reason: ManagedHsmNameUnavailableReason
+  ActivationStatus: ManagedHSMSecurityDomainActivationStatus
+  Attributes: SecretBaseAttributes
+  GeoReplicationRegionProvisioningState: ManagedHsmGeoReplicatedRegionProvisioningState
+  ManagedHsmPrivateEndpointConnectionItemData.id: -|arm-id
+  Secret: KeyVaultSecret
+  MhsmPrivateEndpointConnectionItem: ManagedHsmPrivateEndpointConnectionItemData
+  MhsmPrivateEndpointConnectionItem.id: -|arm-id
+  MhsmPrivateLinkResource: ManagedHsmPrivateLinkResourceData
+  ActionsRequired: ManagedHsmActionsRequiredMessage
+  NetworkRuleAction: ManagedHsmNetworkRuleAction
+  NetworkRuleBypassOptions: ManagedHsmNetworkRuleBypassOption
+  MhsmVirtualNetworkRule.id: SubnetId|arm-id
+  PublicNetworkAccess: ManagedHsmPublicNetworkAccess
+  CreateMode: ManagedHsmCreateMode
+  ManagedHsmProperties.networkAcls: NetworkRuleSet
+  MhsmipRule: ManagedHsmIPRule
+  DeletedManagedHsmProperties.mhsmId: -|arm-id
+  DeletedVaultProperties: DeletedKeyVaultProperties
+  DeletedVault: DeletedKeyVault
+  MhsmipRule.value: AddressRange
+  PrivateLinkResource: KeyVaultPrivateLinkResourceData
+  AccessPolicyEntry: KeyVaultAccessPolicy
+  NetworkRuleSet: KeyVaultNetworkRuleSet
+  VaultCheckNameAvailabilityParameters: KeyVaultNameAvailabilityContent
+  VaultAccessPolicyProperties: KeyVaultAccessPolicyProperties
+  PrivateEndpointConnectionItem: KeyVaultPrivateEndpointConnectionItemData
+  VaultCheckNameAvailabilityParameters.type: -|resource-type
+  VaultPatchProperties: KeyVaultPatchProperties
+  VaultAccessPolicyParameters: KeyVaultAccessPolicyParameters
+  VaultPatchProperties.networkAcls: NetworkRuleSet
+  VaultProperties: KeyVaultProperties
+  VaultProperties.networkAcls: NetworkRuleSet
+  Vault: KeyVault
+  VirtualNetworkRule: KeyVaultVirtualNetworkRule
+  DeletedVaultProperties.vaultId: -|arm-id
+  Permissions: IdentityAccessPermissions
+  IPRule: KeyVaultIPRule
+  KeyPermissions: IdentityAccessKeyPermission
+  SecretPermissions: IdentityAccessSecretPermission
+  StoragePermissions: IdentityAccessStoragePermission
+  CertificatePermissions: IdentityAccessCertificatePermission
+  IPRule.value: AddressRange
+  CheckNameAvailabilityResult: KeyVaultNameAvailabilityResult
+  Trigger: KeyRotationTrigger
+  Action: KeyRotationAction
+  Key: KeyVaultKey
+  Key.properties.kty: keyType
+  KeyAttributes.enabled: isEnabled
+  KeyAttributes.exportable: canExported
+  KeyProperties.kty: keyType
+  ManagedHsmKeyAttributes.enabled: isEnabled
+  ManagedHsmKeyAttributes.exportable: canExported
+  ManagedHsmKeyProperties.kty: keyType
+
 prompted-enum-values: Default
+
 directive:
   - from: swagger-document
     where: $.paths
@@ -62,87 +144,37 @@ directive:
   - from: swagger-document
     where: $.definitions.ManagedHsmSku.properties.family
     transform: delete $['x-ms-client-default']
-  - from: swagger-document
-    where: $.paths..parameters[?(@.name === 'location')]
-    transform: >
-      $['x-ms-format'] = 'azure-location';
   - from: managedHsm.json
     where: $.definitions
-    transform: >
-      $.ManagedHsmResource['x-ms-client-name'] = 'ManagedHsmTrackedResourceData';
-      $.ManagedHsmResource.properties.location['x-ms-format'] = 'azure-location';
-      $.MHSMIPRule.properties.value['x-ms-client-name'] = 'AddressRange';
-      $.DeletedManagedHsmProperties.properties.location['x-ms-format'] = 'azure-location';
-      $.DeletedManagedHsmProperties.properties.mhsmId['x-ms-format'] = 'arm-id';
-      $.MHSMPrivateEndpointConnection.properties.etag['x-ms-format'] = 'etag';
-      $.ManagedHsmProperties.properties.networkAcls['x-ms-client-name'] = 'NetworkRuleSet';
+    transform: > # these directives are here on purpose because we do not want them to merge with others otherwise we get breaking changes
+      $.MHSMPrivateEndpointConnectionProvisioningState['x-ms-enum']['name'] = 'ManagedHsmPrivateEndpointConnectionProvisioningState';
+      $.MHSMPrivateEndpointServiceConnectionStatus['x-ms-enum']['name'] = 'ManagedHsmPrivateEndpointServiceConnectionStatus';
       $.ManagedHsmProperties.properties.provisioningState['x-ms-enum']['name'] = 'ManagedHsmProvisioningState';
-      $.ManagedHsmProperties.properties.createMode['x-ms-enum']['name'] = 'ManagedHsmCreateMode';
-      $.MHSMVirtualNetworkRule.properties.id['x-ms-client-name'] = 'SubnetId';
-      $.MHSMVirtualNetworkRule.properties.id['x-ms-format'] = 'arm-id';
-      $.MHSMNetworkRuleSet.properties.bypass['x-ms-enum']['name'] = 'NetworkRuleBypassOption';
   - from: keyvault.json
     where: $.definitions
     transform: >
-      $.CheckNameAvailabilityResult.properties.reason['x-ms-enum']['name'] = 'NameAvailabilityReason';
-      $.CheckNameAvailabilityResult['x-ms-client-name'] = 'VaultNameAvailabilityResult';
-      $.Permissions.properties.keys.items['x-ms-enum']['name'] = 'KeyPermission';
-      $.Permissions.properties.secrets.items['x-ms-enum']['name'] = 'SecretPermission';
-      $.Permissions.properties.certificates.items['x-ms-enum']['name'] = 'CertificatePermission';
-      $.Permissions.properties.storage.items['x-ms-enum']['name'] = 'StoragePermission';
-      $.Resource['x-ms-client-name'] = 'KeyVaultResourceData';
-      $.IPRule.properties.value['x-ms-client-name'] = 'AddressRange';
-      $.IPRule['x-ms-client-name'] = 'VaultIPRule';
-      $.DeletedVaultProperties.properties.location['x-ms-format'] = 'azure-location';
-      $.DeletedVaultProperties.properties.vaultId['x-ms-format'] = 'arm-id';
-      $.VaultCreateOrUpdateParameters.properties.location['x-ms-format'] = 'azure-location';
-      $.VaultAccessPolicyParameters.properties.location['x-ms-format'] = 'azure-location';
-      $.Vault.properties.location['x-ms-format'] = 'azure-location';
+      $.VaultCheckNameAvailabilityParameters.properties.type['x-ms-constant'] = true;
+      $.NetworkRuleSet.properties.bypass['x-ms-enum']['name'] = 'KeyVaultNetworkRuleBypassOption';
+      $.NetworkRuleSet.properties.defaultAction['x-ms-enum']['name'] = 'KeyVaultNetworkRuleAction';
+      $.PrivateLinkServiceConnectionState.properties.actionsRequired['x-ms-enum']['name'] = 'KeyVaultActionsRequiredMessage';
+      $.VaultPatchProperties.properties.createMode['x-ms-enum']['name'] = 'KeyVaultPatchMode';
+      $.VaultProperties.properties.createMode['x-ms-enum']['name'] = 'KeyVaultCreateMode';
+      $.VaultProperties.properties.provisioningState['x-ms-enum']['name'] = 'KeyVaultProvisioningState';
       $.Vault['x-csharp-usage'] = 'model,input,output';
-      $.VaultProperties.properties.createMode['x-ms-enum']['name'] = 'VaultCreateMode';
-      $.VaultProperties.properties.networkAcls['x-ms-client-name'] = 'NetworkRuleSet';
-      $.VaultPatchProperties.properties.createMode['x-ms-enum']['name'] = 'VaultPatchMode';
-      $.VaultPatchProperties.properties.networkAcls['x-ms-client-name'] = 'NetworkRuleSet';
-      $.Resource.properties.location['x-ms-format'] = 'azure-location';
-      $.PrivateEndpointConnectionItem.properties.etag['x-ms-format'] = 'etag';
-      $.PrivateEndpointConnection.properties.etag['x-ms-format'] = 'etag';
-      $.PrivateLinkServiceConnectionState.properties.actionsRequired['x-ms-enum']['name'] = 'ActionsRequiredMessage';
-      $.VaultCheckNameAvailabilityParameters.properties.type['x-ms-format'] = 'resource-type';
-      $.VaultCheckNameAvailabilityParameters['x-ms-client-name'] = 'VaultNameAvailabilityParameters';
-      $.NetworkRuleSet.properties.bypass['x-ms-enum']['name'] = 'NetworkRuleBypassOption';
-      $.NetworkRuleSet['x-ms-client-name'] = 'VaultNetworkRuleSet';
-      $.AccessPolicyEntry['x-ms-client-name'] = 'VaultAccessPolicy';
-  - rename-model:
-      from: MHSMIPRule
-      to: MhsmIPRule
-  - rename-model:
-      from: Attributes
-      to: BaseAttributes
-  - rename-model:
-      from: Permissions
-      to: IdentityAccessPermissions
-  - rename-model:
-      from: MHSMPrivateLinkResource
-      to: MHSMPrivateLinkResourceData
-  - rename-model:
-      from: PrivateLinkResource
-      to: PrivateLinkResourceData
-  - rename-model:
-      from: MHSMPrivateEndpointConnectionItem
-      to: MHSMPrivateEndpointConnectionItemData
-  - rename-model:
-      from: PrivateEndpointConnectionItem
-      to: PrivateEndpointConnectionItemData
-```
-
-### Tag: package-2021-10
-
-These settings apply only when `--tag=package-2021-10` is specified on the command line.
-
-```yaml $(tag) == 'package-2021-10'
-input-file:
-    - https://github.com/Azure/azure-rest-api-specs/blob/8b871ca35a08c43293fcbb2926e6062db4f6d85c/specification/keyvault/resource-manager/Microsoft.KeyVault/stable/2021-10-01/common.json
-    - https://github.com/Azure/azure-rest-api-specs/blob/8b871ca35a08c43293fcbb2926e6062db4f6d85c/specification/keyvault/resource-manager/Microsoft.KeyVault/stable/2021-10-01/keyvault.json
-    - https://github.com/Azure/azure-rest-api-specs/blob/8b871ca35a08c43293fcbb2926e6062db4f6d85c/specification/keyvault/resource-manager/Microsoft.KeyVault/stable/2021-10-01/managedHsm.json
-    - https://github.com/Azure/azure-rest-api-specs/blob/8b871ca35a08c43293fcbb2926e6062db4f6d85c/specification/keyvault/resource-manager/Microsoft.KeyVault/stable/2021-10-01/providers.json
+      $.CheckNameAvailabilityResult.properties.reason['x-ms-enum']['name'] = 'KeyVaultNameUnavailableReason';
+  # Remove keysManagedHsm.json and keys.json since these 2 are part of data plane
+  - from: keysManagedHsm.json
+    where: $.paths
+    transform: >
+      for (var path in $)
+      {
+          delete $[path];
+      }
+  - from: keys.json
+    where: $.paths
+    transform: >
+      for (var path in $)
+      {
+          delete $[path];
+      }
 ```

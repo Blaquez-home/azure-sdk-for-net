@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.AppService.Models;
@@ -34,8 +33,19 @@ namespace Azure.ResourceManager.AppService
         {
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
-            _apiVersion = apiVersion ?? "2021-02-01";
+            _apiVersion = apiVersion ?? "2024-04-01";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
+        }
+
+        internal RequestUriBuilder CreateListRequestUri(string subscriptionId)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListRequest(string subscriptionId)
@@ -60,7 +70,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<Models.AppServiceCertificateOrderCollection>> ListAsync(string subscriptionId, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceCertificateOrderListResult>> ListAsync(string subscriptionId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
 
@@ -70,9 +80,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServiceCertificateOrderCollection value = default;
+                        AppServiceCertificateOrderListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = Models.AppServiceCertificateOrderCollection.DeserializeAppServiceCertificateOrderCollection(document.RootElement);
+                        value = AppServiceCertificateOrderListResult.DeserializeAppServiceCertificateOrderListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -85,7 +95,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<Models.AppServiceCertificateOrderCollection> List(string subscriptionId, CancellationToken cancellationToken = default)
+        public Response<AppServiceCertificateOrderListResult> List(string subscriptionId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
 
@@ -95,14 +105,25 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServiceCertificateOrderCollection value = default;
+                        AppServiceCertificateOrderListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = Models.AppServiceCertificateOrderCollection.DeserializeAppServiceCertificateOrderCollection(document.RootElement);
+                        value = AppServiceCertificateOrderListResult.DeserializeAppServiceCertificateOrderListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateValidatePurchaseInformationRequestUri(string subscriptionId, AppServiceCertificateOrderData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/validateCertificateRegistrationInformation", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateValidatePurchaseInformationRequest(string subscriptionId, AppServiceCertificateOrderData data)
@@ -120,7 +141,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(data);
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -170,6 +191,19 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListByResourceGroupRequestUri(string subscriptionId, string resourceGroupName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListByResourceGroupRequest(string subscriptionId, string resourceGroupName)
         {
             var message = _pipeline.CreateMessage();
@@ -195,7 +229,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<Models.AppServiceCertificateOrderCollection>> ListByResourceGroupAsync(string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceCertificateOrderListResult>> ListByResourceGroupAsync(string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -206,9 +240,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServiceCertificateOrderCollection value = default;
+                        AppServiceCertificateOrderListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = Models.AppServiceCertificateOrderCollection.DeserializeAppServiceCertificateOrderCollection(document.RootElement);
+                        value = AppServiceCertificateOrderListResult.DeserializeAppServiceCertificateOrderListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -222,7 +256,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<Models.AppServiceCertificateOrderCollection> ListByResourceGroup(string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
+        public Response<AppServiceCertificateOrderListResult> ListByResourceGroup(string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -233,14 +267,28 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServiceCertificateOrderCollection value = default;
+                        AppServiceCertificateOrderListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = Models.AppServiceCertificateOrderCollection.DeserializeAppServiceCertificateOrderCollection(document.RootElement);
+                        value = AppServiceCertificateOrderListResult.DeserializeAppServiceCertificateOrderListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetRequest(string subscriptionId, string resourceGroupName, string certificateOrderName)
@@ -325,6 +373,20 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateCreateOrUpdateRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName, AppServiceCertificateOrderData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateCreateOrUpdateRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, AppServiceCertificateOrderData data)
         {
             var message = _pipeline.CreateMessage();
@@ -343,7 +405,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(data);
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -401,6 +463,20 @@ namespace Azure.ResourceManager.AppService
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateDeleteRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateDeleteRequest(string subscriptionId, string resourceGroupName, string certificateOrderName)
@@ -473,6 +549,20 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateUpdateRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName, AppServiceCertificateOrderPatch patch)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateUpdateRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, AppServiceCertificateOrderPatch patch)
         {
             var message = _pipeline.CreateMessage();
@@ -491,7 +581,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(patch);
+            content.JsonWriter.WriteObjectValue(patch, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -559,6 +649,21 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListCertificatesRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendPath("/certificates", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListCertificatesRequest(string subscriptionId, string resourceGroupName, string certificateOrderName)
         {
             var message = _pipeline.CreateMessage();
@@ -587,7 +692,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="certificateOrderName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="certificateOrderName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AppServiceCertificateCollection>> ListCertificatesAsync(string subscriptionId, string resourceGroupName, string certificateOrderName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceCertificateListResult>> ListCertificatesAsync(string subscriptionId, string resourceGroupName, string certificateOrderName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -599,9 +704,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        AppServiceCertificateCollection value = default;
+                        AppServiceCertificateListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AppServiceCertificateCollection.DeserializeAppServiceCertificateCollection(document.RootElement);
+                        value = AppServiceCertificateListResult.DeserializeAppServiceCertificateListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -616,7 +721,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="certificateOrderName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="certificateOrderName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AppServiceCertificateCollection> ListCertificates(string subscriptionId, string resourceGroupName, string certificateOrderName, CancellationToken cancellationToken = default)
+        public Response<AppServiceCertificateListResult> ListCertificates(string subscriptionId, string resourceGroupName, string certificateOrderName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -628,14 +733,30 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        AppServiceCertificateCollection value = default;
+                        AppServiceCertificateListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AppServiceCertificateCollection.DeserializeAppServiceCertificateCollection(document.RootElement);
+                        value = AppServiceCertificateListResult.DeserializeAppServiceCertificateListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetCertificateRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendPath("/certificates/", false);
+            uri.AppendPath(name, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetCertificateRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, string name)
@@ -668,7 +789,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AppServiceCertificateResourceData>> GetCertificateAsync(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceCertificateData>> GetCertificateAsync(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -681,13 +802,13 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        AppServiceCertificateResourceData value = default;
+                        AppServiceCertificateData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AppServiceCertificateResourceData.DeserializeAppServiceCertificateResourceData(document.RootElement);
+                        value = AppServiceCertificateData.DeserializeAppServiceCertificateData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AppServiceCertificateResourceData)null, message.Response);
+                    return Response.FromValue((AppServiceCertificateData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -701,7 +822,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AppServiceCertificateResourceData> GetCertificate(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, CancellationToken cancellationToken = default)
+        public Response<AppServiceCertificateData> GetCertificate(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -714,19 +835,35 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        AppServiceCertificateResourceData value = default;
+                        AppServiceCertificateData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AppServiceCertificateResourceData.DeserializeAppServiceCertificateResourceData(document.RootElement);
+                        value = AppServiceCertificateData.DeserializeAppServiceCertificateData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AppServiceCertificateResourceData)null, message.Response);
+                    return Response.FromValue((AppServiceCertificateData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
         }
 
-        internal HttpMessage CreateCreateOrUpdateCertificateRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificateResourceData data)
+        internal RequestUriBuilder CreateCreateOrUpdateCertificateRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificateData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendPath("/certificates/", false);
+            uri.AppendPath(name, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateCreateOrUpdateCertificateRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificateData data)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -746,7 +883,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(data);
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -761,7 +898,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/>, <paramref name="name"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response> CreateOrUpdateCertificateAsync(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificateResourceData data, CancellationToken cancellationToken = default)
+        public async Task<Response> CreateOrUpdateCertificateAsync(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificateData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -790,7 +927,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/>, <paramref name="name"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response CreateOrUpdateCertificate(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificateResourceData data, CancellationToken cancellationToken = default)
+        public Response CreateOrUpdateCertificate(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificateData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -808,6 +945,22 @@ namespace Azure.ResourceManager.AppService
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateDeleteCertificateRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendPath("/certificates/", false);
+            uri.AppendPath(name, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateDeleteCertificateRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, string name)
@@ -886,7 +1039,23 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
-        internal HttpMessage CreateUpdateCertificateRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificateResourcePatch patch)
+        internal RequestUriBuilder CreateUpdateCertificateRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificatePatch patch)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendPath("/certificates/", false);
+            uri.AppendPath(name, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateUpdateCertificateRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificatePatch patch)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -906,7 +1075,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(patch);
+            content.JsonWriter.WriteObjectValue(patch, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -921,7 +1090,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/>, <paramref name="name"/> or <paramref name="patch"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AppServiceCertificateResourceData>> UpdateCertificateAsync(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificateResourcePatch patch, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceCertificateData>> UpdateCertificateAsync(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificatePatch patch, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -935,9 +1104,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        AppServiceCertificateResourceData value = default;
+                        AppServiceCertificateData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AppServiceCertificateResourceData.DeserializeAppServiceCertificateResourceData(document.RootElement);
+                        value = AppServiceCertificateData.DeserializeAppServiceCertificateData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -954,7 +1123,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/>, <paramref name="name"/> or <paramref name="patch"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AppServiceCertificateResourceData> UpdateCertificate(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificateResourcePatch patch, CancellationToken cancellationToken = default)
+        public Response<AppServiceCertificateData> UpdateCertificate(string subscriptionId, string resourceGroupName, string certificateOrderName, string name, AppServiceCertificatePatch patch, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -968,14 +1137,29 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        AppServiceCertificateResourceData value = default;
+                        AppServiceCertificateData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AppServiceCertificateResourceData.DeserializeAppServiceCertificateResourceData(document.RootElement);
+                        value = AppServiceCertificateData.DeserializeAppServiceCertificateData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateReissueRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName, ReissueCertificateOrderContent content)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendPath("/reissue", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateReissueRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, ReissueCertificateOrderContent content)
@@ -997,7 +1181,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content0 = new Utf8JsonRequestContent();
-            content0.JsonWriter.WriteObjectValue(content);
+            content0.JsonWriter.WriteObjectValue(content, ModelSerializationExtensions.WireOptions);
             request.Content = content0;
             _userAgent.Apply(message);
             return message;
@@ -1055,6 +1239,21 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateRenewRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName, RenewCertificateOrderContent content)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendPath("/renew", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateRenewRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, RenewCertificateOrderContent content)
         {
             var message = _pipeline.CreateMessage();
@@ -1074,7 +1273,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content0 = new Utf8JsonRequestContent();
-            content0.JsonWriter.WriteObjectValue(content);
+            content0.JsonWriter.WriteObjectValue(content, ModelSerializationExtensions.WireOptions);
             request.Content = content0;
             _userAgent.Apply(message);
             return message;
@@ -1130,6 +1329,21 @@ namespace Azure.ResourceManager.AppService
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateResendEmailRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendPath("/resendEmail", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateResendEmailRequest(string subscriptionId, string resourceGroupName, string certificateOrderName)
@@ -1201,7 +1415,22 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
-        internal HttpMessage CreateResendRequestEmailsRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, NameIdentifier nameIdentifier)
+        internal RequestUriBuilder CreateResendRequestEmailsRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName, AppServiceDomainNameIdentifier nameIdentifier)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendPath("/resendRequestEmails", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateResendRequestEmailsRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, AppServiceDomainNameIdentifier nameIdentifier)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -1219,9 +1448,9 @@ namespace Azure.ResourceManager.AppService
             request.Uri = uri;
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
-            var content0 = new Utf8JsonRequestContent();
-            content0.JsonWriter.WriteObjectValue(nameIdentifier);
-            request.Content = content0;
+            var content = new Utf8JsonRequestContent();
+            content.JsonWriter.WriteObjectValue(nameIdentifier, ModelSerializationExtensions.WireOptions);
+            request.Content = content;
             _userAgent.Apply(message);
             return message;
         }
@@ -1234,7 +1463,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/> or <paramref name="nameIdentifier"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="certificateOrderName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response> ResendRequestEmailsAsync(string subscriptionId, string resourceGroupName, string certificateOrderName, NameIdentifier nameIdentifier, CancellationToken cancellationToken = default)
+        public async Task<Response> ResendRequestEmailsAsync(string subscriptionId, string resourceGroupName, string certificateOrderName, AppServiceDomainNameIdentifier nameIdentifier, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1260,7 +1489,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="certificateOrderName"/> or <paramref name="nameIdentifier"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="certificateOrderName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response ResendRequestEmails(string subscriptionId, string resourceGroupName, string certificateOrderName, NameIdentifier nameIdentifier, CancellationToken cancellationToken = default)
+        public Response ResendRequestEmails(string subscriptionId, string resourceGroupName, string certificateOrderName, AppServiceDomainNameIdentifier nameIdentifier, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1276,6 +1505,21 @@ namespace Azure.ResourceManager.AppService
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateRetrieveSiteSealRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName, SiteSealContent content)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendPath("/retrieveSiteSeal", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateRetrieveSiteSealRequest(string subscriptionId, string resourceGroupName, string certificateOrderName, SiteSealContent content)
@@ -1297,7 +1541,7 @@ namespace Azure.ResourceManager.AppService
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content0 = new Utf8JsonRequestContent();
-            content0.JsonWriter.WriteObjectValue(content);
+            content0.JsonWriter.WriteObjectValue(content, ModelSerializationExtensions.WireOptions);
             request.Content = content0;
             _userAgent.Apply(message);
             return message;
@@ -1363,6 +1607,21 @@ namespace Azure.ResourceManager.AppService
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateVerifyDomainOwnershipRequestUri(string subscriptionId, string resourceGroupName, string certificateOrderName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(certificateOrderName, true);
+            uri.AppendPath("/verifyDomainOwnership", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateVerifyDomainOwnershipRequest(string subscriptionId, string resourceGroupName, string certificateOrderName)
@@ -1432,6 +1691,21 @@ namespace Azure.ResourceManager.AppService
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateRetrieveCertificateActionsRequestUri(string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/retrieveCertificateActions", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateRetrieveCertificateActionsRequest(string subscriptionId, string resourceGroupName, string name)
@@ -1523,6 +1797,21 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateRetrieveCertificateEmailHistoryRequestUri(string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.CertificateRegistration/certificateOrders/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/retrieveEmailHistory", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateRetrieveCertificateEmailHistoryRequest(string subscriptionId, string resourceGroupName, string name)
         {
             var message = _pipeline.CreateMessage();
@@ -1551,7 +1840,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<IReadOnlyList<CertificateEmail>>> RetrieveCertificateEmailHistoryAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public async Task<Response<IReadOnlyList<AppServiceCertificateEmail>>> RetrieveCertificateEmailHistoryAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1563,12 +1852,12 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        IReadOnlyList<CertificateEmail> value = default;
+                        IReadOnlyList<AppServiceCertificateEmail> value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        List<CertificateEmail> array = new List<CertificateEmail>();
+                        List<AppServiceCertificateEmail> array = new List<AppServiceCertificateEmail>();
                         foreach (var item in document.RootElement.EnumerateArray())
                         {
-                            array.Add(CertificateEmail.DeserializeCertificateEmail(item));
+                            array.Add(AppServiceCertificateEmail.DeserializeAppServiceCertificateEmail(item));
                         }
                         value = array;
                         return Response.FromValue(value, message.Response);
@@ -1585,7 +1874,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<IReadOnlyList<CertificateEmail>> RetrieveCertificateEmailHistory(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public Response<IReadOnlyList<AppServiceCertificateEmail>> RetrieveCertificateEmailHistory(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1597,12 +1886,12 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        IReadOnlyList<CertificateEmail> value = default;
+                        IReadOnlyList<AppServiceCertificateEmail> value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        List<CertificateEmail> array = new List<CertificateEmail>();
+                        List<AppServiceCertificateEmail> array = new List<AppServiceCertificateEmail>();
                         foreach (var item in document.RootElement.EnumerateArray())
                         {
-                            array.Add(CertificateEmail.DeserializeCertificateEmail(item));
+                            array.Add(AppServiceCertificateEmail.DeserializeAppServiceCertificateEmail(item));
                         }
                         value = array;
                         return Response.FromValue(value, message.Response);
@@ -1610,6 +1899,14 @@ namespace Azure.ResourceManager.AppService
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListNextPageRequestUri(string nextLink, string subscriptionId)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListNextPageRequest(string nextLink, string subscriptionId)
@@ -1632,7 +1929,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/> or <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<Models.AppServiceCertificateOrderCollection>> ListNextPageAsync(string nextLink, string subscriptionId, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceCertificateOrderListResult>> ListNextPageAsync(string nextLink, string subscriptionId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -1643,9 +1940,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServiceCertificateOrderCollection value = default;
+                        AppServiceCertificateOrderListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = Models.AppServiceCertificateOrderCollection.DeserializeAppServiceCertificateOrderCollection(document.RootElement);
+                        value = AppServiceCertificateOrderListResult.DeserializeAppServiceCertificateOrderListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -1659,7 +1956,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/> or <paramref name="subscriptionId"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<Models.AppServiceCertificateOrderCollection> ListNextPage(string nextLink, string subscriptionId, CancellationToken cancellationToken = default)
+        public Response<AppServiceCertificateOrderListResult> ListNextPage(string nextLink, string subscriptionId, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -1670,14 +1967,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServiceCertificateOrderCollection value = default;
+                        AppServiceCertificateOrderListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = Models.AppServiceCertificateOrderCollection.DeserializeAppServiceCertificateOrderCollection(document.RootElement);
+                        value = AppServiceCertificateOrderListResult.DeserializeAppServiceCertificateOrderListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListByResourceGroupNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListByResourceGroupNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName)
@@ -1701,7 +2006,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<Models.AppServiceCertificateOrderCollection>> ListByResourceGroupNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceCertificateOrderListResult>> ListByResourceGroupNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -1713,9 +2018,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServiceCertificateOrderCollection value = default;
+                        AppServiceCertificateOrderListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = Models.AppServiceCertificateOrderCollection.DeserializeAppServiceCertificateOrderCollection(document.RootElement);
+                        value = AppServiceCertificateOrderListResult.DeserializeAppServiceCertificateOrderListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -1730,7 +2035,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/> or <paramref name="resourceGroupName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<Models.AppServiceCertificateOrderCollection> ListByResourceGroupNextPage(string nextLink, string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
+        public Response<AppServiceCertificateOrderListResult> ListByResourceGroupNextPage(string nextLink, string subscriptionId, string resourceGroupName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -1742,14 +2047,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        Models.AppServiceCertificateOrderCollection value = default;
+                        AppServiceCertificateOrderListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = Models.AppServiceCertificateOrderCollection.DeserializeAppServiceCertificateOrderCollection(document.RootElement);
+                        value = AppServiceCertificateOrderListResult.DeserializeAppServiceCertificateOrderListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListCertificatesNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string certificateOrderName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListCertificatesNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string certificateOrderName)
@@ -1774,7 +2087,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="certificateOrderName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="certificateOrderName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AppServiceCertificateCollection>> ListCertificatesNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string certificateOrderName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceCertificateListResult>> ListCertificatesNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string certificateOrderName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -1787,9 +2100,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        AppServiceCertificateCollection value = default;
+                        AppServiceCertificateListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AppServiceCertificateCollection.DeserializeAppServiceCertificateCollection(document.RootElement);
+                        value = AppServiceCertificateListResult.DeserializeAppServiceCertificateListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -1805,7 +2118,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="certificateOrderName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="certificateOrderName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AppServiceCertificateCollection> ListCertificatesNextPage(string nextLink, string subscriptionId, string resourceGroupName, string certificateOrderName, CancellationToken cancellationToken = default)
+        public Response<AppServiceCertificateListResult> ListCertificatesNextPage(string nextLink, string subscriptionId, string resourceGroupName, string certificateOrderName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -1818,9 +2131,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        AppServiceCertificateCollection value = default;
+                        AppServiceCertificateListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AppServiceCertificateCollection.DeserializeAppServiceCertificateCollection(document.RootElement);
+                        value = AppServiceCertificateListResult.DeserializeAppServiceCertificateListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:

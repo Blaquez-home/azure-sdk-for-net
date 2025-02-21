@@ -9,10 +9,11 @@ using Azure.AI.FormRecognizer.Models;
 using Azure.AI.FormRecognizer.Tests;
 using Azure.AI.FormRecognizer.Training;
 using Azure.Core.TestFramework;
+using NUnit.Framework;
 
 namespace Azure.AI.FormRecognizer.Samples
 {
-    public partial class FormRecognizerSamples : SamplesBase<FormRecognizerTestEnvironment>
+    public partial class FormRecognizerSamples
     {
         /// This sample demonstrates the differences in output that arise when StartRecognizeCustomForms
         /// is called with custom models trained with labels and without labels.
@@ -26,7 +27,7 @@ namespace Azure.AI.FormRecognizer.Samples
         {
             string endpoint = TestEnvironment.Endpoint;
             string apiKey = TestEnvironment.ApiKey;
-            string trainingFileUrl = TestEnvironment.BlobContainerSasUrlV2;
+            string trainingFileUrl = TestEnvironment.BlobContainerSasUrl;
             string formFilePath = FormRecognizerTestEnvironment.CreatePath("Form_1.jpg");
 
             FormRecognizerClient client = new FormRecognizerClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
@@ -78,11 +79,12 @@ namespace Azure.AI.FormRecognizer.Samples
         }
 
         [RecordedTest]
+        [Ignore("https://github.com/Azure/azure-sdk-for-net/issues/47689")]
         public async Task OutputModelsTrainedWithoutLabels()
         {
             string endpoint = TestEnvironment.Endpoint;
             string apiKey = TestEnvironment.ApiKey;
-            string trainingFileUrl = TestEnvironment.BlobContainerSasUrlV2;
+            string trainingFileUrl = TestEnvironment.BlobContainerSasUrl;
             string formFilePath = FormRecognizerTestEnvironment.CreatePath("Form_1.jpg");
 
             FormRecognizerClient client = new FormRecognizerClient(new Uri(endpoint), new AzureKeyCredential(apiKey));

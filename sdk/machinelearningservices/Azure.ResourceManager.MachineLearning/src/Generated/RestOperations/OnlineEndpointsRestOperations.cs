@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.MachineLearning.Models;
@@ -33,11 +32,54 @@ namespace Azure.ResourceManager.MachineLearning
         {
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
-            _apiVersion = apiVersion ?? "2022-02-01-preview";
+            _apiVersion = apiVersion ?? "2024-04-01";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
         }
 
-        internal HttpMessage CreateListRequest(string subscriptionId, string resourceGroupName, string workspaceName, string name, int? count, EndpointComputeType? computeType, string skip, string tags, string properties, OrderString? orderBy)
+        internal RequestUriBuilder CreateListRequestUri(string subscriptionId, string resourceGroupName, string workspaceName, string name, int? count, MachineLearningEndpointComputeType? computeType, string skip, string tags, string properties, MachineLearningOrderString? orderBy)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.MachineLearningServices/workspaces/", false);
+            uri.AppendPath(workspaceName, true);
+            uri.AppendPath("/onlineEndpoints", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            if (name != null)
+            {
+                uri.AppendQuery("name", name, true);
+            }
+            if (count != null)
+            {
+                uri.AppendQuery("count", count.Value, true);
+            }
+            if (computeType != null)
+            {
+                uri.AppendQuery("computeType", computeType.Value.ToString(), true);
+            }
+            if (skip != null)
+            {
+                uri.AppendQuery("$skip", skip, true);
+            }
+            if (tags != null)
+            {
+                uri.AppendQuery("tags", tags, true);
+            }
+            if (properties != null)
+            {
+                uri.AppendQuery("properties", properties, true);
+            }
+            if (orderBy != null)
+            {
+                uri.AppendQuery("orderBy", orderBy.Value.ToString(), true);
+            }
+            return uri;
+        }
+
+        internal HttpMessage CreateListRequest(string subscriptionId, string resourceGroupName, string workspaceName, string name, int? count, MachineLearningEndpointComputeType? computeType, string skip, string tags, string properties, MachineLearningOrderString? orderBy)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -100,7 +142,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="workspaceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="workspaceName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<OnlineEndpointTrackedResourceArmPaginatedResult>> ListAsync(string subscriptionId, string resourceGroupName, string workspaceName, string name = null, int? count = null, EndpointComputeType? computeType = null, string skip = null, string tags = null, string properties = null, OrderString? orderBy = null, CancellationToken cancellationToken = default)
+        public async Task<Response<OnlineEndpointTrackedResourceArmPaginatedResult>> ListAsync(string subscriptionId, string resourceGroupName, string workspaceName, string name = null, int? count = null, MachineLearningEndpointComputeType? computeType = null, string skip = null, string tags = null, string properties = null, MachineLearningOrderString? orderBy = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -136,7 +178,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="workspaceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="workspaceName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<OnlineEndpointTrackedResourceArmPaginatedResult> List(string subscriptionId, string resourceGroupName, string workspaceName, string name = null, int? count = null, EndpointComputeType? computeType = null, string skip = null, string tags = null, string properties = null, OrderString? orderBy = null, CancellationToken cancellationToken = default)
+        public Response<OnlineEndpointTrackedResourceArmPaginatedResult> List(string subscriptionId, string resourceGroupName, string workspaceName, string name = null, int? count = null, MachineLearningEndpointComputeType? computeType = null, string skip = null, string tags = null, string properties = null, MachineLearningOrderString? orderBy = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -156,6 +198,22 @@ namespace Azure.ResourceManager.MachineLearning
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateDeleteRequestUri(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.MachineLearningServices/workspaces/", false);
+            uri.AppendPath(workspaceName, true);
+            uri.AppendPath("/onlineEndpoints/", false);
+            uri.AppendPath(endpointName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateDeleteRequest(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName)
@@ -236,6 +294,22 @@ namespace Azure.ResourceManager.MachineLearning
             }
         }
 
+        internal RequestUriBuilder CreateGetRequestUri(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.MachineLearningServices/workspaces/", false);
+            uri.AppendPath(workspaceName, true);
+            uri.AppendPath("/onlineEndpoints/", false);
+            uri.AppendPath(endpointName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateGetRequest(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName)
         {
             var message = _pipeline.CreateMessage();
@@ -266,7 +340,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<OnlineEndpointData>> GetAsync(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, CancellationToken cancellationToken = default)
+        public async Task<Response<MachineLearningOnlineEndpointData>> GetAsync(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -279,13 +353,13 @@ namespace Azure.ResourceManager.MachineLearning
             {
                 case 200:
                     {
-                        OnlineEndpointData value = default;
+                        MachineLearningOnlineEndpointData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = OnlineEndpointData.DeserializeOnlineEndpointData(document.RootElement);
+                        value = MachineLearningOnlineEndpointData.DeserializeMachineLearningOnlineEndpointData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((OnlineEndpointData)null, message.Response);
+                    return Response.FromValue((MachineLearningOnlineEndpointData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -299,7 +373,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<OnlineEndpointData> Get(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, CancellationToken cancellationToken = default)
+        public Response<MachineLearningOnlineEndpointData> Get(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -312,19 +386,35 @@ namespace Azure.ResourceManager.MachineLearning
             {
                 case 200:
                     {
-                        OnlineEndpointData value = default;
+                        MachineLearningOnlineEndpointData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = OnlineEndpointData.DeserializeOnlineEndpointData(document.RootElement);
+                        value = MachineLearningOnlineEndpointData.DeserializeMachineLearningOnlineEndpointData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((OnlineEndpointData)null, message.Response);
+                    return Response.FromValue((MachineLearningOnlineEndpointData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
         }
 
-        internal HttpMessage CreateUpdateRequest(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, OnlineEndpointPatch patch)
+        internal RequestUriBuilder CreateUpdateRequestUri(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, MachineLearningResourcePatchWithIdentity body)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.MachineLearningServices/workspaces/", false);
+            uri.AppendPath(workspaceName, true);
+            uri.AppendPath("/onlineEndpoints/", false);
+            uri.AppendPath(endpointName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateUpdateRequest(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, MachineLearningResourcePatchWithIdentity body)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -344,7 +434,7 @@ namespace Azure.ResourceManager.MachineLearning
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(patch);
+            content.JsonWriter.WriteObjectValue(body, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -355,19 +445,19 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="workspaceName"> Name of Azure Machine Learning workspace. </param>
         /// <param name="endpointName"> Online Endpoint name. </param>
-        /// <param name="patch"> Online Endpoint entity to apply during operation. </param>
+        /// <param name="body"> Online Endpoint entity to apply during operation. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/>, <paramref name="endpointName"/> or <paramref name="patch"/> is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/>, <paramref name="endpointName"/> or <paramref name="body"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response> UpdateAsync(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, OnlineEndpointPatch patch, CancellationToken cancellationToken = default)
+        public async Task<Response> UpdateAsync(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, MachineLearningResourcePatchWithIdentity body, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
             Argument.AssertNotNullOrEmpty(workspaceName, nameof(workspaceName));
             Argument.AssertNotNullOrEmpty(endpointName, nameof(endpointName));
-            Argument.AssertNotNull(patch, nameof(patch));
+            Argument.AssertNotNull(body, nameof(body));
 
-            using var message = CreateUpdateRequest(subscriptionId, resourceGroupName, workspaceName, endpointName, patch);
+            using var message = CreateUpdateRequest(subscriptionId, resourceGroupName, workspaceName, endpointName, body);
             await _pipeline.SendAsync(message, cancellationToken).ConfigureAwait(false);
             switch (message.Response.Status)
             {
@@ -384,19 +474,19 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="workspaceName"> Name of Azure Machine Learning workspace. </param>
         /// <param name="endpointName"> Online Endpoint name. </param>
-        /// <param name="patch"> Online Endpoint entity to apply during operation. </param>
+        /// <param name="body"> Online Endpoint entity to apply during operation. </param>
         /// <param name="cancellationToken"> The cancellation token to use. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/>, <paramref name="endpointName"/> or <paramref name="patch"/> is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/>, <paramref name="endpointName"/> or <paramref name="body"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response Update(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, OnlineEndpointPatch patch, CancellationToken cancellationToken = default)
+        public Response Update(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, MachineLearningResourcePatchWithIdentity body, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
             Argument.AssertNotNullOrEmpty(workspaceName, nameof(workspaceName));
             Argument.AssertNotNullOrEmpty(endpointName, nameof(endpointName));
-            Argument.AssertNotNull(patch, nameof(patch));
+            Argument.AssertNotNull(body, nameof(body));
 
-            using var message = CreateUpdateRequest(subscriptionId, resourceGroupName, workspaceName, endpointName, patch);
+            using var message = CreateUpdateRequest(subscriptionId, resourceGroupName, workspaceName, endpointName, body);
             _pipeline.Send(message, cancellationToken);
             switch (message.Response.Status)
             {
@@ -408,7 +498,23 @@ namespace Azure.ResourceManager.MachineLearning
             }
         }
 
-        internal HttpMessage CreateCreateOrUpdateRequest(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, OnlineEndpointData data)
+        internal RequestUriBuilder CreateCreateOrUpdateRequestUri(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, MachineLearningOnlineEndpointData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.MachineLearningServices/workspaces/", false);
+            uri.AppendPath(workspaceName, true);
+            uri.AppendPath("/onlineEndpoints/", false);
+            uri.AppendPath(endpointName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateCreateOrUpdateRequest(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, MachineLearningOnlineEndpointData data)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -428,7 +534,7 @@ namespace Azure.ResourceManager.MachineLearning
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(data);
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -443,7 +549,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/>, <paramref name="endpointName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response> CreateOrUpdateAsync(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, OnlineEndpointData data, CancellationToken cancellationToken = default)
+        public async Task<Response> CreateOrUpdateAsync(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, MachineLearningOnlineEndpointData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -472,7 +578,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/>, <paramref name="endpointName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response CreateOrUpdate(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, OnlineEndpointData data, CancellationToken cancellationToken = default)
+        public Response CreateOrUpdate(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, MachineLearningOnlineEndpointData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -490,6 +596,23 @@ namespace Azure.ResourceManager.MachineLearning
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListKeysRequestUri(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.MachineLearningServices/workspaces/", false);
+            uri.AppendPath(workspaceName, true);
+            uri.AppendPath("/onlineEndpoints/", false);
+            uri.AppendPath(endpointName, true);
+            uri.AppendPath("/listKeys", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListKeysRequest(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName)
@@ -523,7 +646,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<EndpointAuthKeys>> ListKeysAsync(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, CancellationToken cancellationToken = default)
+        public async Task<Response<MachineLearningEndpointAuthKeys>> ListKeysAsync(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -536,9 +659,9 @@ namespace Azure.ResourceManager.MachineLearning
             {
                 case 200:
                     {
-                        EndpointAuthKeys value = default;
+                        MachineLearningEndpointAuthKeys value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = EndpointAuthKeys.DeserializeEndpointAuthKeys(document.RootElement);
+                        value = MachineLearningEndpointAuthKeys.DeserializeMachineLearningEndpointAuthKeys(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -554,7 +677,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<EndpointAuthKeys> ListKeys(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, CancellationToken cancellationToken = default)
+        public Response<MachineLearningEndpointAuthKeys> ListKeys(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -567,9 +690,9 @@ namespace Azure.ResourceManager.MachineLearning
             {
                 case 200:
                     {
-                        EndpointAuthKeys value = default;
+                        MachineLearningEndpointAuthKeys value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = EndpointAuthKeys.DeserializeEndpointAuthKeys(document.RootElement);
+                        value = MachineLearningEndpointAuthKeys.DeserializeMachineLearningEndpointAuthKeys(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -577,7 +700,24 @@ namespace Azure.ResourceManager.MachineLearning
             }
         }
 
-        internal HttpMessage CreateRegenerateKeysRequest(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, RegenerateEndpointKeysContent content)
+        internal RequestUriBuilder CreateRegenerateKeysRequestUri(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, MachineLearningEndpointKeyRegenerateContent content)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.MachineLearningServices/workspaces/", false);
+            uri.AppendPath(workspaceName, true);
+            uri.AppendPath("/onlineEndpoints/", false);
+            uri.AppendPath(endpointName, true);
+            uri.AppendPath("/regenerateKeys", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateRegenerateKeysRequest(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, MachineLearningEndpointKeyRegenerateContent content)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -598,7 +738,7 @@ namespace Azure.ResourceManager.MachineLearning
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content0 = new Utf8JsonRequestContent();
-            content0.JsonWriter.WriteObjectValue(content);
+            content0.JsonWriter.WriteObjectValue(content, ModelSerializationExtensions.WireOptions);
             request.Content = content0;
             _userAgent.Apply(message);
             return message;
@@ -613,7 +753,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/>, <paramref name="endpointName"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response> RegenerateKeysAsync(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, RegenerateEndpointKeysContent content, CancellationToken cancellationToken = default)
+        public async Task<Response> RegenerateKeysAsync(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, MachineLearningEndpointKeyRegenerateContent content, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -642,7 +782,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/>, <paramref name="endpointName"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response RegenerateKeys(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, RegenerateEndpointKeysContent content, CancellationToken cancellationToken = default)
+        public Response RegenerateKeys(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, MachineLearningEndpointKeyRegenerateContent content, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -660,6 +800,23 @@ namespace Azure.ResourceManager.MachineLearning
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetTokenRequestUri(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.MachineLearningServices/workspaces/", false);
+            uri.AppendPath(workspaceName, true);
+            uri.AppendPath("/onlineEndpoints/", false);
+            uri.AppendPath(endpointName, true);
+            uri.AppendPath("/token", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetTokenRequest(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName)
@@ -685,7 +842,7 @@ namespace Azure.ResourceManager.MachineLearning
             return message;
         }
 
-        /// <summary> Retrieve a valid AAD token for an Endpoint using AMLToken-based authentication. </summary>
+        /// <summary> Retrieve a valid AML token for an Endpoint using AMLToken-based authentication. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="workspaceName"> Name of Azure Machine Learning workspace. </param>
@@ -693,7 +850,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<EndpointAuthToken>> GetTokenAsync(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, CancellationToken cancellationToken = default)
+        public async Task<Response<MachineLearningEndpointAuthToken>> GetTokenAsync(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -706,9 +863,9 @@ namespace Azure.ResourceManager.MachineLearning
             {
                 case 200:
                     {
-                        EndpointAuthToken value = default;
+                        MachineLearningEndpointAuthToken value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = EndpointAuthToken.DeserializeEndpointAuthToken(document.RootElement);
+                        value = MachineLearningEndpointAuthToken.DeserializeMachineLearningEndpointAuthToken(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -716,7 +873,7 @@ namespace Azure.ResourceManager.MachineLearning
             }
         }
 
-        /// <summary> Retrieve a valid AAD token for an Endpoint using AMLToken-based authentication. </summary>
+        /// <summary> Retrieve a valid AML token for an Endpoint using AMLToken-based authentication. </summary>
         /// <param name="subscriptionId"> The ID of the target subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group. The name is case insensitive. </param>
         /// <param name="workspaceName"> Name of Azure Machine Learning workspace. </param>
@@ -724,7 +881,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="workspaceName"/> or <paramref name="endpointName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<EndpointAuthToken> GetToken(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, CancellationToken cancellationToken = default)
+        public Response<MachineLearningEndpointAuthToken> GetToken(string subscriptionId, string resourceGroupName, string workspaceName, string endpointName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -737,9 +894,9 @@ namespace Azure.ResourceManager.MachineLearning
             {
                 case 200:
                     {
-                        EndpointAuthToken value = default;
+                        MachineLearningEndpointAuthToken value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = EndpointAuthToken.DeserializeEndpointAuthToken(document.RootElement);
+                        value = MachineLearningEndpointAuthToken.DeserializeMachineLearningEndpointAuthToken(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -747,7 +904,15 @@ namespace Azure.ResourceManager.MachineLearning
             }
         }
 
-        internal HttpMessage CreateListNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string workspaceName, string name, int? count, EndpointComputeType? computeType, string skip, string tags, string properties, OrderString? orderBy)
+        internal RequestUriBuilder CreateListNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string workspaceName, string name, int? count, MachineLearningEndpointComputeType? computeType, string skip, string tags, string properties, MachineLearningOrderString? orderBy)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
+        }
+
+        internal HttpMessage CreateListNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string workspaceName, string name, int? count, MachineLearningEndpointComputeType? computeType, string skip, string tags, string properties, MachineLearningOrderString? orderBy)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -776,7 +941,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="workspaceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="workspaceName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<OnlineEndpointTrackedResourceArmPaginatedResult>> ListNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string workspaceName, string name = null, int? count = null, EndpointComputeType? computeType = null, string skip = null, string tags = null, string properties = null, OrderString? orderBy = null, CancellationToken cancellationToken = default)
+        public async Task<Response<OnlineEndpointTrackedResourceArmPaginatedResult>> ListNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string workspaceName, string name = null, int? count = null, MachineLearningEndpointComputeType? computeType = null, string skip = null, string tags = null, string properties = null, MachineLearningOrderString? orderBy = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -814,7 +979,7 @@ namespace Azure.ResourceManager.MachineLearning
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="workspaceName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="workspaceName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<OnlineEndpointTrackedResourceArmPaginatedResult> ListNextPage(string nextLink, string subscriptionId, string resourceGroupName, string workspaceName, string name = null, int? count = null, EndpointComputeType? computeType = null, string skip = null, string tags = null, string properties = null, OrderString? orderBy = null, CancellationToken cancellationToken = default)
+        public Response<OnlineEndpointTrackedResourceArmPaginatedResult> ListNextPage(string nextLink, string subscriptionId, string resourceGroupName, string workspaceName, string name = null, int? count = null, MachineLearningEndpointComputeType? computeType = null, string skip = null, string tags = null, string properties = null, MachineLearningOrderString? orderBy = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));

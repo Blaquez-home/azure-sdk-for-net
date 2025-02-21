@@ -39,7 +39,7 @@ to French if not a human translation is not already defined.
 
 First we'll create a synonym map for country names and abbreviations. A synonym map contains aliases
 and other transformations using the
-[Solr format](https://docs.microsoft.com/rest/api/searchservice/create-synonym-map#apache-solr-synonym-format),
+[Solr format](https://learn.microsoft.com/rest/api/searchservice/create-synonym-map#apache-solr-synonym-format),
 for example:
 
 ```
@@ -88,20 +88,20 @@ SearchIndex index = new SearchIndex(indexName)
 {
     Fields =
     {
-        new SimpleField("hotelId", SearchFieldDataType.String) { IsKey = true, IsFilterable = true, IsSortable = true },
-        new SearchableField("hotelName") { IsFilterable = true, IsSortable = true },
-        new SearchableField("description") { AnalyzerName = LexicalAnalyzerName.EnLucene },
-        new SearchableField("descriptionFr") { AnalyzerName = LexicalAnalyzerName.FrLucene },
-        new SearchableField("tags", collection: true) { IsFilterable = true, IsFacetable = true },
-        new ComplexField("address")
+        new SimpleField("HotelId", SearchFieldDataType.String) { IsKey = true, IsFilterable = true, IsSortable = true },
+        new SearchableField("HotelName") { IsFilterable = true, IsSortable = true },
+        new SearchableField("Description") { AnalyzerName = LexicalAnalyzerName.EnLucene },
+        new SearchableField("DescriptionFr") { AnalyzerName = LexicalAnalyzerName.FrLucene },
+        new SearchableField("Tags", collection: true) { IsFilterable = true, IsFacetable = true },
+        new ComplexField("Address")
         {
             Fields =
             {
-                new SearchableField("streetAddress"),
-                new SearchableField("city") { IsFilterable = true, IsSortable = true, IsFacetable = true },
-                new SearchableField("stateProvince") { IsFilterable = true, IsSortable = true, IsFacetable = true },
-                new SearchableField("country") { SynonymMapNames = new[] { synonymMapName }, IsFilterable = true, IsSortable = true, IsFacetable = true },
-                new SearchableField("postalCode") { IsFilterable = true, IsSortable = true, IsFacetable = true }
+                new SearchableField("StreetAddress"),
+                new SearchableField("City") { IsFilterable = true, IsSortable = true, IsFacetable = true },
+                new SearchableField("StateProvince") { IsFilterable = true, IsSortable = true, IsFacetable = true },
+                new SearchableField("Country") { SynonymMapNames = new[] { synonymMapName }, IsFilterable = true, IsSortable = true, IsFacetable = true },
+                new SearchableField("PostalCode") { IsFilterable = true, IsSortable = true, IsFacetable = true }
             }
         }
     }
@@ -143,7 +143,7 @@ SearchClientOptions options = new SearchClientOptions()
     {
         // Increase timeout for each request to 5 minutes
         Timeout = TimeSpan.FromMinutes(5)
-    });
+    })
 };
 
 // Increase retry attempts to 6
@@ -155,19 +155,19 @@ indexerClient = new SearchIndexerClient(endpoint, credential, options);
 
 ### Create a Skillset
 
-To provide French translations of descriptions, we'll define a [translation skill](https://docs.microsoft.com/azure/search/cognitive-search-skill-text-translation) to translate from English.
-We'll also define a [conditional skill](https://docs.microsoft.com/azure/search/cognitive-search-skill-conditional) to use a human-translated descriptions instead if available.
+To provide French translations of descriptions, we'll define a [translation skill](https://learn.microsoft.com/azure/search/cognitive-search-skill-text-translation) to translate from English.
+We'll also define a [conditional skill](https://learn.microsoft.com/azure/search/cognitive-search-skill-conditional) to use a human-translated descriptions instead if available.
 
-See all [built-in skills](https://docs.microsoft.com/azure/search/cognitive-search-predefined-skills) for more information
+See all [built-in skills](https://learn.microsoft.com/azure/search/cognitive-search-predefined-skills) for more information
 about all available skills.
 
 ```C# Snippet:Azure_Search_Tests_Samples_CreateIndexerAsync_Skillset
 // Translate English descriptions to French.
-// See https://docs.microsoft.com/azure/search/cognitive-search-skill-text-translation for details of the Text Translation skill.
+// See https://learn.microsoft.com/azure/search/cognitive-search-skill-text-translation for details of the Text Translation skill.
 TextTranslationSkill translationSkill = new TextTranslationSkill(
     inputs: new[]
     {
-        new InputFieldMappingEntry("text") { Source = "/document/description" }
+        new InputFieldMappingEntry("text") { Source = "/document/Description" }
     },
     outputs: new[]
     {
@@ -181,13 +181,13 @@ TextTranslationSkill translationSkill = new TextTranslationSkill(
 };
 
 // Use the human-translated French description if available; otherwise, use the translated description.
-// See https://docs.microsoft.com/azure/search/cognitive-search-skill-conditional for details of the Conditional skill.
+// See https://learn.microsoft.com/azure/search/cognitive-search-skill-conditional for details of the Conditional skill.
 ConditionalSkill conditionalSkill = new ConditionalSkill(
     inputs: new[]
     {
-        new InputFieldMappingEntry("condition") { Source = "= $(/document/descriptionFr) == null" },
+        new InputFieldMappingEntry("condition") { Source = "= $(/document/DescriptionFr) == null" },
         new InputFieldMappingEntry("whenTrue") { Source = "/document/descriptionFrTranslated" },
-        new InputFieldMappingEntry("whenFalse") { Source = "/document/descriptionFr" }
+        new InputFieldMappingEntry("whenFalse") { Source = "/document/DescriptionFr" }
     },
     outputs: new[]
     {
@@ -230,15 +230,15 @@ SearchIndexer indexer = new SearchIndexer(
     // We only want to index fields defined in our index, excluding descriptionFr if defined.
     FieldMappings =
     {
-        new FieldMapping("hotelId"),
-        new FieldMapping("hotelName"),
-        new FieldMapping("description"),
-        new FieldMapping("tags"),
-        new FieldMapping("address")
+        new FieldMapping("HotelId"),
+        new FieldMapping("HotelName"),
+        new FieldMapping("Description"),
+        new FieldMapping("Tags"),
+        new FieldMapping("Address")
     },
     OutputFieldMappings =
     {
-        new FieldMapping("/document/descriptionFrFinal") { TargetFieldName = "descriptionFr" }
+        new FieldMapping("/document/descriptionFrFinal") { TargetFieldName = "DescriptionFr" }
     },
     Parameters = new IndexingParameters
     {

@@ -7,26 +7,11 @@
 
 using System.Text.Json;
 using System.Xml.Linq;
-using Azure.Core;
 
 namespace Azure.Data.Tables.Models
 {
     internal partial class TableServiceError
     {
-        internal static TableServiceError DeserializeTableServiceError(JsonElement element)
-        {
-            Optional<string> message = default;
-            foreach (var property in element.EnumerateObject())
-            {
-                if (property.NameEquals("Message"))
-                {
-                    message = property.Value.GetString();
-                    continue;
-                }
-            }
-            return new TableServiceError(message.Value);
-        }
-
         internal static TableServiceError DeserializeTableServiceError(XElement element)
         {
             string message = default;
@@ -35,6 +20,32 @@ namespace Azure.Data.Tables.Models
                 message = (string)messageElement;
             }
             return new TableServiceError(message);
+        }
+
+        internal static TableServiceError DeserializeTableServiceError(JsonElement element)
+        {
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
+            string message = default;
+            foreach (var property in element.EnumerateObject())
+            {
+                if (property.NameEquals("Message"u8))
+                {
+                    message = property.Value.GetString();
+                    continue;
+                }
+            }
+            return new TableServiceError(message);
+        }
+
+        /// <summary> Deserializes the model from a raw response. </summary>
+        /// <param name="response"> The response to deserialize the model from. </param>
+        internal static TableServiceError FromResponse(Response response)
+        {
+            using var document = JsonDocument.Parse(response.Content);
+            return DeserializeTableServiceError(document.RootElement);
         }
     }
 }

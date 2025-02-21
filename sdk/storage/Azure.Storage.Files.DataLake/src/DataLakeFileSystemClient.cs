@@ -16,6 +16,8 @@ using System.Collections.Generic;
 using Azure.Storage.Shared;
 using Azure.Storage.Sas;
 using System.ComponentModel;
+using static Azure.Storage.Constants.Sas;
+using Azure.Storage.Common;
 
 #pragma warning disable SA1402  // File may only contain a single type
 
@@ -102,8 +104,8 @@ namespace Azure.Storage.Files.DataLake
         }
 
         /// <summary>
-        /// Determines whether the client is able to generate a SAS.
-        /// If the client is authenticated with a <see cref="StorageSharedKeyCredential"/>.
+        /// Indicates whether the client is able to generate a SAS uri.
+        /// Client can generate a SAS url if it is authenticated with a <see cref="StorageSharedKeyCredential"/>.
         /// </summary>
         public virtual bool CanGenerateSasUri => ClientConfiguration.SharedKeyCredential != null;
 
@@ -145,7 +147,13 @@ namespace Azure.Storage.Files.DataLake
         /// name of the account and the name of the file system.
         /// </param>
         public DataLakeFileSystemClient(Uri fileSystemUri)
-            : this(fileSystemUri, (HttpPipelinePolicy)null, null, null)
+            : this(
+                  fileSystemUri,
+                  (HttpPipelinePolicy)null,
+                  options: null,
+                  storageSharedKeyCredential: null,
+                  sasCredential: null,
+                  tokenCredential: null)
         {
         }
 
@@ -163,7 +171,13 @@ namespace Azure.Storage.Files.DataLake
         /// every request.
         /// </param>
         public DataLakeFileSystemClient(Uri fileSystemUri, DataLakeClientOptions options)
-            : this(fileSystemUri, (HttpPipelinePolicy)null, options, null)
+            : this(
+                  fileSystemUri,
+                  (HttpPipelinePolicy)null,
+                  options,
+                  storageSharedKeyCredential: null,
+                  sasCredential: null,
+                  tokenCredential: null)
         {
         }
 
@@ -211,6 +225,7 @@ namespace Azure.Storage.Files.DataLake
         /// </param>
         public DataLakeFileSystemClient(string connectionString, string fileSystemName, DataLakeClientOptions options)
         {
+            Argument.AssertNotNullOrWhiteSpace(fileSystemName, nameof(fileSystemName));
             StorageConnectionString conn = StorageConnectionString.Parse(connectionString);
             StorageSharedKeyCredential sharedKeyCredential = conn.Credentials as StorageSharedKeyCredential;
             DataLakeUriBuilder uriBuilder = new DataLakeUriBuilder(conn.BlobEndpoint)
@@ -226,8 +241,8 @@ namespace Azure.Storage.Files.DataLake
             _clientConfiguration = new DataLakeClientConfiguration(
                 pipeline: options.Build(conn.Credentials),
                 sharedKeyCredential: sharedKeyCredential,
-                clientDiagnostics: new StorageClientDiagnostics(options),
-                version: options.Version,
+                clientDiagnostics: new ClientDiagnostics(options),
+                clientOptions: options,
                 customerProvidedKey: options.CustomerProvidedKey);
 
             _containerClient = BlobContainerClientInternals.Create(
@@ -253,7 +268,13 @@ namespace Azure.Storage.Files.DataLake
         /// The shared key credential used to sign requests.
         /// </param>
         public DataLakeFileSystemClient(Uri fileSystemUri, StorageSharedKeyCredential credential)
-            : this(fileSystemUri, credential.AsPolicy(), null, credential)
+            : this(
+                  fileSystemUri,
+                  credential.AsPolicy(),
+                  options: null,
+                  storageSharedKeyCredential: credential,
+                  sasCredential: null,
+                  tokenCredential: null)
         {
         }
 
@@ -274,7 +295,13 @@ namespace Azure.Storage.Files.DataLake
         /// every request.
         /// </param>
         public DataLakeFileSystemClient(Uri fileSystemUri, StorageSharedKeyCredential credential, DataLakeClientOptions options)
-            : this(fileSystemUri, credential.AsPolicy(), options, credential)
+            : this(
+                  fileSystemUri,
+                  credential.AsPolicy(),
+                  options,
+                  storageSharedKeyCredential: credential,
+                  sasCredential: null,
+                  tokenCredential: null)
         {
         }
 
@@ -319,7 +346,13 @@ namespace Azure.Storage.Files.DataLake
         /// This constructor should only be used when shared access signature needs to be updated during lifespan of this client.
         /// </remarks>
         public DataLakeFileSystemClient(Uri fileSystemUri, AzureSasCredential credential, DataLakeClientOptions options)
-            : this(fileSystemUri, credential.AsPolicy<DataLakeUriBuilder>(fileSystemUri), options, null)
+            : this(
+                  fileSystemUri,
+                  credential.AsPolicy<DataLakeUriBuilder>(fileSystemUri),
+                  options,
+                  storageSharedKeyCredential: null,
+                  sasCredential: credential,
+                  tokenCredential: null)
         {
         }
 
@@ -335,9 +368,8 @@ namespace Azure.Storage.Files.DataLake
         /// The token credential used to sign requests.
         /// </param>
         public DataLakeFileSystemClient(Uri fileSystemUri, TokenCredential credential)
-            : this(fileSystemUri, credential.AsPolicy(new DataLakeClientOptions()), null, null)
+            : this(fileSystemUri, credential, new DataLakeClientOptions())
         {
-            Errors.VerifyHttpsTokenAuth(fileSystemUri);
         }
 
         /// <summary>
@@ -357,7 +389,15 @@ namespace Azure.Storage.Files.DataLake
         /// every request.
         /// </param>
         public DataLakeFileSystemClient(Uri fileSystemUri, TokenCredential credential, DataLakeClientOptions options)
-            : this(fileSystemUri, credential.AsPolicy(options), options, null)
+            : this(
+                fileSystemUri,
+                credential.AsPolicy(
+                    string.IsNullOrEmpty(options?.Audience?.ToString()) ? DataLakeAudience.DefaultAudience.CreateDefaultScope() : options.Audience.Value.CreateDefaultScope(),
+                    options),
+                options,
+                storageSharedKeyCredential: null,
+                sasCredential: null,
+                tokenCredential: credential)
         {
             Errors.VerifyHttpsTokenAuth(fileSystemUri);
         }
@@ -381,11 +421,19 @@ namespace Azure.Storage.Files.DataLake
         /// <param name="storageSharedKeyCredential">
         /// The shared key credential used to sign requests.
         /// </param>
+        /// <param name="sasCredential">
+        /// The SAS credential used to sign requests.
+        /// </param>
+        /// <param name="tokenCredential">
+        /// The token credential used to sign requests.
+        /// </param>
         internal DataLakeFileSystemClient(
             Uri fileSystemUri,
             HttpPipelinePolicy authentication,
             DataLakeClientOptions options,
-            StorageSharedKeyCredential storageSharedKeyCredential)
+            StorageSharedKeyCredential storageSharedKeyCredential,
+            AzureSasCredential sasCredential,
+            TokenCredential tokenCredential)
         {
             Argument.AssertNotNull(fileSystemUri, nameof(fileSystemUri));
             DataLakeUriBuilder uriBuilder = new DataLakeUriBuilder(fileSystemUri);
@@ -397,8 +445,10 @@ namespace Azure.Storage.Files.DataLake
             _clientConfiguration = new DataLakeClientConfiguration(
                 pipeline: options.Build(authentication),
                 sharedKeyCredential: storageSharedKeyCredential,
-                clientDiagnostics: new StorageClientDiagnostics(options),
-                version: options.Version,
+                sasCredential: sasCredential,
+                tokenCredential: tokenCredential,
+                clientDiagnostics: new ClientDiagnostics(options),
+                clientOptions: options,
                 customerProvidedKey: options.CustomerProvidedKey);
 
             _containerClient = BlobContainerClientInternals.Create(
@@ -451,13 +501,15 @@ namespace Azure.Storage.Files.DataLake
                 clientDiagnostics: _clientConfiguration.ClientDiagnostics,
                 pipeline: _clientConfiguration.Pipeline,
                 url: dfsUri.AbsoluteUri,
-                version: _clientConfiguration.Version.ToVersionString());
+                resource: "filesystem",
+                version: _clientConfiguration.ClientOptions.Version.ToVersionString());
 
             FileSystemRestClient blobFileSystemRestClient = new FileSystemRestClient(
                 clientDiagnostics: _clientConfiguration.ClientDiagnostics,
                 pipeline: _clientConfiguration.Pipeline,
-                url: blobUri.AbsoluteUri,
-                version: _clientConfiguration.Version.ToVersionString());
+            url: blobUri.AbsoluteUri,
+                resource: "filesystem",
+                version: _clientConfiguration.ClientOptions.Version.ToVersionString());
 
             return (dfsFileSystemRestClient, blobFileSystemRestClient);
         }
@@ -472,12 +524,14 @@ namespace Azure.Storage.Files.DataLake
                 Uri uri,
                 DataLakeClientConfiguration clientConfiguration)
             {
+                var options = new BlobClientOptions(clientConfiguration.ClientOptions.Version.AsBlobsVersion())
+                {
+                    Diagnostics = { IsDistributedTracingEnabled = clientConfiguration.ClientDiagnostics.IsActivityEnabled },
+                };
+                clientConfiguration.TransferValidation.CopyTo(options.TransferValidation);
                 return BlobContainerClient.CreateClient(
                     uri,
-                    new BlobClientOptions(clientConfiguration.Version.AsBlobsVersion())
-                    {
-                        Diagnostics = { IsDistributedTracingEnabled = clientConfiguration.ClientDiagnostics.IsActivityEnabled }
-                    },
+                    options,
                     clientConfiguration.Pipeline);
             }
         }
@@ -547,8 +601,128 @@ namespace Azure.Storage.Files.DataLake
 
         #region Create
         /// <summary>
-        /// The <see cref="Create"/> operation creates a new file system
+        /// The <see cref="Create(DataLakeFileSystemCreateOptions, CancellationToken)"/>
+        /// operation creates a new file system under the specified account. If the file system with the same name
+        /// already exists, the operation fails.
+        ///
+        /// For more information, see
+        /// <see href="https://docs.microsoft.com/rest/api/storageservices/create-container">
+        /// Create Container</see>.
+        /// </summary>
+        /// <param name="options">
+        /// Optional parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        /// Optional <see cref="CancellationToken"/> to propagate
+        /// notifications that the operation should be cancelled.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Response{FileSystemInfo}"/> describing the newly
+        /// created file system.
+        /// </returns>
+        /// <remarks>
+        /// A <see cref="RequestFailedException"/> will be thrown if
+        /// a failure occurs.
+        /// </remarks>
+        public virtual Response<FileSystemInfo> Create(
+            DataLakeFileSystemCreateOptions options = default,
+            CancellationToken cancellationToken = default)
+        {
+            DiagnosticScope scope = ClientConfiguration.ClientDiagnostics.CreateScope($"{nameof(DataLakeFileSystemClient)}.{nameof(Create)}");
+
+            try
+            {
+                scope.Start();
+
+                Response<BlobContainerInfo> containerResponse = _containerClient.Create(
+                    publicAccessType: (Blobs.Models.PublicAccessType?)options?.PublicAccessType ?? Blobs.Models.PublicAccessType.None,
+                    metadata: options?.Metadata,
+                    encryptionScopeOptions: options?.EncryptionScopeOptions.ToBlobContainerEncryptionScopeOptions(),
+                    cancellationToken: cancellationToken);
+
+                return Response.FromValue(
+                    new FileSystemInfo()
+                    {
+                        ETag = containerResponse.Value.ETag,
+                        LastModified = containerResponse.Value.LastModified
+                    },
+                    containerResponse.GetRawResponse());
+            }
+            catch (Exception ex)
+            {
+                scope.Failed(ex);
+                throw;
+            }
+            finally
+            {
+                scope.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// The <see cref="CreateAsync(DataLakeFileSystemCreateOptions, CancellationToken)"/>
+        /// operation creates a new file system
         /// under the specified account. If the file system with the same name
+        /// already exists, the operation fails.
+        ///
+        /// For more information, see
+        /// <see href="https://docs.microsoft.com/rest/api/storageservices/create-container">
+        /// Create Container</see>.
+        /// </summary>
+        /// <param name="options">
+        /// Optional parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        /// Optional <see cref="CancellationToken"/> to propagate
+        /// notifications that the operation should be cancelled.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Response{FileSystemInfo}"/> describing the newly
+        /// created file system.
+        /// </returns>
+        /// <remarks>
+        /// A <see cref="RequestFailedException"/> will be thrown if
+        /// a failure occurs.
+        /// </remarks>
+        public virtual async Task<Response<FileSystemInfo>> CreateAsync(
+            DataLakeFileSystemCreateOptions options = default,
+            CancellationToken cancellationToken = default)
+        {
+            DiagnosticScope scope = ClientConfiguration.ClientDiagnostics.CreateScope($"{nameof(DataLakeFileSystemClient)}.{nameof(Create)}");
+
+            try
+            {
+                scope.Start();
+
+                Response<BlobContainerInfo> containerResponse = await _containerClient.CreateAsync(
+                    publicAccessType: (Blobs.Models.PublicAccessType?)options?.PublicAccessType ?? Blobs.Models.PublicAccessType.None,
+                    metadata: options?.Metadata,
+                    encryptionScopeOptions: options?.EncryptionScopeOptions.ToBlobContainerEncryptionScopeOptions(),
+                    cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
+
+                return Response.FromValue(
+                    new FileSystemInfo()
+                    {
+                        ETag = containerResponse.Value.ETag,
+                        LastModified = containerResponse.Value.LastModified
+                    },
+                    containerResponse.GetRawResponse());
+            }
+            catch (Exception ex)
+            {
+                scope.Failed(ex);
+                throw;
+            }
+            finally
+            {
+                scope.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// The <see cref="Create(Models.PublicAccessType, Metadata, CancellationToken)"/>
+        /// operation creates a new file system under the specified account. If the file system with the same name
         /// already exists, the operation fails.
         ///
         /// For more information, see
@@ -583,10 +757,13 @@ namespace Azure.Storage.Files.DataLake
         /// A <see cref="RequestFailedException"/> will be thrown if
         /// a failure occurs.
         /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#pragma warning disable AZC0002 // DO ensure all service methods, both asynchronous and synchronous, take an optional CancellationToken parameter called cancellationToken.
         public virtual Response<FileSystemInfo> Create(
-            Models.PublicAccessType publicAccessType = Models.PublicAccessType.None,
-            Metadata metadata = default,
-            CancellationToken cancellationToken = default)
+#pragma warning restore AZC0002 // DO ensure all service methods, both asynchronous and synchronous, take an optional CancellationToken parameter called cancellationToken.
+            Models.PublicAccessType publicAccessType,
+            Metadata metadata,
+            CancellationToken cancellationToken)
         {
             DiagnosticScope scope = ClientConfiguration.ClientDiagnostics.CreateScope($"{nameof(DataLakeFileSystemClient)}.{nameof(Create)}");
 
@@ -619,8 +796,8 @@ namespace Azure.Storage.Files.DataLake
         }
 
         /// <summary>
-        /// The <see cref="CreateAsync"/> operation creates a new file system
-        /// under the specified account. If the file system with the same name
+        /// The <see cref="CreateAsync(Models.PublicAccessType, Metadata, CancellationToken)"/>
+        /// operation creates a new file system under the specified account. If the file system with the same name
         /// already exists, the operation fails.
         ///
         /// For more information, see
@@ -655,10 +832,13 @@ namespace Azure.Storage.Files.DataLake
         /// A <see cref="RequestFailedException"/> will be thrown if
         /// a failure occurs.
         /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#pragma warning disable AZC0002 // DO ensure all service methods, both asynchronous and synchronous, take an optional CancellationToken parameter called cancellationToken.
         public virtual async Task<Response<FileSystemInfo>> CreateAsync(
-            Models.PublicAccessType publicAccessType = Models.PublicAccessType.None,
-            Metadata metadata = default,
-            CancellationToken cancellationToken = default)
+#pragma warning restore AZC0002 // DO ensure all service methods, both asynchronous and synchronous, take an optional CancellationToken parameter called cancellationToken.
+            Models.PublicAccessType publicAccessType,
+            Metadata metadata,
+            CancellationToken cancellationToken)
         {
             DiagnosticScope scope = ClientConfiguration.ClientDiagnostics.CreateScope($"{nameof(DataLakeFileSystemClient)}.{nameof(Create)}");
 
@@ -694,8 +874,134 @@ namespace Azure.Storage.Files.DataLake
 
         #region Create If Not Exists
         /// <summary>
-        /// The <see cref="CreateIfNotExists"/> operation creates a new file system
+        /// The <see cref="CreateIfNotExistsAsync(DataLakeFileSystemCreateOptions, CancellationToken)"/>
+        /// operation creates a new file system
         /// under the specified account. If the file system with the same name
+        /// already exists, the operation fails.
+        ///
+        /// For more information, see
+        /// <see href="https://docs.microsoft.com/rest/api/storageservices/create-container">
+        /// Create Container</see>.
+        /// </summary>
+        /// <param name="options">
+        /// Optional parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        /// Optional <see cref="CancellationToken"/> to propagate
+        /// notifications that the operation should be cancelled.
+        /// </param>
+        /// <returns>
+        /// If the container does not already exist, a <see cref="Response{ContainerInfo}"/>
+        /// describing the newly created container. If the container already exists, <c>null</c>.
+        /// </returns>
+        /// <remarks>
+        /// A <see cref="RequestFailedException"/> will be thrown if
+        /// a failure occurs.
+        /// </remarks>
+        public virtual Response<FileSystemInfo> CreateIfNotExists(
+            DataLakeFileSystemCreateOptions options = default,
+            CancellationToken cancellationToken = default)
+        {
+            DiagnosticScope scope = ClientConfiguration.ClientDiagnostics.CreateScope($"{nameof(DataLakeFileSystemClient)}.{nameof(CreateIfNotExists)}");
+            try
+            {
+                scope.Start();
+                Response<BlobContainerInfo> containerResponse = _containerClient.CreateIfNotExists(
+                    publicAccessType: (Blobs.Models.PublicAccessType?)options?.PublicAccessType ?? Blobs.Models.PublicAccessType.None,
+                    metadata: options?.Metadata,
+                    encryptionScopeOptions: options?.EncryptionScopeOptions.ToBlobContainerEncryptionScopeOptions(),
+                    cancellationToken: cancellationToken);
+
+                if (containerResponse == default)
+                {
+                    return default;
+                }
+
+                return Response.FromValue(
+                    new FileSystemInfo()
+                    {
+                        ETag = containerResponse.Value.ETag,
+                        LastModified = containerResponse.Value.LastModified
+                    },
+                    containerResponse.GetRawResponse());
+            }
+            catch (Exception ex)
+            {
+                scope.Failed(ex);
+                throw;
+            }
+            finally
+            {
+                scope.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// The <see cref="CreateIfNotExistsAsync(DataLakeFileSystemCreateOptions, CancellationToken)"/>
+        /// operation creates a new file system
+        /// under the specified account. If the file system with the same name
+        /// already exists, the operation fails.
+        ///
+        /// For more information, see
+        /// <see href="https://docs.microsoft.com/rest/api/storageservices/create-container">
+        /// Create Container</see>.
+        /// </summary>
+        /// <param name="options">
+        /// Optional parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        /// Optional <see cref="CancellationToken"/> to propagate
+        /// notifications that the operation should be cancelled.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Response{ContainerInfo}"/> describing the newly
+        /// created container.
+        /// </returns>
+        /// <remarks>
+        /// A <see cref="RequestFailedException"/> will be thrown if
+        /// a failure occurs.
+        /// </remarks>
+        public virtual async Task<Response<FileSystemInfo>> CreateIfNotExistsAsync(
+            DataLakeFileSystemCreateOptions options = default,
+            CancellationToken cancellationToken = default)
+        {
+            DiagnosticScope scope = ClientConfiguration.ClientDiagnostics.CreateScope($"{nameof(DataLakeFileSystemClient)}.{nameof(CreateIfNotExists)}");
+            try
+            {
+                scope.Start();
+                Response<BlobContainerInfo> containerResponse = await _containerClient.CreateIfNotExistsAsync(
+                    publicAccessType: (Blobs.Models.PublicAccessType?)options?.PublicAccessType ?? Blobs.Models.PublicAccessType.None,
+                    metadata: options?.Metadata,
+                    encryptionScopeOptions: options?.EncryptionScopeOptions.ToBlobContainerEncryptionScopeOptions(),
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
+
+                if (containerResponse == default)
+                {
+                    return default;
+                }
+
+                return Response.FromValue(
+                    new FileSystemInfo()
+                    {
+                        ETag = containerResponse.Value.ETag,
+                        LastModified = containerResponse.Value.LastModified
+                    },
+                    containerResponse.GetRawResponse());
+            }
+            catch (Exception ex)
+            {
+                scope.Failed(ex);
+                throw;
+            }
+            finally
+            {
+                scope.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// The <see cref="CreateIfNotExists(Models.PublicAccessType, Metadata, CancellationToken)"/>
+        /// operation creates a new file system under the specified account. If the file system with the same name
         /// already exists, the operation fails.
         ///
         /// For more information, see
@@ -730,10 +1036,13 @@ namespace Azure.Storage.Files.DataLake
         /// A <see cref="RequestFailedException"/> will be thrown if
         /// a failure occurs.
         /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#pragma warning disable AZC0002 // DO ensure all service methods, both asynchronous and synchronous, take an optional CancellationToken parameter called cancellationToken.
         public virtual Response<FileSystemInfo> CreateIfNotExists(
-            Models.PublicAccessType publicAccessType = Models.PublicAccessType.None,
-            Metadata metadata = default,
-            CancellationToken cancellationToken = default)
+#pragma warning restore AZC0002 // DO ensure all service methods, both asynchronous and synchronous, take an optional CancellationToken parameter called cancellationToken.
+            Models.PublicAccessType publicAccessType,
+            Metadata metadata,
+            CancellationToken cancellationToken)
         {
             DiagnosticScope scope = ClientConfiguration.ClientDiagnostics.CreateScope($"{nameof(DataLakeFileSystemClient)}.{nameof(CreateIfNotExists)}");
             try
@@ -769,8 +1078,8 @@ namespace Azure.Storage.Files.DataLake
         }
 
         /// <summary>
-        /// The <see cref="CreateIfNotExistsAsync"/> operation creates a new file system
-        /// under the specified account. If the file system with the same name
+        /// The <see cref="CreateIfNotExistsAsync(Models.PublicAccessType, Metadata, CancellationToken)"/>
+        /// operation creates a new file system under the specified account. If the file system with the same name
         /// already exists, the operation fails.
         ///
         /// For more information, see
@@ -805,10 +1114,13 @@ namespace Azure.Storage.Files.DataLake
         /// A <see cref="RequestFailedException"/> will be thrown if
         /// a failure occurs.
         /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#pragma warning disable AZC0002 // DO ensure all service methods, both asynchronous and synchronous, take an optional CancellationToken parameter called cancellationToken.
         public virtual async Task<Response<FileSystemInfo>> CreateIfNotExistsAsync(
-            Models.PublicAccessType publicAccessType = Models.PublicAccessType.None,
-            Metadata metadata = default,
-            CancellationToken cancellationToken = default)
+#pragma warning restore AZC0002 // DO ensure all service methods, both asynchronous and synchronous, take an optional CancellationToken parameter called cancellationToken.
+            Models.PublicAccessType publicAccessType,
+            Metadata metadata,
+            CancellationToken cancellationToken)
         {
             DiagnosticScope scope = ClientConfiguration.ClientDiagnostics.CreateScope($"{nameof(DataLakeFileSystemClient)}.{nameof(CreateIfNotExists)}");
             try
@@ -847,9 +1159,7 @@ namespace Azure.Storage.Files.DataLake
         #region Delete
         /// <summary>
         /// The <see cref="Delete"/> operation marks the specified
-        /// file system for deletion. The file system and any paths contained
-        /// within it are later deleted during garbage collection
-        /// which could take several minutes.
+        /// file system for deletion.
         ///
         /// For more information, see
         /// <see href="https://docs.microsoft.com/rest/api/storageservices/delete-container">
@@ -905,9 +1215,7 @@ namespace Azure.Storage.Files.DataLake
 
         /// <summary>
         /// The <see cref="DeleteAsync"/> operation marks the specified
-        /// file system for deletion. The file system and any paths contained
-        /// within it are later deleted during garbage collection which could
-        /// take several minutes.
+        /// file system for deletion.
         ///
         /// For more information, see
         /// <see href="https://docs.microsoft.com/rest/api/storageservices/delete-container">
@@ -966,9 +1274,7 @@ namespace Azure.Storage.Files.DataLake
         #region Delete If Exists
         /// <summary>
         /// The <see cref="DeleteIfExists"/> operation marks the specified
-        /// file system for deletion if it exists. The file system and any files
-        /// and directories contained within it are later deleted during garbage collection
-        /// which could take several minutes.
+        /// file system for deletion if it exists.
         ///
         /// For more information, see
         /// <see href="https://docs.microsoft.com/rest/api/storageservices/delete-container">
@@ -1024,9 +1330,7 @@ namespace Azure.Storage.Files.DataLake
 
         /// <summary>
         /// The <see cref="DeleteIfExistsAsync"/> operation marks the specified
-        /// file system for deletion if it exists. The file system and any files
-        /// and directories contained within it are later deleted during garbage collection
-        /// which could take several minutes.
+        /// file system for deletion if it exists.
         ///
         /// For more information, see
         /// <see href="https://docs.microsoft.com/rest/api/storageservices/delete-container">
@@ -1091,7 +1395,7 @@ namespace Azure.Storage.Files.DataLake
         /// A <see cref="RequestFailedException"/> will be thrown if
         /// a failure occurs. If you want to create the file system if
         /// it doesn't exist, use
-        /// <see cref="CreateIfNotExists"/>
+        /// <see cref="CreateIfNotExists(DataLakeFileSystemCreateOptions, CancellationToken)"/>
         /// instead.
         /// </remarks>
         public virtual Response<bool> Exists(
@@ -1133,7 +1437,7 @@ namespace Azure.Storage.Files.DataLake
         /// A <see cref="RequestFailedException"/> will be thrown if
         /// a failure occurs. If you want to create the file system if
         /// it doesn't exist, use
-        /// <see cref="CreateIfNotExistsAsync"/>
+        /// <see cref="CreateIfNotExistsAsync(DataLakeFileSystemCreateOptions, CancellationToken)"/>
         /// instead.
         /// </remarks>
         public virtual async Task<Response<bool>> ExistsAsync(
@@ -1928,8 +2232,7 @@ namespace Azure.Storage.Files.DataLake
         #region Delete Directory
         /// <summary>
         /// The <see cref="DeleteDirectory"/> operation marks the specified path
-        /// deletion. The path is later deleted during
-        /// garbage collection which could take several minutes.
+        /// deletion.
         ///
         /// For more information, see
         /// <see href="https://docs.microsoft.com/en-us/rest/api/storageservices/datalakestoragegen2/path/delete">
@@ -1982,7 +2285,6 @@ namespace Azure.Storage.Files.DataLake
 
         /// <summary>
         /// The <see cref="DeleteDirectoryAsync"/> deletes a directory in this file system.
-        /// garbage collection which could take several minutes.
         ///
         /// For more information, see
         /// <see href="https://docs.microsoft.com/en-us/rest/api/storageservices/datalakestoragegen2/path/delete">
@@ -2596,6 +2898,7 @@ namespace Azure.Storage.Files.DataLake
         /// A <see cref="RequestFailedException"/> will be thrown if
         /// a failure occurs.
         /// </remarks>
+        [CallerShouldAudit("https://aka.ms/azsdk/callershouldaudit/storage-files-datalake")]
         public virtual Response<FileSystemInfo> SetAccessPolicy(
             Models.PublicAccessType accessType = Models.PublicAccessType.None,
             IEnumerable<DataLakeSignedIdentifier> permissions = default,
@@ -2675,6 +2978,7 @@ namespace Azure.Storage.Files.DataLake
         /// A <see cref="RequestFailedException"/> will be thrown if
         /// a failure occurs.
         /// </remarks>
+        [CallerShouldAudit("https://aka.ms/azsdk/callershouldaudit/storage-files-datalake")]
         public virtual async Task<Response<FileSystemInfo>> SetAccessPolicyAsync(
             Models.PublicAccessType accessType = Models.PublicAccessType.None,
             IEnumerable<DataLakeSignedIdentifier> permissions = default,
@@ -2869,8 +3173,45 @@ namespace Azure.Storage.Files.DataLake
         /// <remarks>
         /// A <see cref="Exception"/> will be thrown if a failure occurs.
         /// </remarks>
+        [CallerShouldAudit("https://aka.ms/azsdk/callershouldaudit/storage-files-datalake")]
         public virtual Uri GenerateSasUri(DataLakeFileSystemSasPermissions permissions, DateTimeOffset expiresOn) =>
-            GenerateSasUri(new DataLakeSasBuilder(permissions, expiresOn) { FileSystemName = Name });
+            GenerateSasUri(permissions, expiresOn, out _);
+
+        /// <summary>
+        /// The <see cref="GenerateSasUri(DataLakeFileSystemSasPermissions, DateTimeOffset)"/>
+        /// returns a <see cref="Uri"/> that generates a DataLake FileSystem Service
+        /// Shared Access Signature (SAS) Uri based on the <see cref="BlobContainerClient"/>
+        /// properties and parameters passed. The SAS is signed by the shared key credential
+        /// of the client.
+        ///
+        /// To check if the client is able to sign a Service Sas see
+        /// <see cref="CanGenerateSasUri"/>.
+        ///
+        /// For more information, see
+        /// <see href="https://docs.microsoft.com/en-us/rest/api/storageservices/constructing-a-service-sas">
+        /// Constructing a service SAS</see>.
+        /// </summary>
+        /// <param name="permissions">
+        /// Required. Specifies the list of permissions to be associated with the SAS.
+        /// See <see cref="DataLakeFileSystemSasPermissions"/>.
+        /// </param>
+        /// <param name="expiresOn">
+        /// Required. Specifies the time at which the SAS becomes invalid. This field
+        /// must be omitted if it has been specified in an associated stored access policy.
+        /// </param>
+        /// <param name="stringToSign">
+        /// For debugging purposes only.  This string will be overwritten with the string to sign that was used to generate the SAS Uri.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Uri"/> containing the SAS Uri.
+        /// </returns>
+        /// <remarks>
+        /// A <see cref="Exception"/> will be thrown if a failure occurs.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [CallerShouldAudit("https://aka.ms/azsdk/callershouldaudit/storage-files-datalake")]
+        public virtual Uri GenerateSasUri(DataLakeFileSystemSasPermissions permissions, DateTimeOffset expiresOn, out string stringToSign) =>
+            GenerateSasUri(new DataLakeSasBuilder(permissions, expiresOn) { FileSystemName = Name }, out stringToSign);
 
         /// <summary>
         /// The <see cref="GenerateSasUri(DataLakeSasBuilder)"/> returns a <see cref="Uri"/>
@@ -2895,34 +3236,199 @@ namespace Azure.Storage.Files.DataLake
         /// A <see cref="RequestFailedException"/> will be thrown if
         /// a failure occurs.
         /// </remarks>
+        [CallerShouldAudit("https://aka.ms/azsdk/callershouldaudit/storage-files-datalake")]
+        public virtual Uri GenerateSasUri(DataLakeSasBuilder builder)
+            => GenerateSasUri(builder, out _);
+
+        /// <summary>
+        /// The <see cref="GenerateSasUri(DataLakeSasBuilder)"/> returns a <see cref="Uri"/>
+        /// that generates a DataLake FileSystem Service Shared Access Signature (SAS)
+        /// Uri based on the Client properties and builder passed.
+        /// The SAS is signed by the shared key credential of the client.
+        ///
+        /// To check if the client is able to sign a Service Sas see
+        /// <see cref="CanGenerateSasUri"/>.
+        ///
+        /// For more information, see
+        /// <see href="https://docs.microsoft.com/en-us/rest/api/storageservices/constructing-a-service-sas">
+        /// Constructing a Service SAS</see>.
+        /// </summary>
+        /// <param name="builder">
+        /// Used to generate a Shared Access Signature (SAS).
+        /// </param>
+        /// <param name="stringToSign">
+        /// For debugging purposes only.  This string will be overwritten with the string to sign that was used to generate the SAS Uri.
+        /// </param>
+        /// <returns>
+        /// A <see cref="DataLakeSasBuilder"/> on successfully deleting.
+        /// </returns>
+        /// <remarks>
+        /// A <see cref="RequestFailedException"/> will be thrown if
+        /// a failure occurs.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [CallerShouldAudit("https://aka.ms/azsdk/callershouldaudit/storage-files-datalake")]
         public virtual Uri GenerateSasUri(
-            DataLakeSasBuilder builder)
+            DataLakeSasBuilder builder,
+            out string stringToSign)
         {
             builder = builder ?? throw Errors.ArgumentNull(nameof(builder));
 
             // Deep copy of builder so we don't modify the user's original DataLakeSasBuilder.
             builder = DataLakeSasBuilder.DeepCopy(builder);
 
-            // Assign builder's FileSystemName, if it is null.
-            builder.FileSystemName ??= Name;
-
-            if (!builder.FileSystemName.Equals(Name, StringComparison.InvariantCulture))
-            {
-                throw Errors.SasNamesNotMatching(
-                    nameof(builder.FileSystemName),
-                    nameof(DataLakeSasBuilder),
-                    nameof(Name));
-            }
-            if (!string.IsNullOrEmpty(builder.Path))
-            {
-                throw Errors.SasBuilderEmptyParam(
-                    nameof(builder),
-                    nameof(builder.Path),
-                    nameof(Constants.DataLake.FileSystemName));
-            }
+            SetBuilderAndValidate(builder);
             DataLakeUriBuilder sasUri = new DataLakeUriBuilder(Uri)
             {
-                Sas = builder.ToSasQueryParameters(ClientConfiguration.SharedKeyCredential)
+                Sas = builder.ToSasQueryParameters(ClientConfiguration.SharedKeyCredential, out stringToSign)
+            };
+            return sasUri.ToUri();
+        }
+        #endregion
+
+        #region GenerateUserDelegationSas
+        /// <summary>
+        /// The <see cref="GenerateUserDelegationSasUri(DataLakeFileSystemSasPermissions, DateTimeOffset, Models.UserDelegationKey)"/>
+        /// returns a <see cref="Uri"/> that generates a DataLake FileSystem Service
+        /// Shared Access Signature (SAS) Uri based on the Client properties and parameters passed.
+        /// The SAS is signed by the user delegation key passed in.
+        ///
+        /// For more information, see
+        /// <see href="https://learn.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas">
+        /// Creating an user delegation SAS</see>.
+        /// </summary>
+        /// <param name="permissions">
+        /// Required. Specifies the list of permissions to be associated with the SAS.
+        /// See <see cref="DataLakeFileSystemSasPermissions"/>.
+        /// </param>
+        /// <param name="expiresOn">
+        /// Required. Specifies the time at which the SAS becomes invalid. This field
+        /// must be omitted if it has been specified in an associated stored access policy.
+        /// </param>
+        /// <param name="userDelegationKey">
+        /// Required. A <see cref="UserDelegationKey"/> returned from
+        /// <see cref="DataLakeServiceClient.GetUserDelegationKeyAsync"/>.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Uri"/> containing the SAS Uri.
+        /// </returns>
+        /// <remarks>
+        /// A <see cref="Exception"/> will be thrown if a failure occurs.
+        /// </remarks>
+        [CallerShouldAudit("https://aka.ms/azsdk/callershouldaudit/storage-files-datalake")]
+        public virtual Uri GenerateUserDelegationSasUri(DataLakeFileSystemSasPermissions permissions, DateTimeOffset expiresOn, Models.UserDelegationKey userDelegationKey) =>
+            GenerateUserDelegationSasUri(permissions, expiresOn, userDelegationKey, out _);
+
+        /// <summary>
+        /// The <see cref="GenerateUserDelegationSasUri(DataLakeFileSystemSasPermissions, DateTimeOffset, Models.UserDelegationKey, out string)"/>
+        /// returns a <see cref="Uri"/> that generates a DataLake FileSystem Service
+        /// Shared Access Signature (SAS) Uri based on the Client properties and parameters passed.
+        /// The SAS is signed by the user delegation key passed in.
+        ///
+        /// For more information, see
+        /// <see href="https://learn.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas">
+        /// Creating an user delegation SAS</see>.
+        /// </summary>
+        /// <param name="permissions">
+        /// Required. Specifies the list of permissions to be associated with the SAS.
+        /// See <see cref="DataLakeFileSystemSasPermissions"/>.
+        /// </param>
+        /// <param name="expiresOn">
+        /// Required. Specifies the time at which the SAS becomes invalid. This field
+        /// must be omitted if it has been specified in an associated stored access policy.
+        /// </param>
+        /// <param name="userDelegationKey">
+        /// Required. A <see cref="UserDelegationKey"/> returned from
+        /// <see cref="DataLakeServiceClient.GetUserDelegationKeyAsync"/>.
+        /// </param>
+        /// <param name="stringToSign">
+        /// For debugging purposes only.  This string will be overwritten with the string to sign that was used to generate the SAS Uri.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Uri"/> containing the SAS Uri.
+        /// </returns>
+        /// <remarks>
+        /// A <see cref="Exception"/> will be thrown if a failure occurs.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [CallerShouldAudit("https://aka.ms/azsdk/callershouldaudit/storage-files-datalake")]
+        public virtual Uri GenerateUserDelegationSasUri(DataLakeFileSystemSasPermissions permissions, DateTimeOffset expiresOn, Models.UserDelegationKey userDelegationKey, out string stringToSign) =>
+            GenerateUserDelegationSasUri(new DataLakeSasBuilder(permissions, expiresOn) { FileSystemName = Name }, userDelegationKey, out stringToSign);
+
+        /// <summary>
+        /// The <see cref="GenerateUserDelegationSasUri(DataLakeSasBuilder, Models.UserDelegationKey)"/> returns a <see cref="Uri"/>
+        /// that generates a DataLake FileSystem Service Shared Access Signature (SAS)
+        /// Uri based on the Client properties and builder passed.
+        /// The SAS is signed by the user delegation key passed in.
+        ///
+        /// For more information, see
+        /// <see href="https://learn.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas">
+        /// Creating an user delegation SAS</see>.
+        /// </summary>
+        /// <param name="builder">
+        /// Required. Used to generate a Shared Access Signature (SAS).
+        /// </param>
+        /// <param name="userDelegationKey">
+        /// Required. A <see cref="UserDelegationKey"/> returned from
+        /// <see cref="DataLakeServiceClient.GetUserDelegationKeyAsync"/>.
+        /// </param>
+        /// <returns>
+        /// A <see cref="DataLakeSasBuilder"/> on successfully deleting.
+        /// </returns>
+        /// <remarks>
+        /// A <see cref="RequestFailedException"/> will be thrown if
+        /// a failure occurs.
+        /// </remarks>
+        [CallerShouldAudit("https://aka.ms/azsdk/callershouldaudit/storage-files-datalake")]
+        public virtual Uri GenerateUserDelegationSasUri(DataLakeSasBuilder builder, Models.UserDelegationKey userDelegationKey)
+            => GenerateUserDelegationSasUri(builder, userDelegationKey, out _);
+
+        /// <summary>
+        /// The <see cref="GenerateUserDelegationSasUri(DataLakeSasBuilder, Models.UserDelegationKey, out string)"/> returns a <see cref="Uri"/>
+        /// that generates a DataLake FileSystem Service Shared Access Signature (SAS)
+        /// Uri based on the Client properties and builder passed.
+        /// The SAS is signed by the user delegation key passed in.
+        ///
+        /// For more information, see
+        /// <see href="https://learn.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas">
+        /// Creating an user delegation SAS</see>.
+        /// </summary>
+        /// <param name="builder">
+        /// Required. Used to generate a Shared Access Signature (SAS).
+        /// </param>
+        /// <param name="userDelegationKey">
+        /// Required. A <see cref="UserDelegationKey"/> returned from
+        /// <see cref="DataLakeServiceClient.GetUserDelegationKeyAsync"/>.
+        /// </param>
+        /// <param name="stringToSign">
+        /// For debugging purposes only.  This string will be overwritten with the string to sign that was used to generate the SAS Uri.
+        /// </param>
+        /// <returns>
+        /// A <see cref="DataLakeSasBuilder"/> on successfully deleting.
+        /// </returns>
+        /// <remarks>
+        /// A <see cref="RequestFailedException"/> will be thrown if
+        /// a failure occurs.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [CallerShouldAudit("https://aka.ms/azsdk/callershouldaudit/storage-files-datalake")]
+        public virtual Uri GenerateUserDelegationSasUri(DataLakeSasBuilder builder, Models.UserDelegationKey userDelegationKey, out string stringToSign)
+        {
+            builder = builder ?? throw Errors.ArgumentNull(nameof(builder));
+            userDelegationKey = userDelegationKey ?? throw Errors.ArgumentNull(nameof(userDelegationKey));
+
+            // Deep copy of builder so we don't modify the user's original DataLakeSasBuilder.
+            builder = DataLakeSasBuilder.DeepCopy(builder);
+
+            SetBuilderAndValidate(builder);
+            if (string.IsNullOrEmpty(AccountName))
+            {
+                throw Errors.SasClientMissingData(nameof(AccountName));
+            }
+
+            DataLakeUriBuilder sasUri = new DataLakeUriBuilder(Uri)
+            {
+                Sas = builder.ToSasQueryParameters(userDelegationKey, AccountName, out stringToSign)
             };
             return sasUri.ToUri();
         }
@@ -3019,6 +3525,7 @@ namespace Azure.Storage.Files.DataLake
                             marker: continuation,
                             maxResults: maxResults,
                             include: null,
+                            showonly: ListBlobsShowOnly.Deleted,
                             timeout: null,
                             cancellationToken: cancellationToken)
                             .ConfigureAwait(false);
@@ -3031,6 +3538,7 @@ namespace Azure.Storage.Files.DataLake
                             marker: continuation,
                             maxResults: maxResults,
                             include: null,
+                            showonly: ListBlobsShowOnly.Deleted,
                             timeout: null,
                             cancellationToken: cancellationToken);
                     }
@@ -3222,7 +3730,8 @@ namespace Azure.Storage.Files.DataLake
             {
                 DataLakeUriBuilder datalakeUriBuilder = new DataLakeUriBuilder(Uri)
                 {
-                    // erase parameters unrelated to container
+                    // erase parameters unrelated to the endpoint
+                    FileSystemName = null,
                     DirectoryOrFilePath = null,
                     Snapshot = null,
                 };
@@ -3235,6 +3744,28 @@ namespace Azure.Storage.Files.DataLake
             return _parentServiceClient;
         }
         #endregion
+
+        private void SetBuilderAndValidate(DataLakeSasBuilder builder)
+        {
+            // Assign builder's FileSystemName, if it is null.
+            builder.FileSystemName ??= Name;
+
+            // Validate that builder is properly set
+            if (!builder.FileSystemName.Equals(Name, StringComparison.InvariantCulture))
+            {
+                throw Errors.SasNamesNotMatching(
+                    nameof(builder.FileSystemName),
+                    nameof(DataLakeSasBuilder),
+                    nameof(Name));
+            }
+            if (!string.IsNullOrEmpty(builder.Path))
+            {
+                throw Errors.SasBuilderEmptyParam(
+                    nameof(builder),
+                    nameof(builder.Path),
+                    nameof(Constants.DataLake.FileSystemName));
+            }
+        }
     }
 
     namespace Specialized

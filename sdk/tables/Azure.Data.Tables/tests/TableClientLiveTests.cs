@@ -25,7 +25,7 @@ namespace Azure.Data.Tables.Tests
     {
         public TableClientLiveTests(bool isAsync, TableEndpointType endpointType) : base(
             isAsync,
-            endpointType /* To record tests, add this argument, RecordedTestMode.Record */)
+            endpointType/* To record tests, add this argument,RecordedTestMode.Record*/)
         { }
 
         [RecordedTest]
@@ -137,7 +137,7 @@ namespace Azure.Data.Tables.Tests
                 async () =>
                     await sasTableclient.UpsertEntityAsync(CreateTableEntities("partition", 1).First(), TableUpdateMode.Replace).ConfigureAwait(false));
             Assert.That(ex.Status, Is.EqualTo((int)HttpStatusCode.Forbidden));
-            if (_endpointType == TableEndpointType.CosmosTable)
+            if (_endpointType == TableEndpointType.CosmosTable || _endpointType == TableEndpointType.CosmosTableAAD)
             {
                 Assert.That(ex.ErrorCode, Is.EqualTo(TableErrorCode.Forbidden.ToString()));
             }
@@ -171,7 +171,7 @@ namespace Azure.Data.Tables.Tests
                 async () =>
                     await sasTableclient.UpsertEntityAsync(CreateTableEntities("partition", 1).First(), TableUpdateMode.Replace).ConfigureAwait(false));
             Assert.That(ex.Status, Is.EqualTo((int)HttpStatusCode.Forbidden));
-            if (_endpointType == TableEndpointType.CosmosTable)
+            if (_endpointType == TableEndpointType.CosmosTable || _endpointType == TableEndpointType.CosmosTableAAD)
             {
                 Assert.That(ex.ErrorCode, Is.EqualTo(TableErrorCode.Forbidden.ToString()));
             }
@@ -235,7 +235,7 @@ namespace Azure.Data.Tables.Tests
                 async () =>
                     await sasTableclient.UpsertEntityAsync(CreateTableEntities("partition", 1).First(), TableUpdateMode.Replace).ConfigureAwait(false));
             Assert.That(ex.Status, Is.EqualTo((int)HttpStatusCode.Forbidden));
-            if (_endpointType == TableEndpointType.CosmosTable)
+            if (_endpointType == TableEndpointType.CosmosTable || _endpointType == TableEndpointType.CosmosTableAAD)
             {
                 Assert.That(ex.ErrorCode, Is.EqualTo(TableErrorCode.Forbidden.ToString()));
             }
@@ -1259,6 +1259,53 @@ namespace Azure.Data.Tables.Tests
         }
 
         [RecordedTest]
+        public async Task GetEntityIfExistsDoesNotThrowWhenNotExists()
+        {
+            // Get the single entity by PartitionKey and RowKey that does not exist.
+            var result = await client.GetEntityIfExistsAsync<TableEntity>(PartitionKeyValue, Recording.Random.NewGuid().ToString()).ConfigureAwait(false);
+
+            Assert.AreEqual((int)HttpStatusCode.NotFound, result.GetRawResponse().Status);
+            Exception ex = Assert.Catch(() => { var x = result.Value; });
+            Assert.That(ex.Message, Does.Contain(result.GetRawResponse().Status.ToString()));
+        }
+
+        [RecordedTest]
+        public async Task GetEntityIfExistsContainsValueWhenExists()
+        {
+            TableEntity entityResults;
+            List<TableEntity> entitiesToCreate = CreateTableEntities(PartitionKeyValue, 1);
+
+            // Upsert the new entities.
+
+            await UpsertTestEntities(entitiesToCreate, TableUpdateMode.Replace).ConfigureAwait(false);
+
+            // Get the single entity by PartitionKey and RowKey.
+
+            entityResults = (await client.GetEntityIfExistsAsync<TableEntity>(PartitionKeyValue, "01").ConfigureAwait(false)).Value;
+
+            Assert.That(entityResults, Is.Not.Null, "The entity should not be null.");
+        }
+
+        [RecordedTest]
+        public async Task GetEntityAllowsEmptyRowKey()
+        {
+            TableEntity entityResults;
+            List<TableEntity> entitiesToCreate = CreateTableEntities(PartitionKeyValue, 1);
+            entitiesToCreate[0].RowKey = string.Empty;
+            entitiesToCreate[0].PartitionKey = string.Empty;
+
+            // Upsert the new entities.
+
+            await UpsertTestEntities(entitiesToCreate, TableUpdateMode.Replace).ConfigureAwait(false);
+
+            // Get the single entity by PartitionKey and RowKey.
+
+            entityResults = (await client.GetEntityAsync<TableEntity>(string.Empty, string.Empty).ConfigureAwait(false)).Value;
+
+            Assert.That(entityResults, Is.Not.Null, "The entity should not be null.");
+        }
+
+        [RecordedTest]
         public async Task StronglyTypedModelDoubleNaNRoundTrips()
         {
             TestEntity entityResults;
@@ -1431,7 +1478,7 @@ namespace Azure.Data.Tables.Tests
             Assert.That(ex.Message.Contains(nameof(TableTransactionFailedException.FailedTransactionActionIndex)));
 
             // Cosmos allows batches larger than 100.
-            if (_endpointType != TableEndpointType.CosmosTable)
+            if (_endpointType != TableEndpointType.CosmosTable && _endpointType != TableEndpointType.CosmosTableAAD)
             {
                 // Try submitting a batch larger than 100 items
                 batch = new List<TableTransactionAction>(

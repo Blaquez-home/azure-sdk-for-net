@@ -22,21 +22,17 @@ namespace Azure.ResourceManager.Network.Models
             _value = value ?? throw new ArgumentNullException(nameof(value));
         }
 
-        private const string TLSv10Value = "TLSv1_0";
-        private const string TLSv11Value = "TLSv1_1";
-        private const string TLSv12Value = "TLSv1_2";
-
-        /// <summary> TLSv1_0. </summary>
-        public static ApplicationGatewaySslProtocol TLSv10 { get; } = new ApplicationGatewaySslProtocol(TLSv10Value);
-        /// <summary> TLSv1_1. </summary>
-        public static ApplicationGatewaySslProtocol TLSv11 { get; } = new ApplicationGatewaySslProtocol(TLSv11Value);
-        /// <summary> TLSv1_2. </summary>
-        public static ApplicationGatewaySslProtocol TLSv12 { get; } = new ApplicationGatewaySslProtocol(TLSv12Value);
+        private const string Tls1_0Value = "TLSv1_0";
+        private const string Tls1_1Value = "TLSv1_1";
+        private const string Tls1_2Value = "TLSv1_2";
+        private const string TLSv13Value = "TLSv1_3";
+        /// <summary> TLSv1_3. </summary>
+        public static ApplicationGatewaySslProtocol TLSv13 { get; } = new ApplicationGatewaySslProtocol(TLSv13Value);
         /// <summary> Determines if two <see cref="ApplicationGatewaySslProtocol"/> values are the same. </summary>
         public static bool operator ==(ApplicationGatewaySslProtocol left, ApplicationGatewaySslProtocol right) => left.Equals(right);
         /// <summary> Determines if two <see cref="ApplicationGatewaySslProtocol"/> values are not the same. </summary>
         public static bool operator !=(ApplicationGatewaySslProtocol left, ApplicationGatewaySslProtocol right) => !left.Equals(right);
-        /// <summary> Converts a string to a <see cref="ApplicationGatewaySslProtocol"/>. </summary>
+        /// <summary> Converts a <see cref="string"/> to a <see cref="ApplicationGatewaySslProtocol"/>. </summary>
         public static implicit operator ApplicationGatewaySslProtocol(string value) => new ApplicationGatewaySslProtocol(value);
 
         /// <inheritdoc />
@@ -47,7 +43,7 @@ namespace Azure.ResourceManager.Network.Models
 
         /// <inheritdoc />
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+        public override int GetHashCode() => _value != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(_value) : 0;
         /// <inheritdoc />
         public override string ToString() => _value;
     }

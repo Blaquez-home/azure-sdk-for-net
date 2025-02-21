@@ -1,6 +1,6 @@
 # Capturing Event Hubs logs using the AzureEventSourceListener
 
-The Event Hubs client library is instrumented using the .NET [`EventSource`](https://docs.microsoft.com/dotnet/api/system.diagnostics.tracing.eventsource) mechanism for logging. When instrumenting or diagnosing issues with applications that consume the library, it is often helpful to have access to the Event Hubs logs.  The following scenarios demonstrate how to use the [`AzureEventSourceListener`](https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/Diagnostics.md#logging) from the `Azure.Core` package to capture logs emitted by the Event Hubs client library.
+The Event Hubs client library is instrumented using the .NET [`EventSource`](https://learn.microsoft.com/dotnet/api/system.diagnostics.tracing.eventsource) mechanism for logging. When instrumenting or diagnosing issues with applications that consume the library, it is often helpful to have access to the Event Hubs logs.  The following scenarios demonstrate how to use the [`AzureEventSourceListener`](https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/Diagnostics.md#logging) from the `Azure.Core` package to capture logs emitted by the Event Hubs client library.
 
 ## Table of contents
 
@@ -10,10 +10,10 @@ The Event Hubs client library is instrumented using the .NET [`EventSource`](htt
 - [Apply filtering logic to logs](#apply-filtering-logic-to-logs)
 - [Capture filtered logs to a file](#capture-filtered-logs-to-a-file)
 - [Finding the desired events](#finding-the-desired-events)
-    - [Event Source: "Azure-Messaging-EventHubs"](#event-source-"azure-messaging-eventhubs")
-    - [Event Source: "Azure-Messaging-EventHubs-Processor-EventProcessorClient"](#event-source-"azure-messaging-eventhubs-processor-eventprocessorclient")
-    - [Event Source: "Azure-Messaging-EventHubs-Processor-BlobEventStore"](#event-source-"azure-messaging-eventhubs-processor-blobeventstore")
-    - [Event Source: "Azure-Messaging-EventHubs-Processor-PartitionLoadBalancer"](#event-source-"azure-messaging-eventhubs-processor-partitionloadbalancer")
+    - [Event Source: "Azure-Messaging-EventHubs"](#event-source-azure-messaging-eventhubs)
+    - [Event Source: "Azure-Messaging-EventHubs-Processor-EventProcessorClient"](#event-source-azure-messaging-eventhubs-processor-eventprocessorclient)
+    - [Event Source: "Azure-Messaging-EventHubs-Processor-BlobEventStore"](#event-source-azure-messaging-eventhubs-processor-blobeventstore)
+    - [Event Source: "Azure-Messaging-EventHubs-Processor-PartitionLoadBalancer"](#event-source-azure-messaging-eventhubs-processor-partitionloadbalancer)
 
 ## Azure Event Source Listener lifetime
 
@@ -28,9 +28,14 @@ The following snippet demonstrates an example of capturing all log information f
 This example captures all Azure SDK logs from any client library in use, writing them to the standard `Console` output stream.
 
 ```C# Snippet:EventHubs_Sample10_ConsoleListener
-var connectionString = "<< CONNECTION STRING FOR THE EVENT HUBS NAMESPACE >>";
+var fullyQualifiedNamespace = "<< NAMESPACE (likely similar to {your-namespace}.servicebus.windows.net) >>";
 var eventHubName = "<< NAME OF THE EVENT HUB >>";
-var producer = new EventHubProducerClient(connectionString, eventHubName);
+var credential = new DefaultAzureCredential();
+
+var producer = new EventHubProducerClient(
+    fullyQualifiedNamespace,
+    eventHubName,
+    credential);
 
 using AzureEventSourceListener consoleListener = AzureEventSourceListener.CreateConsoleLogger(EventLevel.LogAlways);
 
@@ -52,12 +57,17 @@ finally
 
 ## Capture all events and write them to `Trace`
 
-Similar to the previous example, this snippet captures all logs, but writes them to [`Trace`](https://docs.microsoft.com/dotnet/api/system.diagnostics.trace) output.   This approach may be desirable for applications that do not have the `Console` available.
+Similar to the previous example, this snippet captures all logs, but writes them to [`Trace`](https://learn.microsoft.com/dotnet/api/system.diagnostics.trace) output.   This approach may be desirable for applications that do not have the `Console` available.
 
 ```C# Snippet:EventHubs_Sample10_TraceListener
-var connectionString = "<< CONNECTION STRING FOR THE EVENT HUBS NAMESPACE >>";
+var fullyQualifiedNamespace = "<< NAMESPACE (likely similar to {your-namespace}.servicebus.windows.net) >>";
 var eventHubName = "<< NAME OF THE EVENT HUB >>";
-var producer = new EventHubProducerClient(connectionString, eventHubName);
+var credential = new DefaultAzureCredential();
+
+var producer = new EventHubProducerClient(
+    fullyQualifiedNamespace,
+    eventHubName,
+    credential);
 
 using AzureEventSourceListener traceListener = AzureEventSourceListener.CreateTraceLogger(EventLevel.LogAlways);
 
@@ -79,16 +89,21 @@ finally
 
 ## Apply filtering logic to logs
 
-This examples demonstrates using a callback with the listener to allow custom logic, such as filtering, of the log messages.  This can help to reduce log spam when troubleshooting by capturing just the log entries that are helpful.   
+This examples demonstrates using a callback with the listener to allow custom logic, such as filtering, of the log messages.  This can help to reduce log spam when troubleshooting by capturing just the log entries that are helpful.
 
 In the snippet below, the `Verbose` messages for the `Azure-Identity` event source are captured and written to `Trace` output.  Log messages for the `Azure-Messaging-EventHubs` event source are filtered to capture only a specific set to aid in debugging publishing, which are then written to the standard `Console` output.
 
-More information about the `args` parameter for the callback can be found in the [EventWrittenEventArgs](https://docs.microsoft.com/dotnet/api/system.diagnostics.tracing.eventwritteneventargs) documentation..
+More information about the `args` parameter for the callback can be found in the [EventWrittenEventArgs](https://learn.microsoft.com/dotnet/api/system.diagnostics.tracing.eventwritteneventargs) documentation..
 
 ```C# Snippet:EventHubs_Sample10_CustomListenerWithFilter
-var connectionString = "<< CONNECTION STRING FOR THE EVENT HUBS NAMESPACE >>";
+var fullyQualifiedNamespace = "<< NAMESPACE (likely similar to {your-namespace}.servicebus.windows.net) >>";
 var eventHubName = "<< NAME OF THE EVENT HUB >>";
-var producer = new EventHubProducerClient(connectionString, eventHubName);
+var credential = new DefaultAzureCredential();
+
+var producer = new EventHubProducerClient(
+    fullyQualifiedNamespace,
+    eventHubName,
+    credential);
 
 using AzureEventSourceListener customListener = new AzureEventSourceListener((args, message) =>
 {
@@ -127,14 +142,19 @@ finally
 
 ## Capture filtered logs to a file
 
-For scenarios where capturing logs to `Trace` or `Console` outputs isn't ideal, log information can be streamed into a variety of targets, such as Azure Storage, databases, and files for durable persistence.    This example demonstrates capturing error logs to a text file so that they can be analyzed later, while capturing non-error information to `Console` output.  
+For scenarios where capturing logs to `Trace` or `Console` outputs isn't ideal, log information can be streamed into a variety of targets, such as Azure Storage, databases, and files for durable persistence.    This example demonstrates capturing error logs to a text file so that they can be analyzed later, while capturing non-error information to `Console` output.
 
 ```C# Snippet:EventHubs_Sample10_CustomListenerWithFile
-var connectionString = "<< CONNECTION STRING FOR THE EVENT HUBS NAMESPACE >>";
+var fullyQualifiedNamespace = "<< NAMESPACE (likely similar to {your-namespace}.servicebus.windows.net) >>";
 var eventHubName = "<< NAME OF THE EVENT HUB >>";
-var producer = new EventHubProducerClient(connectionString, eventHubName);
+var credential = new DefaultAzureCredential();
 
 using Stream stream = new FileStream("<< PATH TO THE FILE >>", FileMode.OpenOrCreate, FileAccess.Write);
+
+var producer = new EventHubProducerClient(
+    fullyQualifiedNamespace,
+    eventHubName,
+    credential);
 
 using StreamWriter streamWriter = new StreamWriter(stream)
 {
@@ -175,15 +195,15 @@ finally
 
 ## Finding the desired events
 
-The Event Hubs client library logs using several event sources for different areas of functionality.  Each event source contains multiple log events, with most grouped into logical sets that follow the pattern:  
+The Event Hubs client library logs using several event sources for different areas of functionality.  Each event source contains multiple log events, with most grouped into logical sets that follow the pattern:
 
 - `{ Operation Name }Start`
 - `{ Operation Name }Error`
 - `{ Operation Name }Complete`
 
-Each operation will always emit its "Start" and "Complete" log events, and will only emit its "Error" event as needed.  For AMQP operations, the "Complete" event will detail the number of retries that were used for that operation.  
+Each operation will always emit its "Start" and "Complete" log events, and will only emit its "Error" event as needed.  For AMQP operations, the "Complete" event will detail the number of retries that were used for that operation.
 
-Unfortunately, there is currently way to easily view all of the log events offered.  To discover the available log events, inspecting the associated source code is the best option. 
+Unfortunately, there is currently way to easily view all of the log events offered.  To discover the available log events, inspecting the associated source code is the best option.
 
 ### Event Source: "Azure-Messaging-EventHubs"
 

@@ -6,6 +6,7 @@
 #nullable disable
 
 using System;
+using Azure.Core;
 
 namespace Azure.Core.TestFramework.Models
 {
@@ -13,22 +14,19 @@ namespace Azure.Core.TestFramework.Models
     public partial class BodyKeySanitizer
     {
         /// <summary> Initializes a new instance of BodyKeySanitizer. </summary>
-        /// <param name="value"></param>
-        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
-        public BodyKeySanitizer(string value)
+        /// <param name="jsonPath"></param>
+        /// <exception cref="ArgumentNullException"> <paramref name="jsonPath"/> is null. </exception>
+        public BodyKeySanitizer(string jsonPath)
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
+            Argument.AssertNotNull(jsonPath, nameof(jsonPath));
 
-            Value = value;
+            JsonPath = jsonPath;
         }
 
-        /// <summary> Gets or sets the json path. </summary>
-        public string JsonPath { get; set; }
-        /// <summary> Gets the value. </summary>
-        public string Value { get; }
+        /// <summary> Gets the json path. </summary>
+        public string JsonPath { get; }
+        /// <summary> Gets or sets the value. </summary>
+        public string Value { get; set; }
         /// <summary> Gets or sets the regex. </summary>
         public string Regex { get; set; }
         /// <summary> Gets or sets the group for replace. </summary>

@@ -22,15 +22,15 @@ namespace Azure.ResourceManager.Network.Models
             _value = value ?? throw new ArgumentNullException(nameof(value));
         }
 
-        private const string TCPValue = "TCP";
-        private const string UDPValue = "UDP";
+        private const string TcpValue = "TCP";
+        private const string UdpValue = "UDP";
         private const string AnyValue = "Any";
         private const string IcmpValue = "ICMP";
 
         /// <summary> TCP. </summary>
-        public static FirewallPolicyRuleNetworkProtocol TCP { get; } = new FirewallPolicyRuleNetworkProtocol(TCPValue);
+        public static FirewallPolicyRuleNetworkProtocol Tcp { get; } = new FirewallPolicyRuleNetworkProtocol(TcpValue);
         /// <summary> UDP. </summary>
-        public static FirewallPolicyRuleNetworkProtocol UDP { get; } = new FirewallPolicyRuleNetworkProtocol(UDPValue);
+        public static FirewallPolicyRuleNetworkProtocol Udp { get; } = new FirewallPolicyRuleNetworkProtocol(UdpValue);
         /// <summary> Any. </summary>
         public static FirewallPolicyRuleNetworkProtocol Any { get; } = new FirewallPolicyRuleNetworkProtocol(AnyValue);
         /// <summary> ICMP. </summary>
@@ -39,7 +39,7 @@ namespace Azure.ResourceManager.Network.Models
         public static bool operator ==(FirewallPolicyRuleNetworkProtocol left, FirewallPolicyRuleNetworkProtocol right) => left.Equals(right);
         /// <summary> Determines if two <see cref="FirewallPolicyRuleNetworkProtocol"/> values are not the same. </summary>
         public static bool operator !=(FirewallPolicyRuleNetworkProtocol left, FirewallPolicyRuleNetworkProtocol right) => !left.Equals(right);
-        /// <summary> Converts a string to a <see cref="FirewallPolicyRuleNetworkProtocol"/>. </summary>
+        /// <summary> Converts a <see cref="string"/> to a <see cref="FirewallPolicyRuleNetworkProtocol"/>. </summary>
         public static implicit operator FirewallPolicyRuleNetworkProtocol(string value) => new FirewallPolicyRuleNetworkProtocol(value);
 
         /// <inheritdoc />
@@ -50,7 +50,7 @@ namespace Azure.ResourceManager.Network.Models
 
         /// <inheritdoc />
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+        public override int GetHashCode() => _value != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(_value) : 0;
         /// <inheritdoc />
         public override string ToString() => _value;
     }

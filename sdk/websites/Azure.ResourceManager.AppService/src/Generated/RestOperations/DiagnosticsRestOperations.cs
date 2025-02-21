@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.AppService.Models;
@@ -33,8 +32,23 @@ namespace Azure.ResourceManager.AppService
         {
             _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
-            _apiVersion = apiVersion ?? "2021-02-01";
+            _apiVersion = apiVersion ?? "2024-04-01";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
+        }
+
+        internal RequestUriBuilder CreateListHostingEnvironmentDetectorResponsesRequestUri(string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/hostingEnvironments/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/detectors", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListHostingEnvironmentDetectorResponsesRequest(string subscriptionId, string resourceGroupName, string name)
@@ -65,7 +79,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DetectorResponseCollection>> ListHostingEnvironmentDetectorResponsesAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceDetectorListResult>> ListHostingEnvironmentDetectorResponsesAsync(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -77,9 +91,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorResponseCollection value = default;
+                        AppServiceDetectorListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DetectorResponseCollection.DeserializeDetectorResponseCollection(document.RootElement);
+                        value = AppServiceDetectorListResult.DeserializeAppServiceDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -94,7 +108,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DetectorResponseCollection> ListHostingEnvironmentDetectorResponses(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public Response<AppServiceDetectorListResult> ListHostingEnvironmentDetectorResponses(string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -106,14 +120,42 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorResponseCollection value = default;
+                        AppServiceDetectorListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DetectorResponseCollection.DeserializeDetectorResponseCollection(document.RootElement);
+                        value = AppServiceDetectorListResult.DeserializeAppServiceDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetHostingEnvironmentDetectorResponseRequestUri(string subscriptionId, string resourceGroupName, string name, string detectorName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/hostingEnvironments/", false);
+            uri.AppendPath(name, true);
+            uri.AppendPath("/detectors/", false);
+            uri.AppendPath(detectorName, true);
+            if (startTime != null)
+            {
+                uri.AppendQuery("startTime", startTime.Value, "O", true);
+            }
+            if (endTime != null)
+            {
+                uri.AppendQuery("endTime", endTime.Value, "O", true);
+            }
+            if (timeGrain != null)
+            {
+                uri.AppendQuery("timeGrain", timeGrain, true);
+            }
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetHostingEnvironmentDetectorResponseRequest(string subscriptionId, string resourceGroupName, string name, string detectorName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
@@ -222,6 +264,21 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListSiteDetectorResponsesRequestUri(string subscriptionId, string resourceGroupName, string siteName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/detectors", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListSiteDetectorResponsesRequest(string subscriptionId, string resourceGroupName, string siteName)
         {
             var message = _pipeline.CreateMessage();
@@ -250,7 +307,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DetectorResponseCollection>> ListSiteDetectorResponsesAsync(string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceDetectorListResult>> ListSiteDetectorResponsesAsync(string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -262,9 +319,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorResponseCollection value = default;
+                        AppServiceDetectorListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DetectorResponseCollection.DeserializeDetectorResponseCollection(document.RootElement);
+                        value = AppServiceDetectorListResult.DeserializeAppServiceDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -279,7 +336,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DetectorResponseCollection> ListSiteDetectorResponses(string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
+        public Response<AppServiceDetectorListResult> ListSiteDetectorResponses(string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -291,14 +348,42 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorResponseCollection value = default;
+                        AppServiceDetectorListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DetectorResponseCollection.DeserializeDetectorResponseCollection(document.RootElement);
+                        value = AppServiceDetectorListResult.DeserializeAppServiceDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetSiteDetectorResponseRequestUri(string subscriptionId, string resourceGroupName, string siteName, string detectorName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/detectors/", false);
+            uri.AppendPath(detectorName, true);
+            if (startTime != null)
+            {
+                uri.AppendQuery("startTime", startTime.Value, "O", true);
+            }
+            if (endTime != null)
+            {
+                uri.AppendQuery("endTime", endTime.Value, "O", true);
+            }
+            if (timeGrain != null)
+            {
+                uri.AppendQuery("timeGrain", timeGrain, true);
+            }
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetSiteDetectorResponseRequest(string subscriptionId, string resourceGroupName, string siteName, string detectorName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
@@ -407,6 +492,21 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListSiteDiagnosticCategoriesRequestUri(string subscriptionId, string resourceGroupName, string siteName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/diagnostics", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListSiteDiagnosticCategoriesRequest(string subscriptionId, string resourceGroupName, string siteName)
         {
             var message = _pipeline.CreateMessage();
@@ -435,7 +535,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DiagnosticCategoryCollection>> ListSiteDiagnosticCategoriesAsync(string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
+        public async Task<Response<DiagnosticCategoryListResult>> ListSiteDiagnosticCategoriesAsync(string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -447,9 +547,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticCategoryCollection value = default;
+                        DiagnosticCategoryListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DiagnosticCategoryCollection.DeserializeDiagnosticCategoryCollection(document.RootElement);
+                        value = DiagnosticCategoryListResult.DeserializeDiagnosticCategoryListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -464,7 +564,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DiagnosticCategoryCollection> ListSiteDiagnosticCategories(string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
+        public Response<DiagnosticCategoryListResult> ListSiteDiagnosticCategories(string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -476,14 +576,30 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticCategoryCollection value = default;
+                        DiagnosticCategoryListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DiagnosticCategoryCollection.DeserializeDiagnosticCategoryCollection(document.RootElement);
+                        value = DiagnosticCategoryListResult.DeserializeDiagnosticCategoryListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetSiteDiagnosticCategoryRequestUri(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetSiteDiagnosticCategoryRequest(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory)
@@ -574,6 +690,23 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListSiteAnalysesRequestUri(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendPath("/analyses", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListSiteAnalysesRequest(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory)
         {
             var message = _pipeline.CreateMessage();
@@ -605,7 +738,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DiagnosticAnalysisCollection>> ListSiteAnalysesAsync(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public async Task<Response<WebSiteAnalysisDefinitionListResult>> ListSiteAnalysesAsync(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -618,9 +751,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticAnalysisCollection value = default;
+                        WebSiteAnalysisDefinitionListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DiagnosticAnalysisCollection.DeserializeDiagnosticAnalysisCollection(document.RootElement);
+                        value = WebSiteAnalysisDefinitionListResult.DeserializeWebSiteAnalysisDefinitionListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -636,7 +769,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DiagnosticAnalysisCollection> ListSiteAnalyses(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public Response<WebSiteAnalysisDefinitionListResult> ListSiteAnalyses(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -649,14 +782,32 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticAnalysisCollection value = default;
+                        WebSiteAnalysisDefinitionListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DiagnosticAnalysisCollection.DeserializeDiagnosticAnalysisCollection(document.RootElement);
+                        value = WebSiteAnalysisDefinitionListResult.DeserializeWebSiteAnalysisDefinitionListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetSiteAnalysisRequestUri(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string analysisName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendPath("/analyses/", false);
+            uri.AppendPath(analysisName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetSiteAnalysisRequest(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string analysisName)
@@ -692,7 +843,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="diagnosticCategory"/> or <paramref name="analysisName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="diagnosticCategory"/> or <paramref name="analysisName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AnalysisDefinitionData>> GetSiteAnalysisAsync(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string analysisName, CancellationToken cancellationToken = default)
+        public async Task<Response<WebSiteAnalysisDefinitionData>> GetSiteAnalysisAsync(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string analysisName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -706,13 +857,13 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        AnalysisDefinitionData value = default;
+                        WebSiteAnalysisDefinitionData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AnalysisDefinitionData.DeserializeAnalysisDefinitionData(document.RootElement);
+                        value = WebSiteAnalysisDefinitionData.DeserializeWebSiteAnalysisDefinitionData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AnalysisDefinitionData)null, message.Response);
+                    return Response.FromValue((WebSiteAnalysisDefinitionData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -727,7 +878,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="diagnosticCategory"/> or <paramref name="analysisName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="diagnosticCategory"/> or <paramref name="analysisName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AnalysisDefinitionData> GetSiteAnalysis(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string analysisName, CancellationToken cancellationToken = default)
+        public Response<WebSiteAnalysisDefinitionData> GetSiteAnalysis(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string analysisName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -741,16 +892,47 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        AnalysisDefinitionData value = default;
+                        WebSiteAnalysisDefinitionData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AnalysisDefinitionData.DeserializeAnalysisDefinitionData(document.RootElement);
+                        value = WebSiteAnalysisDefinitionData.DeserializeWebSiteAnalysisDefinitionData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AnalysisDefinitionData)null, message.Response);
+                    return Response.FromValue((WebSiteAnalysisDefinitionData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateExecuteSiteAnalysisRequestUri(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string analysisName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendPath("/analyses/", false);
+            uri.AppendPath(analysisName, true);
+            uri.AppendPath("/execute", false);
+            if (startTime != null)
+            {
+                uri.AppendQuery("startTime", startTime.Value, "O", true);
+            }
+            if (endTime != null)
+            {
+                uri.AppendQuery("endTime", endTime.Value, "O", true);
+            }
+            if (timeGrain != null)
+            {
+                uri.AppendQuery("timeGrain", timeGrain, true);
+            }
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateExecuteSiteAnalysisRequest(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string analysisName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
@@ -862,6 +1044,23 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListSiteDetectorsRequestUri(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendPath("/detectors", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListSiteDetectorsRequest(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory)
         {
             var message = _pipeline.CreateMessage();
@@ -893,7 +1092,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DiagnosticDetectorCollection>> ListSiteDetectorsAsync(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public async Task<Response<DiagnosticDetectorListResult>> ListSiteDetectorsAsync(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -906,9 +1105,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticDetectorCollection value = default;
+                        DiagnosticDetectorListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DiagnosticDetectorCollection.DeserializeDiagnosticDetectorCollection(document.RootElement);
+                        value = DiagnosticDetectorListResult.DeserializeDiagnosticDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -924,7 +1123,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DiagnosticDetectorCollection> ListSiteDetectors(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public Response<DiagnosticDetectorListResult> ListSiteDetectors(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -937,14 +1136,32 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticDetectorCollection value = default;
+                        DiagnosticDetectorListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DiagnosticDetectorCollection.DeserializeDiagnosticDetectorCollection(document.RootElement);
+                        value = DiagnosticDetectorListResult.DeserializeDiagnosticDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetSiteDetectorRequestUri(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string detectorName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendPath("/detectors/", false);
+            uri.AppendPath(detectorName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetSiteDetectorRequest(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string detectorName)
@@ -980,7 +1197,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="diagnosticCategory"/> or <paramref name="detectorName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="diagnosticCategory"/> or <paramref name="detectorName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DetectorDefinitionAutoGeneratedData>> GetSiteDetectorAsync(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string detectorName, CancellationToken cancellationToken = default)
+        public async Task<Response<DetectorDefinitionResourceData>> GetSiteDetectorAsync(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string detectorName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -994,13 +1211,13 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorDefinitionAutoGeneratedData value = default;
+                        DetectorDefinitionResourceData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DetectorDefinitionAutoGeneratedData.DeserializeDetectorDefinitionAutoGeneratedData(document.RootElement);
+                        value = DetectorDefinitionResourceData.DeserializeDetectorDefinitionResourceData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((DetectorDefinitionAutoGeneratedData)null, message.Response);
+                    return Response.FromValue((DetectorDefinitionResourceData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -1015,7 +1232,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="diagnosticCategory"/> or <paramref name="detectorName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="diagnosticCategory"/> or <paramref name="detectorName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DetectorDefinitionAutoGeneratedData> GetSiteDetector(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string detectorName, CancellationToken cancellationToken = default)
+        public Response<DetectorDefinitionResourceData> GetSiteDetector(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string detectorName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1029,16 +1246,47 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorDefinitionAutoGeneratedData value = default;
+                        DetectorDefinitionResourceData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DetectorDefinitionAutoGeneratedData.DeserializeDetectorDefinitionAutoGeneratedData(document.RootElement);
+                        value = DetectorDefinitionResourceData.DeserializeDetectorDefinitionResourceData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((DetectorDefinitionAutoGeneratedData)null, message.Response);
+                    return Response.FromValue((DetectorDefinitionResourceData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateExecuteSiteDetectorRequestUri(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string detectorName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendPath("/detectors/", false);
+            uri.AppendPath(detectorName, true);
+            uri.AppendPath("/execute", false);
+            if (startTime != null)
+            {
+                uri.AppendQuery("startTime", startTime.Value, "O", true);
+            }
+            if (endTime != null)
+            {
+                uri.AppendQuery("endTime", endTime.Value, "O", true);
+            }
+            if (timeGrain != null)
+            {
+                uri.AppendQuery("timeGrain", timeGrain, true);
+            }
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateExecuteSiteDetectorRequest(string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, string detectorName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
@@ -1150,6 +1398,23 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListSiteDetectorResponsesSlotRequestUri(string subscriptionId, string resourceGroupName, string siteName, string slot)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/slots/", false);
+            uri.AppendPath(slot, true);
+            uri.AppendPath("/detectors", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListSiteDetectorResponsesSlotRequest(string subscriptionId, string resourceGroupName, string siteName, string slot)
         {
             var message = _pipeline.CreateMessage();
@@ -1181,7 +1446,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DetectorResponseCollection>> ListSiteDetectorResponsesSlotAsync(string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceDetectorListResult>> ListSiteDetectorResponsesSlotAsync(string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1194,9 +1459,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorResponseCollection value = default;
+                        AppServiceDetectorListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DetectorResponseCollection.DeserializeDetectorResponseCollection(document.RootElement);
+                        value = AppServiceDetectorListResult.DeserializeAppServiceDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -1212,7 +1477,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DetectorResponseCollection> ListSiteDetectorResponsesSlot(string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
+        public Response<AppServiceDetectorListResult> ListSiteDetectorResponsesSlot(string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1225,14 +1490,44 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorResponseCollection value = default;
+                        AppServiceDetectorListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DetectorResponseCollection.DeserializeDetectorResponseCollection(document.RootElement);
+                        value = AppServiceDetectorListResult.DeserializeAppServiceDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetSiteDetectorResponseSlotRequestUri(string subscriptionId, string resourceGroupName, string siteName, string slot, string detectorName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/slots/", false);
+            uri.AppendPath(slot, true);
+            uri.AppendPath("/detectors/", false);
+            uri.AppendPath(detectorName, true);
+            if (startTime != null)
+            {
+                uri.AppendQuery("startTime", startTime.Value, "O", true);
+            }
+            if (endTime != null)
+            {
+                uri.AppendQuery("endTime", endTime.Value, "O", true);
+            }
+            if (timeGrain != null)
+            {
+                uri.AppendQuery("timeGrain", timeGrain, true);
+            }
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetSiteDetectorResponseSlotRequest(string subscriptionId, string resourceGroupName, string siteName, string slot, string detectorName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
@@ -1347,6 +1642,23 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListSiteDiagnosticCategoriesSlotRequestUri(string subscriptionId, string resourceGroupName, string siteName, string slot)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/slots/", false);
+            uri.AppendPath(slot, true);
+            uri.AppendPath("/diagnostics", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListSiteDiagnosticCategoriesSlotRequest(string subscriptionId, string resourceGroupName, string siteName, string slot)
         {
             var message = _pipeline.CreateMessage();
@@ -1378,7 +1690,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DiagnosticCategoryCollection>> ListSiteDiagnosticCategoriesSlotAsync(string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
+        public async Task<Response<DiagnosticCategoryListResult>> ListSiteDiagnosticCategoriesSlotAsync(string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1391,9 +1703,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticCategoryCollection value = default;
+                        DiagnosticCategoryListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DiagnosticCategoryCollection.DeserializeDiagnosticCategoryCollection(document.RootElement);
+                        value = DiagnosticCategoryListResult.DeserializeDiagnosticCategoryListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -1409,7 +1721,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DiagnosticCategoryCollection> ListSiteDiagnosticCategoriesSlot(string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
+        public Response<DiagnosticCategoryListResult> ListSiteDiagnosticCategoriesSlot(string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1422,14 +1734,32 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticCategoryCollection value = default;
+                        DiagnosticCategoryListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DiagnosticCategoryCollection.DeserializeDiagnosticCategoryCollection(document.RootElement);
+                        value = DiagnosticCategoryListResult.DeserializeDiagnosticCategoryListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetSiteDiagnosticCategorySlotRequestUri(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/slots/", false);
+            uri.AppendPath(slot, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetSiteDiagnosticCategorySlotRequest(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory)
@@ -1526,6 +1856,25 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListSiteAnalysesSlotRequestUri(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/slots/", false);
+            uri.AppendPath(slot, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendPath("/analyses", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListSiteAnalysesSlotRequest(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory)
         {
             var message = _pipeline.CreateMessage();
@@ -1560,7 +1909,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DiagnosticAnalysisCollection>> ListSiteAnalysesSlotAsync(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public async Task<Response<WebSiteAnalysisDefinitionListResult>> ListSiteAnalysesSlotAsync(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1574,9 +1923,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticAnalysisCollection value = default;
+                        WebSiteAnalysisDefinitionListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DiagnosticAnalysisCollection.DeserializeDiagnosticAnalysisCollection(document.RootElement);
+                        value = WebSiteAnalysisDefinitionListResult.DeserializeWebSiteAnalysisDefinitionListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -1593,7 +1942,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DiagnosticAnalysisCollection> ListSiteAnalysesSlot(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public Response<WebSiteAnalysisDefinitionListResult> ListSiteAnalysesSlot(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1607,14 +1956,34 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticAnalysisCollection value = default;
+                        WebSiteAnalysisDefinitionListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DiagnosticAnalysisCollection.DeserializeDiagnosticAnalysisCollection(document.RootElement);
+                        value = WebSiteAnalysisDefinitionListResult.DeserializeWebSiteAnalysisDefinitionListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetSiteAnalysisSlotRequestUri(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string analysisName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/slots/", false);
+            uri.AppendPath(slot, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendPath("/analyses/", false);
+            uri.AppendPath(analysisName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetSiteAnalysisSlotRequest(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string analysisName)
@@ -1653,7 +2022,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/>, <paramref name="diagnosticCategory"/> or <paramref name="analysisName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/>, <paramref name="diagnosticCategory"/> or <paramref name="analysisName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AnalysisDefinitionData>> GetSiteAnalysisSlotAsync(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string analysisName, CancellationToken cancellationToken = default)
+        public async Task<Response<WebSiteAnalysisDefinitionData>> GetSiteAnalysisSlotAsync(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string analysisName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1668,13 +2037,13 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        AnalysisDefinitionData value = default;
+                        WebSiteAnalysisDefinitionData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AnalysisDefinitionData.DeserializeAnalysisDefinitionData(document.RootElement);
+                        value = WebSiteAnalysisDefinitionData.DeserializeWebSiteAnalysisDefinitionData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AnalysisDefinitionData)null, message.Response);
+                    return Response.FromValue((WebSiteAnalysisDefinitionData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -1690,7 +2059,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/>, <paramref name="diagnosticCategory"/> or <paramref name="analysisName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/>, <paramref name="diagnosticCategory"/> or <paramref name="analysisName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AnalysisDefinitionData> GetSiteAnalysisSlot(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string analysisName, CancellationToken cancellationToken = default)
+        public Response<WebSiteAnalysisDefinitionData> GetSiteAnalysisSlot(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string analysisName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1705,16 +2074,49 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        AnalysisDefinitionData value = default;
+                        WebSiteAnalysisDefinitionData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AnalysisDefinitionData.DeserializeAnalysisDefinitionData(document.RootElement);
+                        value = WebSiteAnalysisDefinitionData.DeserializeWebSiteAnalysisDefinitionData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AnalysisDefinitionData)null, message.Response);
+                    return Response.FromValue((WebSiteAnalysisDefinitionData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateExecuteSiteAnalysisSlotRequestUri(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string analysisName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/slots/", false);
+            uri.AppendPath(slot, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendPath("/analyses/", false);
+            uri.AppendPath(analysisName, true);
+            uri.AppendPath("/execute", false);
+            if (startTime != null)
+            {
+                uri.AppendQuery("startTime", startTime.Value, "O", true);
+            }
+            if (endTime != null)
+            {
+                uri.AppendQuery("endTime", endTime.Value, "O", true);
+            }
+            if (timeGrain != null)
+            {
+                uri.AppendQuery("timeGrain", timeGrain, true);
+            }
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateExecuteSiteAnalysisSlotRequest(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string analysisName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
@@ -1832,6 +2234,25 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListSiteDetectorsSlotRequestUri(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/slots/", false);
+            uri.AppendPath(slot, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendPath("/detectors", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateListSiteDetectorsSlotRequest(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory)
         {
             var message = _pipeline.CreateMessage();
@@ -1866,7 +2287,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DiagnosticDetectorCollection>> ListSiteDetectorsSlotAsync(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public async Task<Response<DiagnosticDetectorListResult>> ListSiteDetectorsSlotAsync(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1880,9 +2301,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticDetectorCollection value = default;
+                        DiagnosticDetectorListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DiagnosticDetectorCollection.DeserializeDiagnosticDetectorCollection(document.RootElement);
+                        value = DiagnosticDetectorListResult.DeserializeDiagnosticDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -1899,7 +2320,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DiagnosticDetectorCollection> ListSiteDetectorsSlot(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public Response<DiagnosticDetectorListResult> ListSiteDetectorsSlot(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1913,14 +2334,34 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticDetectorCollection value = default;
+                        DiagnosticDetectorListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DiagnosticDetectorCollection.DeserializeDiagnosticDetectorCollection(document.RootElement);
+                        value = DiagnosticDetectorListResult.DeserializeDiagnosticDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetSiteDetectorSlotRequestUri(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string detectorName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/slots/", false);
+            uri.AppendPath(slot, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendPath("/detectors/", false);
+            uri.AppendPath(detectorName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetSiteDetectorSlotRequest(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string detectorName)
@@ -1959,7 +2400,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/>, <paramref name="diagnosticCategory"/> or <paramref name="detectorName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/>, <paramref name="diagnosticCategory"/> or <paramref name="detectorName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DetectorDefinitionAutoGeneratedData>> GetSiteDetectorSlotAsync(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string detectorName, CancellationToken cancellationToken = default)
+        public async Task<Response<DetectorDefinitionResourceData>> GetSiteDetectorSlotAsync(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string detectorName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -1974,13 +2415,13 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorDefinitionAutoGeneratedData value = default;
+                        DetectorDefinitionResourceData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DetectorDefinitionAutoGeneratedData.DeserializeDetectorDefinitionAutoGeneratedData(document.RootElement);
+                        value = DetectorDefinitionResourceData.DeserializeDetectorDefinitionResourceData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((DetectorDefinitionAutoGeneratedData)null, message.Response);
+                    return Response.FromValue((DetectorDefinitionResourceData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -1996,7 +2437,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/>, <paramref name="diagnosticCategory"/> or <paramref name="detectorName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/>, <paramref name="diagnosticCategory"/> or <paramref name="detectorName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DetectorDefinitionAutoGeneratedData> GetSiteDetectorSlot(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string detectorName, CancellationToken cancellationToken = default)
+        public Response<DetectorDefinitionResourceData> GetSiteDetectorSlot(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string detectorName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -2011,16 +2452,49 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorDefinitionAutoGeneratedData value = default;
+                        DetectorDefinitionResourceData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DetectorDefinitionAutoGeneratedData.DeserializeDetectorDefinitionAutoGeneratedData(document.RootElement);
+                        value = DetectorDefinitionResourceData.DeserializeDetectorDefinitionResourceData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((DetectorDefinitionAutoGeneratedData)null, message.Response);
+                    return Response.FromValue((DetectorDefinitionResourceData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateExecuteSiteDetectorSlotRequestUri(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string detectorName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Web/sites/", false);
+            uri.AppendPath(siteName, true);
+            uri.AppendPath("/slots/", false);
+            uri.AppendPath(slot, true);
+            uri.AppendPath("/diagnostics/", false);
+            uri.AppendPath(diagnosticCategory, true);
+            uri.AppendPath("/detectors/", false);
+            uri.AppendPath(detectorName, true);
+            uri.AppendPath("/execute", false);
+            if (startTime != null)
+            {
+                uri.AppendQuery("startTime", startTime.Value, "O", true);
+            }
+            if (endTime != null)
+            {
+                uri.AppendQuery("endTime", endTime.Value, "O", true);
+            }
+            if (timeGrain != null)
+            {
+                uri.AppendQuery("timeGrain", timeGrain, true);
+            }
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateExecuteSiteDetectorSlotRequest(string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, string detectorName, DateTimeOffset? startTime, DateTimeOffset? endTime, string timeGrain)
@@ -2138,6 +2612,14 @@ namespace Azure.ResourceManager.AppService
             }
         }
 
+        internal RequestUriBuilder CreateListHostingEnvironmentDetectorResponsesNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string name)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
+        }
+
         internal HttpMessage CreateListHostingEnvironmentDetectorResponsesNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string name)
         {
             var message = _pipeline.CreateMessage();
@@ -2160,7 +2642,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DetectorResponseCollection>> ListHostingEnvironmentDetectorResponsesNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceDetectorListResult>> ListHostingEnvironmentDetectorResponsesNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2173,9 +2655,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorResponseCollection value = default;
+                        AppServiceDetectorListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DetectorResponseCollection.DeserializeDetectorResponseCollection(document.RootElement);
+                        value = AppServiceDetectorListResult.DeserializeAppServiceDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2191,7 +2673,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="name"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DetectorResponseCollection> ListHostingEnvironmentDetectorResponsesNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
+        public Response<AppServiceDetectorListResult> ListHostingEnvironmentDetectorResponsesNextPage(string nextLink, string subscriptionId, string resourceGroupName, string name, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2204,14 +2686,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorResponseCollection value = default;
+                        AppServiceDetectorListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DetectorResponseCollection.DeserializeDetectorResponseCollection(document.RootElement);
+                        value = AppServiceDetectorListResult.DeserializeAppServiceDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListSiteDetectorResponsesNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string siteName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListSiteDetectorResponsesNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string siteName)
@@ -2236,7 +2726,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DetectorResponseCollection>> ListSiteDetectorResponsesNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceDetectorListResult>> ListSiteDetectorResponsesNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2249,9 +2739,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorResponseCollection value = default;
+                        AppServiceDetectorListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DetectorResponseCollection.DeserializeDetectorResponseCollection(document.RootElement);
+                        value = AppServiceDetectorListResult.DeserializeAppServiceDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2267,7 +2757,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DetectorResponseCollection> ListSiteDetectorResponsesNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
+        public Response<AppServiceDetectorListResult> ListSiteDetectorResponsesNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2280,14 +2770,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorResponseCollection value = default;
+                        AppServiceDetectorListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DetectorResponseCollection.DeserializeDetectorResponseCollection(document.RootElement);
+                        value = AppServiceDetectorListResult.DeserializeAppServiceDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListSiteDiagnosticCategoriesNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string siteName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListSiteDiagnosticCategoriesNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string siteName)
@@ -2312,7 +2810,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DiagnosticCategoryCollection>> ListSiteDiagnosticCategoriesNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
+        public async Task<Response<DiagnosticCategoryListResult>> ListSiteDiagnosticCategoriesNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2325,9 +2823,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticCategoryCollection value = default;
+                        DiagnosticCategoryListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DiagnosticCategoryCollection.DeserializeDiagnosticCategoryCollection(document.RootElement);
+                        value = DiagnosticCategoryListResult.DeserializeDiagnosticCategoryListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2343,7 +2841,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="siteName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DiagnosticCategoryCollection> ListSiteDiagnosticCategoriesNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
+        public Response<DiagnosticCategoryListResult> ListSiteDiagnosticCategoriesNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2356,14 +2854,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticCategoryCollection value = default;
+                        DiagnosticCategoryListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DiagnosticCategoryCollection.DeserializeDiagnosticCategoryCollection(document.RootElement);
+                        value = DiagnosticCategoryListResult.DeserializeDiagnosticCategoryListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListSiteAnalysesNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListSiteAnalysesNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory)
@@ -2389,7 +2895,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DiagnosticAnalysisCollection>> ListSiteAnalysesNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public async Task<Response<WebSiteAnalysisDefinitionListResult>> ListSiteAnalysesNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2403,9 +2909,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticAnalysisCollection value = default;
+                        WebSiteAnalysisDefinitionListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DiagnosticAnalysisCollection.DeserializeDiagnosticAnalysisCollection(document.RootElement);
+                        value = WebSiteAnalysisDefinitionListResult.DeserializeWebSiteAnalysisDefinitionListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2422,7 +2928,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DiagnosticAnalysisCollection> ListSiteAnalysesNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public Response<WebSiteAnalysisDefinitionListResult> ListSiteAnalysesNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2436,14 +2942,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticAnalysisCollection value = default;
+                        WebSiteAnalysisDefinitionListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DiagnosticAnalysisCollection.DeserializeDiagnosticAnalysisCollection(document.RootElement);
+                        value = WebSiteAnalysisDefinitionListResult.DeserializeWebSiteAnalysisDefinitionListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListSiteDetectorsNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListSiteDetectorsNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory)
@@ -2469,7 +2983,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DiagnosticDetectorCollection>> ListSiteDetectorsNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public async Task<Response<DiagnosticDetectorListResult>> ListSiteDetectorsNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2483,9 +2997,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticDetectorCollection value = default;
+                        DiagnosticDetectorListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DiagnosticDetectorCollection.DeserializeDiagnosticDetectorCollection(document.RootElement);
+                        value = DiagnosticDetectorListResult.DeserializeDiagnosticDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2502,7 +3016,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DiagnosticDetectorCollection> ListSiteDetectorsNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public Response<DiagnosticDetectorListResult> ListSiteDetectorsNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2516,14 +3030,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticDetectorCollection value = default;
+                        DiagnosticDetectorListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DiagnosticDetectorCollection.DeserializeDiagnosticDetectorCollection(document.RootElement);
+                        value = DiagnosticDetectorListResult.DeserializeDiagnosticDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListSiteDetectorResponsesSlotNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListSiteDetectorResponsesSlotNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot)
@@ -2549,7 +3071,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DetectorResponseCollection>> ListSiteDetectorResponsesSlotNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
+        public async Task<Response<AppServiceDetectorListResult>> ListSiteDetectorResponsesSlotNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2563,9 +3085,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorResponseCollection value = default;
+                        AppServiceDetectorListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DetectorResponseCollection.DeserializeDetectorResponseCollection(document.RootElement);
+                        value = AppServiceDetectorListResult.DeserializeAppServiceDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2582,7 +3104,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DetectorResponseCollection> ListSiteDetectorResponsesSlotNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
+        public Response<AppServiceDetectorListResult> ListSiteDetectorResponsesSlotNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2596,14 +3118,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DetectorResponseCollection value = default;
+                        AppServiceDetectorListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DetectorResponseCollection.DeserializeDetectorResponseCollection(document.RootElement);
+                        value = AppServiceDetectorListResult.DeserializeAppServiceDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListSiteDiagnosticCategoriesSlotNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListSiteDiagnosticCategoriesSlotNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot)
@@ -2629,7 +3159,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DiagnosticCategoryCollection>> ListSiteDiagnosticCategoriesSlotNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
+        public async Task<Response<DiagnosticCategoryListResult>> ListSiteDiagnosticCategoriesSlotNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2643,9 +3173,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticCategoryCollection value = default;
+                        DiagnosticCategoryListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DiagnosticCategoryCollection.DeserializeDiagnosticCategoryCollection(document.RootElement);
+                        value = DiagnosticCategoryListResult.DeserializeDiagnosticCategoryListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2662,7 +3192,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/> or <paramref name="slot"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DiagnosticCategoryCollection> ListSiteDiagnosticCategoriesSlotNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
+        public Response<DiagnosticCategoryListResult> ListSiteDiagnosticCategoriesSlotNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2676,14 +3206,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticCategoryCollection value = default;
+                        DiagnosticCategoryListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DiagnosticCategoryCollection.DeserializeDiagnosticCategoryCollection(document.RootElement);
+                        value = DiagnosticCategoryListResult.DeserializeDiagnosticCategoryListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListSiteAnalysesSlotNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListSiteAnalysesSlotNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory)
@@ -2710,7 +3248,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DiagnosticAnalysisCollection>> ListSiteAnalysesSlotNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public async Task<Response<WebSiteAnalysisDefinitionListResult>> ListSiteAnalysesSlotNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2725,9 +3263,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticAnalysisCollection value = default;
+                        WebSiteAnalysisDefinitionListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DiagnosticAnalysisCollection.DeserializeDiagnosticAnalysisCollection(document.RootElement);
+                        value = WebSiteAnalysisDefinitionListResult.DeserializeWebSiteAnalysisDefinitionListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2745,7 +3283,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DiagnosticAnalysisCollection> ListSiteAnalysesSlotNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public Response<WebSiteAnalysisDefinitionListResult> ListSiteAnalysesSlotNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2760,14 +3298,22 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticAnalysisCollection value = default;
+                        WebSiteAnalysisDefinitionListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DiagnosticAnalysisCollection.DeserializeDiagnosticAnalysisCollection(document.RootElement);
+                        value = WebSiteAnalysisDefinitionListResult.DeserializeWebSiteAnalysisDefinitionListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListSiteDetectorsSlotNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListSiteDetectorsSlotNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory)
@@ -2794,7 +3340,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DiagnosticDetectorCollection>> ListSiteDetectorsSlotNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public async Task<Response<DiagnosticDetectorListResult>> ListSiteDetectorsSlotNextPageAsync(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2809,9 +3355,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticDetectorCollection value = default;
+                        DiagnosticDetectorListResult value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DiagnosticDetectorCollection.DeserializeDiagnosticDetectorCollection(document.RootElement);
+                        value = DiagnosticDetectorListResult.DeserializeDiagnosticDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -2829,7 +3375,7 @@ namespace Azure.ResourceManager.AppService
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="nextLink"/>, <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="siteName"/>, <paramref name="slot"/> or <paramref name="diagnosticCategory"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DiagnosticDetectorCollection> ListSiteDetectorsSlotNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
+        public Response<DiagnosticDetectorListResult> ListSiteDetectorsSlotNextPage(string nextLink, string subscriptionId, string resourceGroupName, string siteName, string slot, string diagnosticCategory, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNull(nextLink, nameof(nextLink));
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
@@ -2844,9 +3390,9 @@ namespace Azure.ResourceManager.AppService
             {
                 case 200:
                     {
-                        DiagnosticDetectorCollection value = default;
+                        DiagnosticDetectorListResult value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DiagnosticDetectorCollection.DeserializeDiagnosticDetectorCollection(document.RootElement);
+                        value = DiagnosticDetectorListResult.DeserializeDiagnosticDetectorListResult(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:

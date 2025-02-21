@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.Sql.Models;
@@ -35,6 +34,27 @@ namespace Azure.ResourceManager.Sql
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
             _apiVersion = apiVersion ?? "2020-11-01-preview";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
+        }
+
+        internal RequestUriBuilder CreateListByVersionRequestUri(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, int jobVersion)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/jobAgents/", false);
+            uri.AppendPath(jobAgentName, true);
+            uri.AppendPath("/jobs/", false);
+            uri.AppendPath(jobName, true);
+            uri.AppendPath("/versions/", false);
+            uri.AppendPath(jobVersion, true);
+            uri.AppendPath("/steps", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListByVersionRequest(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, int jobVersion)
@@ -132,6 +152,28 @@ namespace Azure.ResourceManager.Sql
             }
         }
 
+        internal RequestUriBuilder CreateGetByVersionRequestUri(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, int jobVersion, string stepName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/jobAgents/", false);
+            uri.AppendPath(jobAgentName, true);
+            uri.AppendPath("/jobs/", false);
+            uri.AppendPath(jobName, true);
+            uri.AppendPath("/versions/", false);
+            uri.AppendPath(jobVersion, true);
+            uri.AppendPath("/steps/", false);
+            uri.AppendPath(stepName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateGetByVersionRequest(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, int jobVersion, string stepName)
         {
             var message = _pipeline.CreateMessage();
@@ -171,7 +213,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="jobAgentName"/>, <paramref name="jobName"/> or <paramref name="stepName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="jobAgentName"/>, <paramref name="jobName"/> or <paramref name="stepName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<JobStepData>> GetByVersionAsync(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, int jobVersion, string stepName, CancellationToken cancellationToken = default)
+        public async Task<Response<SqlServerJobStepData>> GetByVersionAsync(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, int jobVersion, string stepName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -186,13 +228,13 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        JobStepData value = default;
+                        SqlServerJobStepData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = JobStepData.DeserializeJobStepData(document.RootElement);
+                        value = SqlServerJobStepData.DeserializeSqlServerJobStepData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((JobStepData)null, message.Response);
+                    return Response.FromValue((SqlServerJobStepData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -209,7 +251,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="jobAgentName"/>, <paramref name="jobName"/> or <paramref name="stepName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="jobAgentName"/>, <paramref name="jobName"/> or <paramref name="stepName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<JobStepData> GetByVersion(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, int jobVersion, string stepName, CancellationToken cancellationToken = default)
+        public Response<SqlServerJobStepData> GetByVersion(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, int jobVersion, string stepName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -224,16 +266,35 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        JobStepData value = default;
+                        SqlServerJobStepData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = JobStepData.DeserializeJobStepData(document.RootElement);
+                        value = SqlServerJobStepData.DeserializeSqlServerJobStepData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((JobStepData)null, message.Response);
+                    return Response.FromValue((SqlServerJobStepData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListByJobRequestUri(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/jobAgents/", false);
+            uri.AppendPath(jobAgentName, true);
+            uri.AppendPath("/jobs/", false);
+            uri.AppendPath(jobName, true);
+            uri.AppendPath("/steps", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListByJobRequest(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName)
@@ -261,7 +322,7 @@ namespace Azure.ResourceManager.Sql
             return message;
         }
 
-        /// <summary> Gets all job steps for a job&apos;s current version. </summary>
+        /// <summary> Gets all job steps for a job's current version. </summary>
         /// <param name="subscriptionId"> The subscription ID that identifies an Azure subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal. </param>
         /// <param name="serverName"> The name of the server. </param>
@@ -294,7 +355,7 @@ namespace Azure.ResourceManager.Sql
             }
         }
 
-        /// <summary> Gets all job steps for a job&apos;s current version. </summary>
+        /// <summary> Gets all job steps for a job's current version. </summary>
         /// <param name="subscriptionId"> The subscription ID that identifies an Azure subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal. </param>
         /// <param name="serverName"> The name of the server. </param>
@@ -327,6 +388,26 @@ namespace Azure.ResourceManager.Sql
             }
         }
 
+        internal RequestUriBuilder CreateGetRequestUri(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/jobAgents/", false);
+            uri.AppendPath(jobAgentName, true);
+            uri.AppendPath("/jobs/", false);
+            uri.AppendPath(jobName, true);
+            uri.AppendPath("/steps/", false);
+            uri.AppendPath(stepName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateGetRequest(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName)
         {
             var message = _pipeline.CreateMessage();
@@ -353,7 +434,7 @@ namespace Azure.ResourceManager.Sql
             return message;
         }
 
-        /// <summary> Gets a job step in a job&apos;s current version. </summary>
+        /// <summary> Gets a job step in a job's current version. </summary>
         /// <param name="subscriptionId"> The subscription ID that identifies an Azure subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal. </param>
         /// <param name="serverName"> The name of the server. </param>
@@ -363,7 +444,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="jobAgentName"/>, <paramref name="jobName"/> or <paramref name="stepName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="jobAgentName"/>, <paramref name="jobName"/> or <paramref name="stepName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<JobStepData>> GetAsync(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName, CancellationToken cancellationToken = default)
+        public async Task<Response<SqlServerJobStepData>> GetAsync(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -378,19 +459,19 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        JobStepData value = default;
+                        SqlServerJobStepData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = JobStepData.DeserializeJobStepData(document.RootElement);
+                        value = SqlServerJobStepData.DeserializeSqlServerJobStepData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((JobStepData)null, message.Response);
+                    return Response.FromValue((SqlServerJobStepData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
         }
 
-        /// <summary> Gets a job step in a job&apos;s current version. </summary>
+        /// <summary> Gets a job step in a job's current version. </summary>
         /// <param name="subscriptionId"> The subscription ID that identifies an Azure subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal. </param>
         /// <param name="serverName"> The name of the server. </param>
@@ -400,7 +481,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="jobAgentName"/>, <paramref name="jobName"/> or <paramref name="stepName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="jobAgentName"/>, <paramref name="jobName"/> or <paramref name="stepName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<JobStepData> Get(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName, CancellationToken cancellationToken = default)
+        public Response<SqlServerJobStepData> Get(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -415,19 +496,39 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        JobStepData value = default;
+                        SqlServerJobStepData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = JobStepData.DeserializeJobStepData(document.RootElement);
+                        value = SqlServerJobStepData.DeserializeSqlServerJobStepData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((JobStepData)null, message.Response);
+                    return Response.FromValue((SqlServerJobStepData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
         }
 
-        internal HttpMessage CreateCreateOrUpdateRequest(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName, JobStepData data)
+        internal RequestUriBuilder CreateCreateOrUpdateRequestUri(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName, SqlServerJobStepData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/jobAgents/", false);
+            uri.AppendPath(jobAgentName, true);
+            uri.AppendPath("/jobs/", false);
+            uri.AppendPath(jobName, true);
+            uri.AppendPath("/steps/", false);
+            uri.AppendPath(stepName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateCreateOrUpdateRequest(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName, SqlServerJobStepData data)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -451,7 +552,7 @@ namespace Azure.ResourceManager.Sql
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(data);
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -468,7 +569,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="jobAgentName"/>, <paramref name="jobName"/>, <paramref name="stepName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="jobAgentName"/>, <paramref name="jobName"/> or <paramref name="stepName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<JobStepData>> CreateOrUpdateAsync(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName, JobStepData data, CancellationToken cancellationToken = default)
+        public async Task<Response<SqlServerJobStepData>> CreateOrUpdateAsync(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName, SqlServerJobStepData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -485,9 +586,9 @@ namespace Azure.ResourceManager.Sql
                 case 200:
                 case 201:
                     {
-                        JobStepData value = default;
+                        SqlServerJobStepData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = JobStepData.DeserializeJobStepData(document.RootElement);
+                        value = SqlServerJobStepData.DeserializeSqlServerJobStepData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -506,7 +607,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="jobAgentName"/>, <paramref name="jobName"/>, <paramref name="stepName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="jobAgentName"/>, <paramref name="jobName"/> or <paramref name="stepName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<JobStepData> CreateOrUpdate(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName, JobStepData data, CancellationToken cancellationToken = default)
+        public Response<SqlServerJobStepData> CreateOrUpdate(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName, SqlServerJobStepData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -523,14 +624,34 @@ namespace Azure.ResourceManager.Sql
                 case 200:
                 case 201:
                     {
-                        JobStepData value = default;
+                        SqlServerJobStepData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = JobStepData.DeserializeJobStepData(document.RootElement);
+                        value = SqlServerJobStepData.DeserializeSqlServerJobStepData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateDeleteRequestUri(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/jobAgents/", false);
+            uri.AppendPath(jobAgentName, true);
+            uri.AppendPath("/jobs/", false);
+            uri.AppendPath(jobName, true);
+            uri.AppendPath("/steps/", false);
+            uri.AppendPath(stepName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateDeleteRequest(string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, string stepName)
@@ -620,6 +741,14 @@ namespace Azure.ResourceManager.Sql
             }
         }
 
+        internal RequestUriBuilder CreateListByVersionNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, int jobVersion)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
+        }
+
         internal HttpMessage CreateListByVersionNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName, int jobVersion)
         {
             var message = _pipeline.CreateMessage();
@@ -706,6 +835,14 @@ namespace Azure.ResourceManager.Sql
             }
         }
 
+        internal RequestUriBuilder CreateListByJobNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
+        }
+
         internal HttpMessage CreateListByJobNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string serverName, string jobAgentName, string jobName)
         {
             var message = _pipeline.CreateMessage();
@@ -720,7 +857,7 @@ namespace Azure.ResourceManager.Sql
             return message;
         }
 
-        /// <summary> Gets all job steps for a job&apos;s current version. </summary>
+        /// <summary> Gets all job steps for a job's current version. </summary>
         /// <param name="nextLink"> The URL to the next page of results. </param>
         /// <param name="subscriptionId"> The subscription ID that identifies an Azure subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal. </param>
@@ -755,7 +892,7 @@ namespace Azure.ResourceManager.Sql
             }
         }
 
-        /// <summary> Gets all job steps for a job&apos;s current version. </summary>
+        /// <summary> Gets all job steps for a job's current version. </summary>
         /// <param name="nextLink"> The URL to the next page of results. </param>
         /// <param name="subscriptionId"> The subscription ID that identifies an Azure subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal. </param>

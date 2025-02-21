@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 
@@ -35,6 +34,25 @@ namespace Azure.ResourceManager.Sql
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
             _apiVersion = apiVersion ?? "2020-11-01-preview";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
+        }
+
+        internal RequestUriBuilder CreateListByServerRequestUri(string subscriptionId, string resourceGroupName, string serverName, string expand)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/advisors", false);
+            if (expand != null)
+            {
+                uri.AppendQuery("$expand", expand, true);
+            }
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListByServerRequest(string subscriptionId, string resourceGroupName, string serverName, string expand)
@@ -70,7 +88,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="serverName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="serverName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<IReadOnlyList<AdvisorData>>> ListByServerAsync(string subscriptionId, string resourceGroupName, string serverName, string expand = null, CancellationToken cancellationToken = default)
+        public async Task<Response<IReadOnlyList<SqlAdvisorData>>> ListByServerAsync(string subscriptionId, string resourceGroupName, string serverName, string expand = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -82,12 +100,12 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        IReadOnlyList<AdvisorData> value = default;
+                        IReadOnlyList<SqlAdvisorData> value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        List<AdvisorData> array = new List<AdvisorData>();
+                        List<SqlAdvisorData> array = new List<SqlAdvisorData>();
                         foreach (var item in document.RootElement.EnumerateArray())
                         {
-                            array.Add(AdvisorData.DeserializeAdvisorData(item));
+                            array.Add(SqlAdvisorData.DeserializeSqlAdvisorData(item));
                         }
                         value = array;
                         return Response.FromValue(value, message.Response);
@@ -105,7 +123,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="serverName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="serverName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<IReadOnlyList<AdvisorData>> ListByServer(string subscriptionId, string resourceGroupName, string serverName, string expand = null, CancellationToken cancellationToken = default)
+        public Response<IReadOnlyList<SqlAdvisorData>> ListByServer(string subscriptionId, string resourceGroupName, string serverName, string expand = null, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -117,12 +135,12 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        IReadOnlyList<AdvisorData> value = default;
+                        IReadOnlyList<SqlAdvisorData> value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        List<AdvisorData> array = new List<AdvisorData>();
+                        List<SqlAdvisorData> array = new List<SqlAdvisorData>();
                         foreach (var item in document.RootElement.EnumerateArray())
                         {
-                            array.Add(AdvisorData.DeserializeAdvisorData(item));
+                            array.Add(SqlAdvisorData.DeserializeSqlAdvisorData(item));
                         }
                         value = array;
                         return Response.FromValue(value, message.Response);
@@ -130,6 +148,22 @@ namespace Azure.ResourceManager.Sql
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateGetRequestUri(string subscriptionId, string resourceGroupName, string serverName, string advisorName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/advisors/", false);
+            uri.AppendPath(advisorName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetRequest(string subscriptionId, string resourceGroupName, string serverName, string advisorName)
@@ -162,7 +196,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="advisorName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="advisorName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AdvisorData>> GetAsync(string subscriptionId, string resourceGroupName, string serverName, string advisorName, CancellationToken cancellationToken = default)
+        public async Task<Response<SqlAdvisorData>> GetAsync(string subscriptionId, string resourceGroupName, string serverName, string advisorName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -175,13 +209,13 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        AdvisorData value = default;
+                        SqlAdvisorData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AdvisorData.DeserializeAdvisorData(document.RootElement);
+                        value = SqlAdvisorData.DeserializeSqlAdvisorData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AdvisorData)null, message.Response);
+                    return Response.FromValue((SqlAdvisorData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -195,7 +229,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="advisorName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="advisorName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AdvisorData> Get(string subscriptionId, string resourceGroupName, string serverName, string advisorName, CancellationToken cancellationToken = default)
+        public Response<SqlAdvisorData> Get(string subscriptionId, string resourceGroupName, string serverName, string advisorName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -208,19 +242,35 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        AdvisorData value = default;
+                        SqlAdvisorData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AdvisorData.DeserializeAdvisorData(document.RootElement);
+                        value = SqlAdvisorData.DeserializeSqlAdvisorData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((AdvisorData)null, message.Response);
+                    return Response.FromValue((SqlAdvisorData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
         }
 
-        internal HttpMessage CreateUpdateRequest(string subscriptionId, string resourceGroupName, string serverName, string advisorName, AdvisorData data)
+        internal RequestUriBuilder CreateUpdateRequestUri(string subscriptionId, string resourceGroupName, string serverName, string advisorName, SqlAdvisorData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/advisors/", false);
+            uri.AppendPath(advisorName, true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateUpdateRequest(string subscriptionId, string resourceGroupName, string serverName, string advisorName, SqlAdvisorData data)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -240,7 +290,7 @@ namespace Azure.ResourceManager.Sql
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(data);
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -255,7 +305,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="advisorName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="advisorName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<AdvisorData>> UpdateAsync(string subscriptionId, string resourceGroupName, string serverName, string advisorName, AdvisorData data, CancellationToken cancellationToken = default)
+        public async Task<Response<SqlAdvisorData>> UpdateAsync(string subscriptionId, string resourceGroupName, string serverName, string advisorName, SqlAdvisorData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -269,9 +319,9 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        AdvisorData value = default;
+                        SqlAdvisorData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = AdvisorData.DeserializeAdvisorData(document.RootElement);
+                        value = SqlAdvisorData.DeserializeSqlAdvisorData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -288,7 +338,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="advisorName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="advisorName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<AdvisorData> Update(string subscriptionId, string resourceGroupName, string serverName, string advisorName, AdvisorData data, CancellationToken cancellationToken = default)
+        public Response<SqlAdvisorData> Update(string subscriptionId, string resourceGroupName, string serverName, string advisorName, SqlAdvisorData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -302,9 +352,9 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        AdvisorData value = default;
+                        SqlAdvisorData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = AdvisorData.DeserializeAdvisorData(document.RootElement);
+                        value = SqlAdvisorData.DeserializeSqlAdvisorData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:

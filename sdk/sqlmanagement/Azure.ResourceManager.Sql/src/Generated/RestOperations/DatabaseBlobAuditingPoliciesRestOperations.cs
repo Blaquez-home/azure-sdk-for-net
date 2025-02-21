@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager.Sql.Models;
@@ -35,6 +34,23 @@ namespace Azure.ResourceManager.Sql
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
             _apiVersion = apiVersion ?? "2021-11-01-preview";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
+        }
+
+        internal RequestUriBuilder CreateListByDatabaseRequestUri(string subscriptionId, string resourceGroupName, string serverName, string databaseName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/databases/", false);
+            uri.AppendPath(databaseName, true);
+            uri.AppendPath("/auditingSettings", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateListByDatabaseRequest(string subscriptionId, string resourceGroupName, string serverName, string databaseName)
@@ -122,6 +138,24 @@ namespace Azure.ResourceManager.Sql
             }
         }
 
+        internal RequestUriBuilder CreateGetRequestUri(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/databases/", false);
+            uri.AppendPath(databaseName, true);
+            uri.AppendPath("/auditingSettings/", false);
+            uri.AppendPath(blobAuditingPolicyName.ToString(), true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
         internal HttpMessage CreateGetRequest(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName)
         {
             var message = _pipeline.CreateMessage();
@@ -146,7 +180,7 @@ namespace Azure.ResourceManager.Sql
             return message;
         }
 
-        /// <summary> Gets a database&apos;s blob auditing policy. </summary>
+        /// <summary> Gets a database's blob auditing policy. </summary>
         /// <param name="subscriptionId"> The subscription ID that identifies an Azure subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal. </param>
         /// <param name="serverName"> The name of the server. </param>
@@ -155,7 +189,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="databaseName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="databaseName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DatabaseBlobAuditingPolicyData>> GetAsync(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName, CancellationToken cancellationToken = default)
+        public async Task<Response<SqlDatabaseBlobAuditingPolicyData>> GetAsync(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -168,19 +202,19 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        DatabaseBlobAuditingPolicyData value = default;
+                        SqlDatabaseBlobAuditingPolicyData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DatabaseBlobAuditingPolicyData.DeserializeDatabaseBlobAuditingPolicyData(document.RootElement);
+                        value = SqlDatabaseBlobAuditingPolicyData.DeserializeSqlDatabaseBlobAuditingPolicyData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((DatabaseBlobAuditingPolicyData)null, message.Response);
+                    return Response.FromValue((SqlDatabaseBlobAuditingPolicyData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
         }
 
-        /// <summary> Gets a database&apos;s blob auditing policy. </summary>
+        /// <summary> Gets a database's blob auditing policy. </summary>
         /// <param name="subscriptionId"> The subscription ID that identifies an Azure subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal. </param>
         /// <param name="serverName"> The name of the server. </param>
@@ -189,7 +223,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="databaseName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="databaseName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DatabaseBlobAuditingPolicyData> Get(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName, CancellationToken cancellationToken = default)
+        public Response<SqlDatabaseBlobAuditingPolicyData> Get(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -202,19 +236,37 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        DatabaseBlobAuditingPolicyData value = default;
+                        SqlDatabaseBlobAuditingPolicyData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DatabaseBlobAuditingPolicyData.DeserializeDatabaseBlobAuditingPolicyData(document.RootElement);
+                        value = SqlDatabaseBlobAuditingPolicyData.DeserializeSqlDatabaseBlobAuditingPolicyData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((DatabaseBlobAuditingPolicyData)null, message.Response);
+                    return Response.FromValue((SqlDatabaseBlobAuditingPolicyData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
         }
 
-        internal HttpMessage CreateCreateOrUpdateRequest(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName, DatabaseBlobAuditingPolicyData data)
+        internal RequestUriBuilder CreateCreateOrUpdateRequestUri(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName, SqlDatabaseBlobAuditingPolicyData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/databases/", false);
+            uri.AppendPath(databaseName, true);
+            uri.AppendPath("/auditingSettings/", false);
+            uri.AppendPath(blobAuditingPolicyName.ToString(), true);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateCreateOrUpdateRequest(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName, SqlDatabaseBlobAuditingPolicyData data)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -236,13 +288,13 @@ namespace Azure.ResourceManager.Sql
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(data);
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
         }
 
-        /// <summary> Creates or updates a database&apos;s blob auditing policy. </summary>
+        /// <summary> Creates or updates a database's blob auditing policy. </summary>
         /// <param name="subscriptionId"> The subscription ID that identifies an Azure subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal. </param>
         /// <param name="serverName"> The name of the server. </param>
@@ -252,7 +304,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="databaseName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="databaseName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<DatabaseBlobAuditingPolicyData>> CreateOrUpdateAsync(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName, DatabaseBlobAuditingPolicyData data, CancellationToken cancellationToken = default)
+        public async Task<Response<SqlDatabaseBlobAuditingPolicyData>> CreateOrUpdateAsync(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName, SqlDatabaseBlobAuditingPolicyData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -267,9 +319,9 @@ namespace Azure.ResourceManager.Sql
                 case 200:
                 case 201:
                     {
-                        DatabaseBlobAuditingPolicyData value = default;
+                        SqlDatabaseBlobAuditingPolicyData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = DatabaseBlobAuditingPolicyData.DeserializeDatabaseBlobAuditingPolicyData(document.RootElement);
+                        value = SqlDatabaseBlobAuditingPolicyData.DeserializeSqlDatabaseBlobAuditingPolicyData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -277,7 +329,7 @@ namespace Azure.ResourceManager.Sql
             }
         }
 
-        /// <summary> Creates or updates a database&apos;s blob auditing policy. </summary>
+        /// <summary> Creates or updates a database's blob auditing policy. </summary>
         /// <param name="subscriptionId"> The subscription ID that identifies an Azure subscription. </param>
         /// <param name="resourceGroupName"> The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal. </param>
         /// <param name="serverName"> The name of the server. </param>
@@ -287,7 +339,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/>, <paramref name="databaseName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="databaseName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<DatabaseBlobAuditingPolicyData> CreateOrUpdate(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName, DatabaseBlobAuditingPolicyData data, CancellationToken cancellationToken = default)
+        public Response<SqlDatabaseBlobAuditingPolicyData> CreateOrUpdate(string subscriptionId, string resourceGroupName, string serverName, string databaseName, BlobAuditingPolicyName blobAuditingPolicyName, SqlDatabaseBlobAuditingPolicyData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -302,14 +354,22 @@ namespace Azure.ResourceManager.Sql
                 case 200:
                 case 201:
                     {
-                        DatabaseBlobAuditingPolicyData value = default;
+                        SqlDatabaseBlobAuditingPolicyData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = DatabaseBlobAuditingPolicyData.DeserializeDatabaseBlobAuditingPolicyData(document.RootElement);
+                        value = SqlDatabaseBlobAuditingPolicyData.DeserializeSqlDatabaseBlobAuditingPolicyData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
                     throw new RequestFailedException(message.Response);
             }
+        }
+
+        internal RequestUriBuilder CreateListByDatabaseNextPageRequestUri(string nextLink, string subscriptionId, string resourceGroupName, string serverName, string databaseName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendRawNextLink(nextLink, false);
+            return uri;
         }
 
         internal HttpMessage CreateListByDatabaseNextPageRequest(string nextLink, string subscriptionId, string resourceGroupName, string serverName, string databaseName)

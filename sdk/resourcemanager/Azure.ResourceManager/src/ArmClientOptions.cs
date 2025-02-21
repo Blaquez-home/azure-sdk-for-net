@@ -3,6 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Text.Json;
 using Azure.Core;
 using Azure.ResourceManager.Resources;
 
@@ -27,13 +30,50 @@ namespace Azure.ResourceManager
         /// To find which API Versions are available in your environment you can use the <see cref="ResourceProviderResource.Get"/> method
         /// for the provider namespace you are interested in.
         /// </summary>
-        /// <param name="resourceType"> The resource type to set the version for. </param>
+        /// <param name="resourceType"> The resource type to set the version for. To determine the appropriate value, you can refer to the corresponding documentation or XML documentation comments of the API. Then, get its resource type from the Resource's ResourceType field.</param>
         /// <param name="apiVersion"> The api version to use. </param>
         public void SetApiVersion(ResourceType resourceType, string apiVersion)
         {
             Argument.AssertNotNullOrEmpty(apiVersion, nameof(apiVersion));
 
             ResourceApiVersionOverrides[resourceType] = apiVersion;
+        }
+
+        /// <summary>
+        /// Sets the api versions from an Azure Stack profile.
+        /// </summary>
+        public void SetApiVersionsFromProfile(AzureStackProfile profile)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            using (Stream stream = assembly.GetManifestResourceStream(profile.GetManifestName()))
+            {
+                var allProfile = BinaryData.FromStream(stream).ToObjectFromJson<Dictionary<string, Dictionary<string, object>>>();
+                var armProfile = allProfile["resource-manager"];
+                foreach (var keyValuePair in armProfile)
+                {
+                    var namespaceName = keyValuePair.Key;
+                    var element = (JsonElement)keyValuePair.Value;
+
+                    foreach (var apiVersionProperty in element.EnumerateObject())
+                    {
+                        var apiVersion = apiVersionProperty.Name;
+                        foreach (var resourceTypeItem in apiVersionProperty.Value.EnumerateArray())
+                        {
+                            string resourceTypeName = default;
+                            foreach (var property in resourceTypeItem.EnumerateObject())
+                            {
+                                if (property.NameEquals("resourceType"))
+                                {
+                                    resourceTypeName = property.Value.GetString();
+                                    break;
+                                }
+                            }
+                            var resourceType = $"{namespaceName}/{resourceTypeName}";
+                            ResourceApiVersionOverrides[resourceType] = apiVersion;
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -3,15 +3,16 @@
 
 using System;
 using System.Threading.Tasks;
-using Azure.AI.FormRecognizer.Tests;
 using Azure.AI.FormRecognizer.Training;
 using Azure.Core.TestFramework;
+using NUnit.Framework;
 
 namespace Azure.AI.FormRecognizer.Samples
 {
-    public partial class FormRecognizerSamples : SamplesBase<FormRecognizerTestEnvironment>
+    public partial class FormRecognizerSamples
     {
         [RecordedTest]
+        [Ignore("https://github.com/Azure/azure-sdk-for-net/issues/47689")]
         public async Task CopyModel()
         {
             #region Snippet:FormRecognizerSampleCreateCopySourceClientV3
@@ -31,7 +32,7 @@ namespace Azure.AI.FormRecognizer.Samples
 #if SNIPPET
             Uri trainingFileUri = new Uri("<trainingFileUri>");
 #else
-            Uri trainingFileUri = new Uri(TestEnvironment.BlobContainerSasUrlV2);
+            Uri trainingFileUri = new Uri(TestEnvironment.BlobContainerSasUrl);
 #endif
             TrainingOperation operation = await sourceClient.StartTrainingAsync(trainingFileUri, useTrainingLabels: false);
             Response<CustomFormModel> operationResponse = await operation.WaitForCompletionAsync();
@@ -54,8 +55,8 @@ namespace Azure.AI.FormRecognizer.Samples
             string resourceId = "<resourceId>";
             string resourceRegion = "<region>";
 #else
-            string resourceId = TestEnvironment.TargetResourceId;
-            string resourceRegion = TestEnvironment.TargetResourceRegion;
+            string resourceId = TestEnvironment.ResourceId;
+            string resourceRegion = TestEnvironment.ResourceRegion;
 #endif
             CopyAuthorization targetAuth = await targetClient.GetCopyAuthorizationAsync(resourceId, resourceRegion);
             #endregion

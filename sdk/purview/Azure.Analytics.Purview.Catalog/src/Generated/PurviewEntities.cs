@@ -8,13 +8,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 
 namespace Azure.Analytics.Purview.Catalog
 {
-    /// <summary> The PurviewEntities service client. </summary>
+    // Data plane generated sub-client.
+    /// <summary> The PurviewEntities sub-client. </summary>
     public partial class PurviewEntities
     {
         private static readonly string[] AuthorizationScopes = new string[] { "https://purview.azure.net/.default" };
@@ -47,137 +47,23 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Create or update an entity in Atlas.
+        /// [Protocol Method] Create or update an entity in Atlas.
         /// Existing entity is matched using its unique guid if supplied or by its unique attributes eg: qualifiedName.
         /// Map and array of collections are not well supported. E.g., array&lt;array&lt;int&gt;&gt;, array&lt;map&lt;string, int&gt;&gt;.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entity: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string,
-        ///     businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     classifications: [
-        ///       {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string,
-        ///         entityGuid: string,
-        ///         entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///         removePropagationsOnEntityDelete: boolean,
-        ///         validityPeriods: [
-        ///           {
-        ///             endTime: string,
-        ///             startTime: string,
-        ///             timeZone: string
-        ///           }
-        ///         ],
-        ///         source: string,
-        ///         sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///       }
-        ///     ],
-        ///     createTime: number,
-        ///     createdBy: string,
-        ///     customAttributes: Dictionary&lt;string, string&gt;,
-        ///     guid: string,
-        ///     homeId: string,
-        ///     isIncomplete: boolean,
-        ///     labels: [string],
-        ///     meanings: [
-        ///       {
-        ///         confidence: number,
-        ///         createdBy: string,
-        ///         description: string,
-        ///         displayText: string,
-        ///         expression: string,
-        ///         relationGuid: string,
-        ///         source: string,
-        ///         status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///         steward: string,
-        ///         termGuid: string
-        ///       }
-        ///     ],
-        ///     provenanceType: number,
-        ///     proxy: boolean,
-        ///     relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///     updateTime: number,
-        ///     updatedBy: string,
-        ///     version: number,
-        ///     source: string,
-        ///     sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///     contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='CreateOrUpdateAsync(RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> CreateOrUpdateAsync(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -197,137 +83,23 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Create or update an entity in Atlas.
+        /// [Protocol Method] Create or update an entity in Atlas.
         /// Existing entity is matched using its unique guid if supplied or by its unique attributes eg: qualifiedName.
         /// Map and array of collections are not well supported. E.g., array&lt;array&lt;int&gt;&gt;, array&lt;map&lt;string, int&gt;&gt;.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entity: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string,
-        ///     businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     classifications: [
-        ///       {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string,
-        ///         entityGuid: string,
-        ///         entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///         removePropagationsOnEntityDelete: boolean,
-        ///         validityPeriods: [
-        ///           {
-        ///             endTime: string,
-        ///             startTime: string,
-        ///             timeZone: string
-        ///           }
-        ///         ],
-        ///         source: string,
-        ///         sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///       }
-        ///     ],
-        ///     createTime: number,
-        ///     createdBy: string,
-        ///     customAttributes: Dictionary&lt;string, string&gt;,
-        ///     guid: string,
-        ///     homeId: string,
-        ///     isIncomplete: boolean,
-        ///     labels: [string],
-        ///     meanings: [
-        ///       {
-        ///         confidence: number,
-        ///         createdBy: string,
-        ///         description: string,
-        ///         displayText: string,
-        ///         expression: string,
-        ///         relationGuid: string,
-        ///         source: string,
-        ///         status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///         steward: string,
-        ///         termGuid: string
-        ///       }
-        ///     ],
-        ///     provenanceType: number,
-        ///     proxy: boolean,
-        ///     relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///     updateTime: number,
-        ///     updatedBy: string,
-        ///     version: number,
-        ///     source: string,
-        ///     sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///     contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='CreateOrUpdate(RequestContent,RequestContext)']/*" />
         public virtual Response CreateOrUpdate(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -346,87 +118,26 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> List entities in bulk identified by its GUIDs. </summary>
+        /// <summary>
+        /// [Protocol Method] List entities in bulk identified by its GUIDs.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guids"> An array of GUIDs of entities to list. </param>
         /// <param name="minExtInfo"> Whether to return minimal information for referred entities. </param>
         /// <param name="ignoreRelationships"> Whether to ignore relationship attributes. </param>
         /// <param name="excludeRelationshipTypes"> An array of the relationship types need to be excluded from the response. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guids"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       createTime: number,
-        ///       createdBy: string,
-        ///       customAttributes: Dictionary&lt;string, string&gt;,
-        ///       guid: string,
-        ///       homeId: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       provenanceType: number,
-        ///       proxy: boolean,
-        ///       relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       updateTime: number,
-        ///       updatedBy: string,
-        ///       version: number,
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///       contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetByGuidsAsync(IEnumerable<string> guids, bool? minExtInfo = null, bool? ignoreRelationships = null, IEnumerable<string> excludeRelationshipTypes = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetByGuidsAsync(IEnumerable{string},bool?,bool?,IEnumerable{string},RequestContext)']/*" />
+        public virtual async Task<Response> GetByGuidsAsync(IEnumerable<string> guids, bool? minExtInfo, bool? ignoreRelationships, IEnumerable<string> excludeRelationshipTypes, RequestContext context)
         {
             Argument.AssertNotNull(guids, nameof(guids));
 
@@ -444,87 +155,26 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> List entities in bulk identified by its GUIDs. </summary>
+        /// <summary>
+        /// [Protocol Method] List entities in bulk identified by its GUIDs.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guids"> An array of GUIDs of entities to list. </param>
         /// <param name="minExtInfo"> Whether to return minimal information for referred entities. </param>
         /// <param name="ignoreRelationships"> Whether to ignore relationship attributes. </param>
         /// <param name="excludeRelationshipTypes"> An array of the relationship types need to be excluded from the response. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guids"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       createTime: number,
-        ///       createdBy: string,
-        ///       customAttributes: Dictionary&lt;string, string&gt;,
-        ///       guid: string,
-        ///       homeId: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       provenanceType: number,
-        ///       proxy: boolean,
-        ///       relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       updateTime: number,
-        ///       updatedBy: string,
-        ///       version: number,
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///       contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetByGuids(IEnumerable<string> guids, bool? minExtInfo = null, bool? ignoreRelationships = null, IEnumerable<string> excludeRelationshipTypes = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetByGuids(IEnumerable{string},bool?,bool?,IEnumerable{string},RequestContext)']/*" />
+        public virtual Response GetByGuids(IEnumerable<string> guids, bool? minExtInfo, bool? ignoreRelationships, IEnumerable<string> excludeRelationshipTypes, RequestContext context)
         {
             Argument.AssertNotNull(guids, nameof(guids));
 
@@ -543,139 +193,23 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Create or update entities in Atlas in bulk.
+        /// [Protocol Method] Create or update entities in Atlas in bulk.
         /// Existing entity is matched using its unique guid if supplied or by its unique attributes eg: qualifiedName.
         /// Map and array of collections are not well supported. E.g., array&lt;array&lt;int&gt;&gt;, array&lt;map&lt;string, int&gt;&gt;.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       createTime: number,
-        ///       createdBy: string,
-        ///       customAttributes: Dictionary&lt;string, string&gt;,
-        ///       guid: string,
-        ///       homeId: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       provenanceType: number,
-        ///       proxy: boolean,
-        ///       relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       updateTime: number,
-        ///       updatedBy: string,
-        ///       version: number,
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///       contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='CreateOrUpdateEntitiesAsync(RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> CreateOrUpdateEntitiesAsync(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -695,139 +229,23 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Create or update entities in Atlas in bulk.
+        /// [Protocol Method] Create or update entities in Atlas in bulk.
         /// Existing entity is matched using its unique guid if supplied or by its unique attributes eg: qualifiedName.
         /// Map and array of collections are not well supported. E.g., array&lt;array&lt;int&gt;&gt;, array&lt;map&lt;string, int&gt;&gt;.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       createTime: number,
-        ///       createdBy: string,
-        ///       customAttributes: Dictionary&lt;string, string&gt;,
-        ///       guid: string,
-        ///       homeId: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       provenanceType: number,
-        ///       proxy: boolean,
-        ///       relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       updateTime: number,
-        ///       updatedBy: string,
-        ///       version: number,
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///       contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='CreateOrUpdateEntities(RequestContent,RequestContext)']/*" />
         public virtual Response CreateOrUpdateEntities(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -846,74 +264,23 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete a list of entities in bulk identified by their GUIDs or unique attributes. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete a list of entities in bulk identified by their GUIDs or unique attributes.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guids"> An array of GUIDs of entities to delete. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guids"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> DeleteByGuidsAsync(IEnumerable<string> guids, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteByGuidsAsync(IEnumerable{string},RequestContext)']/*" />
+        public virtual async Task<Response> DeleteByGuidsAsync(IEnumerable<string> guids, RequestContext context)
         {
             Argument.AssertNotNull(guids, nameof(guids));
 
@@ -931,74 +298,23 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete a list of entities in bulk identified by their GUIDs or unique attributes. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete a list of entities in bulk identified by their GUIDs or unique attributes.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guids"> An array of GUIDs of entities to delete. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guids"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response DeleteByGuids(IEnumerable<string> guids, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteByGuids(IEnumerable{string},RequestContext)']/*" />
+        public virtual Response DeleteByGuids(IEnumerable<string> guids, RequestContext context)
         {
             Argument.AssertNotNull(guids, nameof(guids));
 
@@ -1016,42 +332,22 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Associate a classification to multiple entities in bulk. </summary>
+        /// <summary>
+        /// [Protocol Method] Associate a classification to multiple entities in bulk.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classification: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string,
-        ///     entityGuid: string,
-        ///     entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///     removePropagationsOnEntityDelete: boolean,
-        ///     validityPeriods: [
-        ///       {
-        ///         endTime: string,
-        ///         startTime: string,
-        ///         timeZone: string
-        ///       }
-        ///     ],
-        ///     source: string,
-        ///     sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///   },
-        ///   entityGuids: [string]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddClassificationAsync(RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> AddClassificationAsync(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -1070,42 +366,22 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Associate a classification to multiple entities in bulk. </summary>
+        /// <summary>
+        /// [Protocol Method] Associate a classification to multiple entities in bulk.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   classification: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string,
-        ///     entityGuid: string,
-        ///     entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///     removePropagationsOnEntityDelete: boolean,
-        ///     validityPeriods: [
-        ///       {
-        ///         endTime: string,
-        ///         startTime: string,
-        ///         timeZone: string
-        ///       }
-        ///     ],
-        ///     source: string,
-        ///     sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///   },
-        ///   entityGuids: [string]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddClassification(RequestContent,RequestContext)']/*" />
         public virtual Response AddClassification(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -1124,85 +400,26 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get complete definition of an entity given its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Get complete definition of an entity given its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="minExtInfo"> Whether to return minimal information for referred entities. </param>
         /// <param name="ignoreRelationships"> Whether to ignore relationship attributes. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entity: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string,
-        ///     businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     classifications: [
-        ///       {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string,
-        ///         entityGuid: string,
-        ///         entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///         removePropagationsOnEntityDelete: boolean,
-        ///         validityPeriods: [
-        ///           {
-        ///             endTime: string,
-        ///             startTime: string,
-        ///             timeZone: string
-        ///           }
-        ///         ],
-        ///         source: string,
-        ///         sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///       }
-        ///     ],
-        ///     createTime: number,
-        ///     createdBy: string,
-        ///     customAttributes: Dictionary&lt;string, string&gt;,
-        ///     guid: string,
-        ///     homeId: string,
-        ///     isIncomplete: boolean,
-        ///     labels: [string],
-        ///     meanings: [
-        ///       {
-        ///         confidence: number,
-        ///         createdBy: string,
-        ///         description: string,
-        ///         displayText: string,
-        ///         expression: string,
-        ///         relationGuid: string,
-        ///         source: string,
-        ///         status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///         steward: string,
-        ///         termGuid: string
-        ///       }
-        ///     ],
-        ///     provenanceType: number,
-        ///     proxy: boolean,
-        ///     relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///     updateTime: number,
-        ///     updatedBy: string,
-        ///     version: number,
-        ///     source: string,
-        ///     sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///     contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetByGuidAsync(string guid, bool? minExtInfo = null, bool? ignoreRelationships = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetByGuidAsync(string,bool?,bool?,RequestContext)']/*" />
+        public virtual async Task<Response> GetByGuidAsync(string guid, bool? minExtInfo, bool? ignoreRelationships, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
 
@@ -1220,85 +437,26 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get complete definition of an entity given its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Get complete definition of an entity given its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="minExtInfo"> Whether to return minimal information for referred entities. </param>
         /// <param name="ignoreRelationships"> Whether to ignore relationship attributes. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entity: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string,
-        ///     businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     classifications: [
-        ///       {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string,
-        ///         entityGuid: string,
-        ///         entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///         removePropagationsOnEntityDelete: boolean,
-        ///         validityPeriods: [
-        ///           {
-        ///             endTime: string,
-        ///             startTime: string,
-        ///             timeZone: string
-        ///           }
-        ///         ],
-        ///         source: string,
-        ///         sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///       }
-        ///     ],
-        ///     createTime: number,
-        ///     createdBy: string,
-        ///     customAttributes: Dictionary&lt;string, string&gt;,
-        ///     guid: string,
-        ///     homeId: string,
-        ///     isIncomplete: boolean,
-        ///     labels: [string],
-        ///     meanings: [
-        ///       {
-        ///         confidence: number,
-        ///         createdBy: string,
-        ///         description: string,
-        ///         displayText: string,
-        ///         expression: string,
-        ///         relationGuid: string,
-        ///         source: string,
-        ///         status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///         steward: string,
-        ///         termGuid: string
-        ///       }
-        ///     ],
-        ///     provenanceType: number,
-        ///     proxy: boolean,
-        ///     relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///     updateTime: number,
-        ///     updatedBy: string,
-        ///     version: number,
-        ///     source: string,
-        ///     sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///     contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetByGuid(string guid, bool? minExtInfo = null, bool? ignoreRelationships = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetByGuid(string,bool?,bool?,RequestContext)']/*" />
+        public virtual Response GetByGuid(string guid, bool? minExtInfo, bool? ignoreRelationships, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
 
@@ -1317,80 +475,27 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Update entity partially - create or update entity attribute identified by its GUID.
+        /// [Protocol Method] Update entity partially - create or update entity attribute identified by its GUID.
         /// Supports only primitive attribute type and entity references.
         /// It does not support updating complex types like arrays, and maps.
         /// Null updates are not possible.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="name"> The name of the attribute. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/>, <paramref name="name"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='PartialUpdateEntityAttributeByGuidAsync(string,string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> PartialUpdateEntityAttributeByGuidAsync(string guid, string name, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -1412,80 +517,27 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Update entity partially - create or update entity attribute identified by its GUID.
+        /// [Protocol Method] Update entity partially - create or update entity attribute identified by its GUID.
         /// Supports only primitive attribute type and entity references.
         /// It does not support updating complex types like arrays, and maps.
         /// Null updates are not possible.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="name"> The name of the attribute. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/>, <paramref name="name"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='PartialUpdateEntityAttributeByGuid(string,string,RequestContent,RequestContext)']/*" />
         public virtual Response PartialUpdateEntityAttributeByGuid(string guid, string name, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -1506,75 +558,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete an entity identified by its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete an entity identified by its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> DeleteByGuidAsync(string guid, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteByGuidAsync(string,RequestContext)']/*" />
+        public virtual async Task<Response> DeleteByGuidAsync(string guid, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
 
@@ -1592,75 +593,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete an entity identified by its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete an entity identified by its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response DeleteByGuid(string guid, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteByGuid(string,RequestContext)']/*" />
+        public virtual Response DeleteByGuid(string guid, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
 
@@ -1678,42 +628,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> List classifications for a given entity represented by a GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] List classifications for a given entity represented by a GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="classificationName"> The name of the classification. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> or <paramref name="classificationName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> or <paramref name="classificationName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   typeName: string,
-        ///   lastModifiedTS: string,
-        ///   entityGuid: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   removePropagationsOnEntityDelete: boolean,
-        ///   validityPeriods: [
-        ///     {
-        ///       endTime: string,
-        ///       startTime: string,
-        ///       timeZone: string
-        ///     }
-        ///   ],
-        ///   source: string,
-        ///   sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetClassificationAsync(string guid, string classificationName, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetClassificationAsync(string,string,RequestContext)']/*" />
+        public virtual async Task<Response> GetClassificationAsync(string guid, string classificationName, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
             Argument.AssertNotNullOrEmpty(classificationName, nameof(classificationName));
@@ -1732,42 +665,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> List classifications for a given entity represented by a GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] List classifications for a given entity represented by a GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="classificationName"> The name of the classification. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> or <paramref name="classificationName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> or <paramref name="classificationName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   typeName: string,
-        ///   lastModifiedTS: string,
-        ///   entityGuid: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   removePropagationsOnEntityDelete: boolean,
-        ///   validityPeriods: [
-        ///     {
-        ///       endTime: string,
-        ///       startTime: string,
-        ///       timeZone: string
-        ///     }
-        ///   ],
-        ///   source: string,
-        ///   sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetClassification(string guid, string classificationName, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetClassification(string,string,RequestContext)']/*" />
+        public virtual Response GetClassification(string guid, string classificationName, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
             Argument.AssertNotNullOrEmpty(classificationName, nameof(classificationName));
@@ -1786,22 +702,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete a given classification from an existing entity represented by a GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete a given classification from an existing entity represented by a GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="classificationName"> The name of the classification. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> or <paramref name="classificationName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> or <paramref name="classificationName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteClassificationAsync(string,string,RequestContext)']/*" />
         public virtual async Task<Response> DeleteClassificationAsync(string guid, string classificationName, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -1821,22 +739,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete a given classification from an existing entity represented by a GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete a given classification from an existing entity represented by a GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="classificationName"> The name of the classification. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> or <paramref name="classificationName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> or <paramref name="classificationName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteClassification(string,string,RequestContext)']/*" />
         public virtual Response DeleteClassification(string guid, string classificationName, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -1856,32 +776,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> List classifications for a given entity represented by a GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] List classifications for a given entity represented by a GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   list: [AnyObject],
-        ///   pageSize: number,
-        ///   sortBy: string,
-        ///   sortType: &quot;NONE&quot; | &quot;ASC&quot; | &quot;DESC&quot;,
-        ///   startIndex: number,
-        ///   totalCount: number
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetClassificationsAsync(string guid, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetClassificationsAsync(string,RequestContext)']/*" />
+        public virtual async Task<Response> GetClassificationsAsync(string guid, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
 
@@ -1899,32 +811,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> List classifications for a given entity represented by a GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] List classifications for a given entity represented by a GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   list: [AnyObject],
-        ///   pageSize: number,
-        ///   sortBy: string,
-        ///   sortType: &quot;NONE&quot; | &quot;ASC&quot; | &quot;DESC&quot;,
-        ///   startIndex: number,
-        ///   totalCount: number
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetClassifications(string guid, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetClassifications(string,RequestContext)']/*" />
+        public virtual Response GetClassifications(string guid, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
 
@@ -1942,41 +846,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Add classifications to an existing entity represented by a GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Add classifications to an existing entity represented by a GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   typeName: string,
-        ///   lastModifiedTS: string,
-        ///   entityGuid: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   removePropagationsOnEntityDelete: boolean,
-        ///   validityPeriods: [
-        ///     {
-        ///       endTime: string,
-        ///       startTime: string,
-        ///       timeZone: string
-        ///     }
-        ///   ],
-        ///   source: string,
-        ///   sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddClassificationsAsync(string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> AddClassificationsAsync(string guid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -1996,41 +883,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Add classifications to an existing entity represented by a GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Add classifications to an existing entity represented by a GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   typeName: string,
-        ///   lastModifiedTS: string,
-        ///   entityGuid: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   removePropagationsOnEntityDelete: boolean,
-        ///   validityPeriods: [
-        ///     {
-        ///       endTime: string,
-        ///       startTime: string,
-        ///       timeZone: string
-        ///     }
-        ///   ],
-        ///   source: string,
-        ///   sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddClassifications(string,RequestContent,RequestContext)']/*" />
         public virtual Response AddClassifications(string guid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -2050,41 +920,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update classifications to an existing entity represented by a guid. </summary>
+        /// <summary>
+        /// [Protocol Method] Update classifications to an existing entity represented by a guid.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   typeName: string,
-        ///   lastModifiedTS: string,
-        ///   entityGuid: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   removePropagationsOnEntityDelete: boolean,
-        ///   validityPeriods: [
-        ///     {
-        ///       endTime: string,
-        ///       startTime: string,
-        ///       timeZone: string
-        ///     }
-        ///   ],
-        ///   source: string,
-        ///   sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='UpdateClassificationsAsync(string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> UpdateClassificationsAsync(string guid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -2104,41 +957,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update classifications to an existing entity represented by a guid. </summary>
+        /// <summary>
+        /// [Protocol Method] Update classifications to an existing entity represented by a guid.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   typeName: string,
-        ///   lastModifiedTS: string,
-        ///   entityGuid: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   removePropagationsOnEntityDelete: boolean,
-        ///   validityPeriods: [
-        ///     {
-        ///       endTime: string,
-        ///       startTime: string,
-        ///       timeZone: string
-        ///     }
-        ///   ],
-        ///   source: string,
-        ///   sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='UpdateClassifications(string,RequestContent,RequestContext)']/*" />
         public virtual Response UpdateClassifications(string guid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -2159,92 +995,31 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Get complete definition of an entity given its type and unique attribute.
+        /// [Protocol Method] Get complete definition of an entity given its type and unique attribute.
         /// In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format:
-        /// attr:\&lt;attrName&gt;=&lt;attrValue&gt;. 
+        /// attr:\&lt;attrName&gt;=&lt;attrValue&gt;.
         /// NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName.
         /// The REST request would look something like this:
         /// GET /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="minExtInfo"> Whether to return minimal information for referred entities. </param>
         /// <param name="ignoreRelationships"> Whether to ignore relationship attributes. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entity: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string,
-        ///     businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     classifications: [
-        ///       {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string,
-        ///         entityGuid: string,
-        ///         entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///         removePropagationsOnEntityDelete: boolean,
-        ///         validityPeriods: [
-        ///           {
-        ///             endTime: string,
-        ///             startTime: string,
-        ///             timeZone: string
-        ///           }
-        ///         ],
-        ///         source: string,
-        ///         sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///       }
-        ///     ],
-        ///     createTime: number,
-        ///     createdBy: string,
-        ///     customAttributes: Dictionary&lt;string, string&gt;,
-        ///     guid: string,
-        ///     homeId: string,
-        ///     isIncomplete: boolean,
-        ///     labels: [string],
-        ///     meanings: [
-        ///       {
-        ///         confidence: number,
-        ///         createdBy: string,
-        ///         description: string,
-        ///         displayText: string,
-        ///         expression: string,
-        ///         relationGuid: string,
-        ///         source: string,
-        ///         status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///         steward: string,
-        ///         termGuid: string
-        ///       }
-        ///     ],
-        ///     provenanceType: number,
-        ///     proxy: boolean,
-        ///     relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///     updateTime: number,
-        ///     updatedBy: string,
-        ///     version: number,
-        ///     source: string,
-        ///     sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///     contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetByUniqueAttributesAsync(string typeName, bool? minExtInfo = null, bool? ignoreRelationships = null, string attrQualifiedName = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetByUniqueAttributesAsync(string,bool?,bool?,string,RequestContext)']/*" />
+        public virtual async Task<Response> GetByUniqueAttributesAsync(string typeName, bool? minExtInfo, bool? ignoreRelationships, string attrQualifiedName, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
 
@@ -2263,92 +1038,31 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Get complete definition of an entity given its type and unique attribute.
+        /// [Protocol Method] Get complete definition of an entity given its type and unique attribute.
         /// In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format:
-        /// attr:\&lt;attrName&gt;=&lt;attrValue&gt;. 
+        /// attr:\&lt;attrName&gt;=&lt;attrValue&gt;.
         /// NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName.
         /// The REST request would look something like this:
         /// GET /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="minExtInfo"> Whether to return minimal information for referred entities. </param>
         /// <param name="ignoreRelationships"> Whether to ignore relationship attributes. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entity: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string,
-        ///     businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     classifications: [
-        ///       {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string,
-        ///         entityGuid: string,
-        ///         entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///         removePropagationsOnEntityDelete: boolean,
-        ///         validityPeriods: [
-        ///           {
-        ///             endTime: string,
-        ///             startTime: string,
-        ///             timeZone: string
-        ///           }
-        ///         ],
-        ///         source: string,
-        ///         sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///       }
-        ///     ],
-        ///     createTime: number,
-        ///     createdBy: string,
-        ///     customAttributes: Dictionary&lt;string, string&gt;,
-        ///     guid: string,
-        ///     homeId: string,
-        ///     isIncomplete: boolean,
-        ///     labels: [string],
-        ///     meanings: [
-        ///       {
-        ///         confidence: number,
-        ///         createdBy: string,
-        ///         description: string,
-        ///         displayText: string,
-        ///         expression: string,
-        ///         relationGuid: string,
-        ///         source: string,
-        ///         status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///         steward: string,
-        ///         termGuid: string
-        ///       }
-        ///     ],
-        ///     provenanceType: number,
-        ///     proxy: boolean,
-        ///     relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///     updateTime: number,
-        ///     updatedBy: string,
-        ///     version: number,
-        ///     source: string,
-        ///     sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///     contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetByUniqueAttributes(string typeName, bool? minExtInfo = null, bool? ignoreRelationships = null, string attrQualifiedName = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetByUniqueAttributes(string,bool?,bool?,string,RequestContext)']/*" />
+        public virtual Response GetByUniqueAttributes(string typeName, bool? minExtInfo, bool? ignoreRelationships, string attrQualifiedName, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
 
@@ -2367,7 +1081,7 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Update entity partially - Allow a subset of attributes to be updated on
+        /// [Protocol Method] Update entity partially - Allow a subset of attributes to be updated on
         /// an entity which is identified by its type and unique attribute  eg: Referenceable.qualifiedName.
         /// Null updates are not possible.
         /// In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format:
@@ -2375,137 +1089,23 @@ namespace Azure.Analytics.Purview.Catalog
         /// NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName.
         /// The REST request would look something like this:
         /// PUT /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entity: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string,
-        ///     businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     classifications: [
-        ///       {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string,
-        ///         entityGuid: string,
-        ///         entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///         removePropagationsOnEntityDelete: boolean,
-        ///         validityPeriods: [
-        ///           {
-        ///             endTime: string,
-        ///             startTime: string,
-        ///             timeZone: string
-        ///           }
-        ///         ],
-        ///         source: string,
-        ///         sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///       }
-        ///     ],
-        ///     createTime: number,
-        ///     createdBy: string,
-        ///     customAttributes: Dictionary&lt;string, string&gt;,
-        ///     guid: string,
-        ///     homeId: string,
-        ///     isIncomplete: boolean,
-        ///     labels: [string],
-        ///     meanings: [
-        ///       {
-        ///         confidence: number,
-        ///         createdBy: string,
-        ///         description: string,
-        ///         displayText: string,
-        ///         expression: string,
-        ///         relationGuid: string,
-        ///         source: string,
-        ///         status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///         steward: string,
-        ///         termGuid: string
-        ///       }
-        ///     ],
-        ///     provenanceType: number,
-        ///     proxy: boolean,
-        ///     relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///     updateTime: number,
-        ///     updatedBy: string,
-        ///     version: number,
-        ///     source: string,
-        ///     sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///     contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='PartialUpdateEntityByUniqueAttributesAsync(string,RequestContent,string,RequestContext)']/*" />
         public virtual async Task<Response> PartialUpdateEntityByUniqueAttributesAsync(string typeName, RequestContent content, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -2526,7 +1126,7 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Update entity partially - Allow a subset of attributes to be updated on
+        /// [Protocol Method] Update entity partially - Allow a subset of attributes to be updated on
         /// an entity which is identified by its type and unique attribute  eg: Referenceable.qualifiedName.
         /// Null updates are not possible.
         /// In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format:
@@ -2534,137 +1134,23 @@ namespace Azure.Analytics.Purview.Catalog
         /// NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName.
         /// The REST request would look something like this:
         /// PUT /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entity: {
-        ///     attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     typeName: string,
-        ///     lastModifiedTS: string,
-        ///     businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     classifications: [
-        ///       {
-        ///         attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///         typeName: string,
-        ///         lastModifiedTS: string,
-        ///         entityGuid: string,
-        ///         entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///         removePropagationsOnEntityDelete: boolean,
-        ///         validityPeriods: [
-        ///           {
-        ///             endTime: string,
-        ///             startTime: string,
-        ///             timeZone: string
-        ///           }
-        ///         ],
-        ///         source: string,
-        ///         sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///       }
-        ///     ],
-        ///     createTime: number,
-        ///     createdBy: string,
-        ///     customAttributes: Dictionary&lt;string, string&gt;,
-        ///     guid: string,
-        ///     homeId: string,
-        ///     isIncomplete: boolean,
-        ///     labels: [string],
-        ///     meanings: [
-        ///       {
-        ///         confidence: number,
-        ///         createdBy: string,
-        ///         description: string,
-        ///         displayText: string,
-        ///         expression: string,
-        ///         relationGuid: string,
-        ///         source: string,
-        ///         status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///         steward: string,
-        ///         termGuid: string
-        ///       }
-        ///     ],
-        ///     provenanceType: number,
-        ///     proxy: boolean,
-        ///     relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///     status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///     updateTime: number,
-        ///     updatedBy: string,
-        ///     version: number,
-        ///     source: string,
-        ///     sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///     contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///   }
-        /// }
-        /// </code>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='PartialUpdateEntityByUniqueAttributes(string,RequestContent,string,RequestContext)']/*" />
         public virtual Response PartialUpdateEntityByUniqueAttributes(string typeName, RequestContent content, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -2685,82 +1171,29 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Delete an entity identified by its type and unique attributes.
+        /// [Protocol Method] Delete an entity identified by its type and unique attributes.
         /// In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format:
         /// attr:\&lt;attrName&gt;=\&lt;attrValue&gt;.
         /// NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName.
         /// The REST request would look something like this:
         /// DELETE /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> DeleteByUniqueAttributeAsync(string typeName, string attrQualifiedName = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteByUniqueAttributeAsync(string,string,RequestContext)']/*" />
+        public virtual async Task<Response> DeleteByUniqueAttributeAsync(string typeName, string attrQualifiedName, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
 
@@ -2779,82 +1212,29 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Delete an entity identified by its type and unique attributes.
+        /// [Protocol Method] Delete an entity identified by its type and unique attributes.
         /// In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format:
         /// attr:\&lt;attrName&gt;=\&lt;attrValue&gt;.
         /// NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName.
         /// The REST request would look something like this:
         /// DELETE /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   guidAssignments: Dictionary&lt;string, string&gt;,
-        ///   mutatedEntities: Dictionary&lt;string, AtlasEntityHeader[]&gt;,
-        ///   partialUpdatedEntities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       classificationNames: [string],
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       displayText: string,
-        ///       guid: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meaningNames: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response DeleteByUniqueAttribute(string typeName, string attrQualifiedName = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteByUniqueAttribute(string,string,RequestContext)']/*" />
+        public virtual Response DeleteByUniqueAttribute(string typeName, string attrQualifiedName, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
 
@@ -2872,23 +1252,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete a given classification from an entity identified by its type and unique attributes. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete a given classification from an entity identified by its type and unique attributes.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="classificationName"> The name of the classification. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> or <paramref name="classificationName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> or <paramref name="classificationName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteClassificationByUniqueAttributeAsync(string,string,string,RequestContext)']/*" />
         public virtual async Task<Response> DeleteClassificationByUniqueAttributeAsync(string typeName, string classificationName, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -2908,23 +1290,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete a given classification from an entity identified by its type and unique attributes. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete a given classification from an entity identified by its type and unique attributes.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="classificationName"> The name of the classification. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> or <paramref name="classificationName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> or <paramref name="classificationName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteClassificationByUniqueAttribute(string,string,string,RequestContext)']/*" />
         public virtual Response DeleteClassificationByUniqueAttribute(string typeName, string classificationName, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -2944,42 +1328,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Add classification to the entity identified by its type and unique attributes. </summary>
+        /// <summary>
+        /// [Protocol Method] Add classification to the entity identified by its type and unique attributes.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   typeName: string,
-        ///   lastModifiedTS: string,
-        ///   entityGuid: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   removePropagationsOnEntityDelete: boolean,
-        ///   validityPeriods: [
-        ///     {
-        ///       endTime: string,
-        ///       startTime: string,
-        ///       timeZone: string
-        ///     }
-        ///   ],
-        ///   source: string,
-        ///   sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddClassificationsByUniqueAttributeAsync(string,RequestContent,string,RequestContext)']/*" />
         public virtual async Task<Response> AddClassificationsByUniqueAttributeAsync(string typeName, RequestContent content, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -2999,42 +1366,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Add classification to the entity identified by its type and unique attributes. </summary>
+        /// <summary>
+        /// [Protocol Method] Add classification to the entity identified by its type and unique attributes.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   typeName: string,
-        ///   lastModifiedTS: string,
-        ///   entityGuid: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   removePropagationsOnEntityDelete: boolean,
-        ///   validityPeriods: [
-        ///     {
-        ///       endTime: string,
-        ///       startTime: string,
-        ///       timeZone: string
-        ///     }
-        ///   ],
-        ///   source: string,
-        ///   sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddClassificationsByUniqueAttribute(string,RequestContent,string,RequestContext)']/*" />
         public virtual Response AddClassificationsByUniqueAttribute(string typeName, RequestContent content, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -3054,42 +1404,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update classification on an entity identified by its type and unique attributes. </summary>
+        /// <summary>
+        /// [Protocol Method] Update classification on an entity identified by its type and unique attributes.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   typeName: string,
-        ///   lastModifiedTS: string,
-        ///   entityGuid: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   removePropagationsOnEntityDelete: boolean,
-        ///   validityPeriods: [
-        ///     {
-        ///       endTime: string,
-        ///       startTime: string,
-        ///       timeZone: string
-        ///     }
-        ///   ],
-        ///   source: string,
-        ///   sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='UpdateClassificationsByUniqueAttributeAsync(string,RequestContent,string,RequestContext)']/*" />
         public virtual async Task<Response> UpdateClassificationsByUniqueAttributeAsync(string typeName, RequestContent content, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -3109,42 +1442,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Update classification on an entity identified by its type and unique attributes. </summary>
+        /// <summary>
+        /// [Protocol Method] Update classification on an entity identified by its type and unique attributes.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> or <paramref name="content"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   typeName: string,
-        ///   lastModifiedTS: string,
-        ///   entityGuid: string,
-        ///   entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///   removePropagationsOnEntityDelete: boolean,
-        ///   validityPeriods: [
-        ///     {
-        ///       endTime: string,
-        ///       startTime: string,
-        ///       timeZone: string
-        ///     }
-        ///   ],
-        ///   source: string,
-        ///   sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='UpdateClassificationsByUniqueAttribute(string,RequestContent,string,RequestContext)']/*" />
         public virtual Response UpdateClassificationsByUniqueAttribute(string typeName, RequestContent content, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -3164,25 +1480,22 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Set classifications on entities in bulk. </summary>
+        /// <summary>
+        /// [Protocol Method] Set classifications on entities in bulk.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   guidHeaderMap: Dictionary&lt;string, AtlasEntityHeader&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='SetClassificationsAsync(RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> SetClassificationsAsync(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -3201,25 +1514,22 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Set classifications on entities in bulk. </summary>
+        /// <summary>
+        /// [Protocol Method] Set classifications on entities in bulk.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="content"/> is null. </exception>
-        /// <remarks>
-        /// Schema for <c>Request Body</c>:
-        /// <code>{
-        ///   guidHeaderMap: Dictionary&lt;string, AtlasEntityHeader&gt;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='SetClassifications(RequestContent,RequestContext)']/*" />
         public virtual Response SetClassifications(RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNull(content, nameof(content));
@@ -3239,99 +1549,36 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Bulk API to retrieve list of entities identified by its unique attributes.
-        /// 
+        /// [Protocol Method] Bulk API to retrieve list of entities identified by its unique attributes.
+        ///
         /// In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format
-        /// 
+        ///
         /// typeName=\&lt;typeName&gt;&amp;attr_1:\&lt;attrName&gt;=\&lt;attrValue&gt;&amp;attr_2:\&lt;attrName&gt;=\&lt;attrValue&gt;&amp;attr_3:\&lt;attrName&gt;=\&lt;attrValue&gt;
-        /// 
+        ///
         /// NOTE: The attrName should be an unique attribute for the given entity-type
-        /// 
+        ///
         /// The REST request would look something like this
-        /// 
+        ///
         /// GET /v2/entity/bulk/uniqueAttribute/type/hive_db?attr_0:qualifiedName=db1@cl1&amp;attr_2:qualifiedName=db2@cl1
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="minExtInfo"> Whether to return minimal information for referred entities. </param>
         /// <param name="ignoreRelationships"> Whether to ignore relationship attributes. </param>
         /// <param name="attrNQualifiedName"> Qualified name of an entity. E.g. to find 2 entities you can set attrs_0:qualifiedName=db1@cl1&amp;attrs_2:qualifiedName=db2@cl1. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       createTime: number,
-        ///       createdBy: string,
-        ///       customAttributes: Dictionary&lt;string, string&gt;,
-        ///       guid: string,
-        ///       homeId: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       provenanceType: number,
-        ///       proxy: boolean,
-        ///       relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       updateTime: number,
-        ///       updatedBy: string,
-        ///       version: number,
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///       contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetEntitiesByUniqueAttributesAsync(string typeName, bool? minExtInfo = null, bool? ignoreRelationships = null, string attrNQualifiedName = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetEntitiesByUniqueAttributesAsync(string,bool?,bool?,string,RequestContext)']/*" />
+        public virtual async Task<Response> GetEntitiesByUniqueAttributesAsync(string typeName, bool? minExtInfo, bool? ignoreRelationships, string attrNQualifiedName, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
 
@@ -3350,99 +1597,36 @@ namespace Azure.Analytics.Purview.Catalog
         }
 
         /// <summary>
-        /// Bulk API to retrieve list of entities identified by its unique attributes.
-        /// 
+        /// [Protocol Method] Bulk API to retrieve list of entities identified by its unique attributes.
+        ///
         /// In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format
-        /// 
+        ///
         /// typeName=\&lt;typeName&gt;&amp;attr_1:\&lt;attrName&gt;=\&lt;attrValue&gt;&amp;attr_2:\&lt;attrName&gt;=\&lt;attrValue&gt;&amp;attr_3:\&lt;attrName&gt;=\&lt;attrValue&gt;
-        /// 
+        ///
         /// NOTE: The attrName should be an unique attribute for the given entity-type
-        /// 
+        ///
         /// The REST request would look something like this
-        /// 
+        ///
         /// GET /v2/entity/bulk/uniqueAttribute/type/hive_db?attr_0:qualifiedName=db1@cl1&amp;attr_2:qualifiedName=db2@cl1
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="minExtInfo"> Whether to return minimal information for referred entities. </param>
         /// <param name="ignoreRelationships"> Whether to ignore relationship attributes. </param>
         /// <param name="attrNQualifiedName"> Qualified name of an entity. E.g. to find 2 entities you can set attrs_0:qualifiedName=db1@cl1&amp;attrs_2:qualifiedName=db2@cl1. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   referredEntities: Dictionary&lt;string, AtlasEntity&gt;,
-        ///   entities: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       businessAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       classifications: [
-        ///         {
-        ///           attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///           typeName: string,
-        ///           lastModifiedTS: string,
-        ///           entityGuid: string,
-        ///           entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///           removePropagationsOnEntityDelete: boolean,
-        ///           validityPeriods: [
-        ///             {
-        ///               endTime: string,
-        ///               startTime: string,
-        ///               timeZone: string
-        ///             }
-        ///           ],
-        ///           source: string,
-        ///           sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///         }
-        ///       ],
-        ///       createTime: number,
-        ///       createdBy: string,
-        ///       customAttributes: Dictionary&lt;string, string&gt;,
-        ///       guid: string,
-        ///       homeId: string,
-        ///       isIncomplete: boolean,
-        ///       labels: [string],
-        ///       meanings: [
-        ///         {
-        ///           confidence: number,
-        ///           createdBy: string,
-        ///           description: string,
-        ///           displayText: string,
-        ///           expression: string,
-        ///           relationGuid: string,
-        ///           source: string,
-        ///           status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///           steward: string,
-        ///           termGuid: string
-        ///         }
-        ///       ],
-        ///       provenanceType: number,
-        ///       proxy: boolean,
-        ///       relationshipAttributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       status: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       updateTime: number,
-        ///       updatedBy: string,
-        ///       version: number,
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;,
-        ///       contacts: Dictionary&lt;string, ContactBasic[]&gt;
-        ///     }
-        ///   ]
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetEntitiesByUniqueAttributes(string typeName, bool? minExtInfo = null, bool? ignoreRelationships = null, string attrNQualifiedName = null, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetEntitiesByUniqueAttributes(string,bool?,bool?,string,RequestContext)']/*" />
+        public virtual Response GetEntitiesByUniqueAttributes(string typeName, bool? minExtInfo, bool? ignoreRelationships, string attrNQualifiedName, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
 
@@ -3460,69 +1644,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get entity header given its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Get entity header given its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   typeName: string,
-        ///   lastModifiedTS: string,
-        ///   classificationNames: [string],
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   displayText: string,
-        ///   guid: string,
-        ///   isIncomplete: boolean,
-        ///   labels: [string],
-        ///   meaningNames: [string],
-        ///   meanings: [
-        ///     {
-        ///       confidence: number,
-        ///       createdBy: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> GetHeaderAsync(string guid, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetHeaderAsync(string,RequestContext)']/*" />
+        public virtual async Task<Response> GetHeaderAsync(string guid, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
 
@@ -3540,69 +1679,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get entity header given its GUID. </summary>
+        /// <summary>
+        /// [Protocol Method] Get entity header given its GUID.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///   typeName: string,
-        ///   lastModifiedTS: string,
-        ///   classificationNames: [string],
-        ///   classifications: [
-        ///     {
-        ///       attributes: Dictionary&lt;string, AnyObject&gt;,
-        ///       typeName: string,
-        ///       lastModifiedTS: string,
-        ///       entityGuid: string,
-        ///       entityStatus: &quot;ACTIVE&quot; | &quot;DELETED&quot;,
-        ///       removePropagationsOnEntityDelete: boolean,
-        ///       validityPeriods: [
-        ///         {
-        ///           endTime: string,
-        ///           startTime: string,
-        ///           timeZone: string
-        ///         }
-        ///       ],
-        ///       source: string,
-        ///       sourceDetails: Dictionary&lt;string, AnyObject&gt;
-        ///     }
-        ///   ],
-        ///   displayText: string,
-        ///   guid: string,
-        ///   isIncomplete: boolean,
-        ///   labels: [string],
-        ///   meaningNames: [string],
-        ///   meanings: [
-        ///     {
-        ///       confidence: number,
-        ///       createdBy: string,
-        ///       description: string,
-        ///       displayText: string,
-        ///       expression: string,
-        ///       relationGuid: string,
-        ///       source: string,
-        ///       status: &quot;DISCOVERED&quot; | &quot;PROPOSED&quot; | &quot;IMPORTED&quot; | &quot;VALIDATED&quot; | &quot;DEPRECATED&quot; | &quot;OBSOLETE&quot; | &quot;OTHER&quot;,
-        ///       steward: string,
-        ///       termGuid: string
-        ///     }
-        ///   ],
-        ///   status: &quot;ACTIVE&quot; | &quot;DELETED&quot;
-        /// }
-        /// </code>
-        /// Schema for <c>Response Error</c>:
-        /// <code>{
-        ///   requestId: string,
-        ///   errorCode: string,
-        ///   errorMessage: string
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response GetHeader(string guid, RequestContext context = null)
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetHeader(string,RequestContext)']/*" />
+        public virtual Response GetHeader(string guid, RequestContext context)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
 
@@ -3620,12 +1714,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Remove business metadata from an entity. </summary>
+        /// <summary>
+        /// [Protocol Method] Remove business metadata from an entity.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteBusinessMetadataAsync(string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> DeleteBusinessMetadataAsync(string guid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -3644,12 +1750,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Remove business metadata from an entity. </summary>
+        /// <summary>
+        /// [Protocol Method] Remove business metadata from an entity.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteBusinessMetadata(string,RequestContent,RequestContext)']/*" />
         public virtual Response DeleteBusinessMetadata(string guid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -3668,13 +1786,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Add business metadata to an entity. </summary>
+        /// <summary>
+        /// [Protocol Method] Add business metadata to an entity.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="isOverwrite"> Whether to overwrite the existing business metadata on the entity or not, default is false. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddOrUpdateBusinessMetadataAsync(string,RequestContent,bool?,RequestContext)']/*" />
         public virtual async Task<Response> AddOrUpdateBusinessMetadataAsync(string guid, RequestContent content, bool? isOverwrite = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -3693,13 +1823,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Add business metadata to an entity. </summary>
+        /// <summary>
+        /// [Protocol Method] Add business metadata to an entity.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="isOverwrite"> Whether to overwrite the existing business metadata on the entity or not, default is false. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddOrUpdateBusinessMetadata(string,RequestContent,bool?,RequestContext)']/*" />
         public virtual Response AddOrUpdateBusinessMetadata(string guid, RequestContent content, bool? isOverwrite = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -3718,13 +1860,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete business metadata attributes from an entity. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete business metadata attributes from an entity.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="bmName"> BusinessMetadata name. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> or <paramref name="bmName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> or <paramref name="bmName"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteBusinessMetadataAttributesAsync(string,string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> DeleteBusinessMetadataAttributesAsync(string guid, string bmName, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -3744,13 +1898,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete business metadata attributes from an entity. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete business metadata attributes from an entity.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="bmName"> BusinessMetadata name. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> or <paramref name="bmName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> or <paramref name="bmName"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteBusinessMetadataAttributes(string,string,RequestContent,RequestContext)']/*" />
         public virtual Response DeleteBusinessMetadataAttributes(string guid, string bmName, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -3770,13 +1936,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Add or update business metadata attributes. </summary>
+        /// <summary>
+        /// [Protocol Method] Add or update business metadata attributes
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="bmName"> BusinessMetadata name. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> or <paramref name="bmName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> or <paramref name="bmName"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddOrUpdateBusinessMetadataAttributesAsync(string,string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> AddOrUpdateBusinessMetadataAttributesAsync(string guid, string bmName, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -3796,13 +1974,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Add or update business metadata attributes. </summary>
+        /// <summary>
+        /// [Protocol Method] Add or update business metadata attributes
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="bmName"> BusinessMetadata name. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> or <paramref name="bmName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> or <paramref name="bmName"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddOrUpdateBusinessMetadataAttributes(string,string,RequestContent,RequestContext)']/*" />
         public virtual Response AddOrUpdateBusinessMetadataAttributes(string guid, string bmName, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -3822,9 +2012,21 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get the sample Template for uploading/creating bulk BusinessMetaData. </summary>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
-        public virtual async Task<Response> GetSampleBusinessMetadataTemplateAsync(RequestContext context = null)
+        /// <summary>
+        /// [Protocol Method] Get the sample Template for uploading/creating bulk BusinessMetaData
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetSampleBusinessMetadataTemplateAsync(RequestContext)']/*" />
+        public virtual async Task<Response> GetSampleBusinessMetadataTemplateAsync(RequestContext context)
         {
             using var scope = ClientDiagnostics.CreateScope("PurviewEntities.GetSampleBusinessMetadataTemplate");
             scope.Start();
@@ -3840,9 +2042,21 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Get the sample Template for uploading/creating bulk BusinessMetaData. </summary>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
-        public virtual Response GetSampleBusinessMetadataTemplate(RequestContext context = null)
+        /// <summary>
+        /// [Protocol Method] Get the sample Template for uploading/creating bulk BusinessMetaData
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='GetSampleBusinessMetadataTemplate(RequestContext)']/*" />
+        public virtual Response GetSampleBusinessMetadataTemplate(RequestContext context)
         {
             using var scope = ClientDiagnostics.CreateScope("PurviewEntities.GetSampleBusinessMetadataTemplate");
             scope.Start();
@@ -3858,32 +2072,29 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Upload the file for creating Business Metadata in BULK. </summary>
+        /// <summary>
+        /// [Protocol Method] Upload the file for creating Business Metadata in BULK
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   failedImportInfoList: [
-        ///     {
-        ///       childObjectName: string,
-        ///       importStatus: &quot;SUCCESS&quot; | &quot;FAILED&quot;,
-        ///       parentObjectName: string,
-        ///       remarks: string
-        ///     }
-        ///   ],
-        ///   successImportInfoList: [ImportInfo]
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual async Task<Response> ImportBusinessMetadataAsync(RequestContent content, RequestContext context = null)
+        /// <param name="contentType"> Body Parameter content-type. Allowed values: "multipart/form-data". </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='ImportBusinessMetadataAsync(RequestContent,string,RequestContext)']/*" />
+        public virtual async Task<Response> ImportBusinessMetadataAsync(RequestContent content, string contentType, RequestContext context = null)
         {
             using var scope = ClientDiagnostics.CreateScope("PurviewEntities.ImportBusinessMetadata");
             scope.Start();
             try
             {
-                using HttpMessage message = CreateImportBusinessMetadataRequest(content, context);
+                using HttpMessage message = CreateImportBusinessMetadataRequest(content, contentType, context);
                 return await _pipeline.ProcessMessageAsync(message, context).ConfigureAwait(false);
             }
             catch (Exception e)
@@ -3893,32 +2104,29 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Upload the file for creating Business Metadata in BULK. </summary>
+        /// <summary>
+        /// [Protocol Method] Upload the file for creating Business Metadata in BULK
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
-        /// <remarks>
-        /// Schema for <c>Response Body</c>:
-        /// <code>{
-        ///   failedImportInfoList: [
-        ///     {
-        ///       childObjectName: string,
-        ///       importStatus: &quot;SUCCESS&quot; | &quot;FAILED&quot;,
-        ///       parentObjectName: string,
-        ///       remarks: string
-        ///     }
-        ///   ],
-        ///   successImportInfoList: [ImportInfo]
-        /// }
-        /// </code>
-        /// 
-        /// </remarks>
-        public virtual Response ImportBusinessMetadata(RequestContent content, RequestContext context = null)
+        /// <param name="contentType"> Body Parameter content-type. Allowed values: "multipart/form-data". </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='ImportBusinessMetadata(RequestContent,string,RequestContext)']/*" />
+        public virtual Response ImportBusinessMetadata(RequestContent content, string contentType, RequestContext context = null)
         {
             using var scope = ClientDiagnostics.CreateScope("PurviewEntities.ImportBusinessMetadata");
             scope.Start();
             try
             {
-                using HttpMessage message = CreateImportBusinessMetadataRequest(content, context);
+                using HttpMessage message = CreateImportBusinessMetadataRequest(content, contentType, context);
                 return _pipeline.ProcessMessage(message, context);
             }
             catch (Exception e)
@@ -3928,12 +2136,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> delete given labels to a given entity. </summary>
+        /// <summary>
+        /// [Protocol Method] delete given labels to a given entity
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteLabelsAsync(string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> DeleteLabelsAsync(string guid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -3952,12 +2172,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> delete given labels to a given entity. </summary>
+        /// <summary>
+        /// [Protocol Method] delete given labels to a given entity
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteLabels(string,RequestContent,RequestContext)']/*" />
         public virtual Response DeleteLabels(string guid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -3976,12 +2208,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Set labels to a given entity. </summary>
+        /// <summary>
+        /// [Protocol Method] Set labels to a given entity
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='SetLabelsAsync(string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> SetLabelsAsync(string guid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -4000,12 +2244,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Set labels to a given entity. </summary>
+        /// <summary>
+        /// [Protocol Method] Set labels to a given entity
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='SetLabels(string,RequestContent,RequestContext)']/*" />
         public virtual Response SetLabels(string guid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -4024,12 +2280,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> add given labels to a given entity. </summary>
+        /// <summary>
+        /// [Protocol Method] add given labels to a given entity
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddLabelAsync(string,RequestContent,RequestContext)']/*" />
         public virtual async Task<Response> AddLabelAsync(string guid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -4048,12 +2316,24 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> add given labels to a given entity. </summary>
+        /// <summary>
+        /// [Protocol Method] add given labels to a given entity
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="guid"> The globally unique identifier of the entity. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="guid"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="guid"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddLabel(string,RequestContent,RequestContext)']/*" />
         public virtual Response AddLabel(string guid, RequestContent content, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(guid, nameof(guid));
@@ -4072,13 +2352,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete given labels to a given entity identified by its type and unique attributes, if labels is null/empty, no labels will be removed. If any labels in labels set are non-existing labels, they will be ignored, only existing labels will be removed. In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format: attr:&lt;attrName&gt;=&lt;attrValue&gt;. NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName. The REST request would look something like this: DELETE /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete given labels to a given entity identified by its type and unique attributes, if labels is null/empty, no labels will be removed. If any labels in labels set are non-existing labels, they will be ignored, only existing labels will be removed. In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format: attr:&lt;attrName&gt;=&lt;attrValue&gt;. NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName. The REST request would look something like this: DELETE /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteLabelsByUniqueAttributeAsync(string,RequestContent,string,RequestContext)']/*" />
         public virtual async Task<Response> DeleteLabelsByUniqueAttributeAsync(string typeName, RequestContent content, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -4097,13 +2389,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Delete given labels to a given entity identified by its type and unique attributes, if labels is null/empty, no labels will be removed. If any labels in labels set are non-existing labels, they will be ignored, only existing labels will be removed. In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format: attr:&lt;attrName&gt;=&lt;attrValue&gt;. NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName. The REST request would look something like this: DELETE /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue. </summary>
+        /// <summary>
+        /// [Protocol Method] Delete given labels to a given entity identified by its type and unique attributes, if labels is null/empty, no labels will be removed. If any labels in labels set are non-existing labels, they will be ignored, only existing labels will be removed. In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format: attr:&lt;attrName&gt;=&lt;attrValue&gt;. NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName. The REST request would look something like this: DELETE /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='DeleteLabelsByUniqueAttribute(string,RequestContent,string,RequestContext)']/*" />
         public virtual Response DeleteLabelsByUniqueAttribute(string typeName, RequestContent content, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -4122,13 +2426,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Set labels to a given entity identified by its type and unique attributes, if labels is null/empty, existing labels will all be removed. In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format: attr:&lt;attrName&gt;=&lt;attrValue&gt;. NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName. The REST request would look something like this: POST /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue. </summary>
+        /// <summary>
+        /// [Protocol Method] Set labels to a given entity identified by its type and unique attributes, if labels is null/empty, existing labels will all be removed. In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format: attr:&lt;attrName&gt;=&lt;attrValue&gt;. NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName. The REST request would look something like this: POST /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='SetLabelsByUniqueAttributeAsync(string,RequestContent,string,RequestContext)']/*" />
         public virtual async Task<Response> SetLabelsByUniqueAttributeAsync(string typeName, RequestContent content, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -4147,13 +2463,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Set labels to a given entity identified by its type and unique attributes, if labels is null/empty, existing labels will all be removed. In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format: attr:&lt;attrName&gt;=&lt;attrValue&gt;. NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName. The REST request would look something like this: POST /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue. </summary>
+        /// <summary>
+        /// [Protocol Method] Set labels to a given entity identified by its type and unique attributes, if labels is null/empty, existing labels will all be removed. In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format: attr:&lt;attrName&gt;=&lt;attrValue&gt;. NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName. The REST request would look something like this: POST /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='SetLabelsByUniqueAttribute(string,RequestContent,string,RequestContext)']/*" />
         public virtual Response SetLabelsByUniqueAttribute(string typeName, RequestContent content, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -4172,13 +2500,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Add given labels to a given entity identified by its type and unique attributes, if labels is null/empty, no labels will be added. In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format: attr:&lt;attrName&gt;=&lt;attrValue&gt;. NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName. The REST request would look something like this: PUT /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue. </summary>
+        /// <summary>
+        /// [Protocol Method] Add given labels to a given entity identified by its type and unique attributes, if labels is null/empty, no labels will be added. In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format: attr:&lt;attrName&gt;=&lt;attrValue&gt;. NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName. The REST request would look something like this: PUT /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddLabelsByUniqueAttributeAsync(string,RequestContent,string,RequestContext)']/*" />
         public virtual async Task<Response> AddLabelsByUniqueAttributeAsync(string typeName, RequestContent content, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -4197,13 +2537,25 @@ namespace Azure.Analytics.Purview.Catalog
             }
         }
 
-        /// <summary> Add given labels to a given entity identified by its type and unique attributes, if labels is null/empty, no labels will be added. In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format: attr:&lt;attrName&gt;=&lt;attrValue&gt;. NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName. The REST request would look something like this: PUT /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue. </summary>
+        /// <summary>
+        /// [Protocol Method] Add given labels to a given entity identified by its type and unique attributes, if labels is null/empty, no labels will be added. In addition to the typeName path parameter, attribute key-value pair(s) can be provided in the following format: attr:&lt;attrName&gt;=&lt;attrValue&gt;. NOTE: The attrName and attrValue should be unique across entities, eg. qualifiedName. The REST request would look something like this: PUT /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// This <see href="https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/samples/ProtocolMethods.md">protocol method</see> allows explicit creation of the request and processing of the response for advanced scenarios.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         /// <param name="typeName"> The name of the type. </param>
         /// <param name="content"> The content to send as the body of the request. </param>
         /// <param name="attrQualifiedName"> The qualified name of the entity. </param>
-        /// <param name="context"> The request context, which can override default behaviors on the request on a per-call basis. </param>
+        /// <param name="context"> The request context, which can override default behaviors of the client pipeline on a per-call basis. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="typeName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="typeName"/> is an empty string, and was expected to be non-empty. </exception>
+        /// <exception cref="RequestFailedException"> Service returned a non-success status code. </exception>
+        /// <returns> The response returned from the service. </returns>
+        /// <include file="Docs/PurviewEntities.xml" path="doc/members/member[@name='AddLabelsByUniqueAttribute(string,RequestContent,string,RequestContext)']/*" />
         public virtual Response AddLabelsByUniqueAttribute(string typeName, RequestContent content, string attrQualifiedName = null, RequestContext context = null)
         {
             Argument.AssertNotNullOrEmpty(typeName, nameof(typeName));
@@ -4247,9 +2599,12 @@ namespace Azure.Analytics.Purview.Catalog
             uri.Reset(_endpoint);
             uri.AppendRaw("/catalog/api", false);
             uri.AppendPath("/atlas/v2/entity/bulk", false);
-            foreach (var param in guids)
+            if (guids != null && !(guids is ChangeTrackingList<string> changeTrackingList && changeTrackingList.IsUndefined))
             {
-                uri.AppendQuery("guid", param, true);
+                foreach (var param in guids)
+                {
+                    uri.AppendQuery("guid", param, true);
+                }
             }
             if (minExtInfo != null)
             {
@@ -4259,11 +2614,11 @@ namespace Azure.Analytics.Purview.Catalog
             {
                 uri.AppendQuery("ignoreRelationships", ignoreRelationships.Value, true);
             }
-            if (excludeRelationshipTypes != null)
+            if (excludeRelationshipTypes != null && !(excludeRelationshipTypes is ChangeTrackingList<string> changeTrackingList0 && changeTrackingList0.IsUndefined))
             {
-                foreach (var param0 in excludeRelationshipTypes)
+                foreach (var param in excludeRelationshipTypes)
                 {
-                    uri.AppendQuery("excludeRelationshipTypes", param0, true);
+                    uri.AppendQuery("excludeRelationshipTypes", param, true);
                 }
             }
             request.Uri = uri;
@@ -4296,9 +2651,12 @@ namespace Azure.Analytics.Purview.Catalog
             uri.Reset(_endpoint);
             uri.AppendRaw("/catalog/api", false);
             uri.AppendPath("/atlas/v2/entity/bulk", false);
-            foreach (var param in guids)
+            if (guids != null && !(guids is ChangeTrackingList<string> changeTrackingList && changeTrackingList.IsUndefined))
             {
-                uri.AppendQuery("guid", param, true);
+                foreach (var param in guids)
+                {
+                    uri.AppendQuery("guid", param, true);
+                }
             }
             request.Uri = uri;
             request.Headers.Add("Accept", "application/json");
@@ -4742,7 +3100,7 @@ namespace Azure.Analytics.Purview.Catalog
             return message;
         }
 
-        internal HttpMessage CreateImportBusinessMetadataRequest(RequestContent content, RequestContext context)
+        internal HttpMessage CreateImportBusinessMetadataRequest(RequestContent content, string contentType, RequestContext context)
         {
             var message = _pipeline.CreateMessage(context, ResponseClassifier200);
             var request = message.Request;
@@ -4753,7 +3111,7 @@ namespace Azure.Analytics.Purview.Catalog
             uri.AppendPath("/atlas/v2/entity/businessmetadata/import", false);
             request.Uri = uri;
             request.Headers.Add("Accept", "application/json");
-            request.Headers.Add("Content-Type", "multipart/form-data");
+            request.Headers.Add("Content-Type", contentType);
             request.Content = content;
             return message;
         }

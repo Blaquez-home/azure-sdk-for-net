@@ -13,11 +13,13 @@ using NUnit.Framework;
 
 namespace Azure.ResourceManager.Network.Tests
 {
+    [ClientTestFixture(true, "2021-04-01", "2018-11-01")]
     public class RouteTableTests : NetworkServiceClientTestBase
     {
         private SubscriptionResource _subscription;
 
-        public RouteTableTests(bool isAsync) : base(isAsync)
+        public RouteTableTests(bool isAsync, string apiVersion)
+        : base(isAsync, RouteTableResource.ResourceType, apiVersion)
         {
         }
 
@@ -196,7 +198,7 @@ namespace Azure.ResourceManager.Network.Tests
             {
                 Location = location,
 
-                AddressSpace = new AddressSpace()
+                AddressSpace = new VirtualNetworkAddressSpace()
                 {
                     AddressPrefixes = { "10.0.0.0/16", }
                 },

@@ -5,7 +5,8 @@
 
 #nullable disable
 
-using Azure;
+using System;
+using System.Collections.Generic;
 using Azure.Core;
 using Azure.ResourceManager.Resources.Models;
 
@@ -14,15 +15,16 @@ namespace Azure.ResourceManager.Network.Models
     /// <summary> Frontend IP configuration of an application gateway. </summary>
     public partial class ApplicationGatewayFrontendIPConfiguration : NetworkResourceData
     {
-        /// <summary> Initializes a new instance of ApplicationGatewayFrontendIPConfiguration. </summary>
+        /// <summary> Initializes a new instance of <see cref="ApplicationGatewayFrontendIPConfiguration"/>. </summary>
         public ApplicationGatewayFrontendIPConfiguration()
         {
         }
 
-        /// <summary> Initializes a new instance of ApplicationGatewayFrontendIPConfiguration. </summary>
+        /// <summary> Initializes a new instance of <see cref="ApplicationGatewayFrontendIPConfiguration"/>. </summary>
         /// <param name="id"> Resource ID. </param>
         /// <param name="name"> Resource name. </param>
         /// <param name="resourceType"> Resource type. </param>
+        /// <param name="serializedAdditionalRawData"> Keeps track of any properties unknown to the library. </param>
         /// <param name="etag"> A unique read-only string that changes whenever the resource is updated. </param>
         /// <param name="privateIPAddress"> PrivateIPAddress of the network interface IP Configuration. </param>
         /// <param name="privateIPAllocationMethod"> The private IP address allocation method. </param>
@@ -30,9 +32,9 @@ namespace Azure.ResourceManager.Network.Models
         /// <param name="publicIPAddress"> Reference to the PublicIP resource. </param>
         /// <param name="privateLinkConfiguration"> Reference to the application gateway private link configuration. </param>
         /// <param name="provisioningState"> The provisioning state of the frontend IP configuration resource. </param>
-        internal ApplicationGatewayFrontendIPConfiguration(ResourceIdentifier id, string name, ResourceType? resourceType, ETag? etag, string privateIPAddress, IPAllocationMethod? privateIPAllocationMethod, WritableSubResource subnet, WritableSubResource publicIPAddress, WritableSubResource privateLinkConfiguration, NetworkProvisioningState? provisioningState) : base(id, name, resourceType)
+        internal ApplicationGatewayFrontendIPConfiguration(ResourceIdentifier id, string name, ResourceType? resourceType, IDictionary<string, BinaryData> serializedAdditionalRawData, ETag? etag, string privateIPAddress, NetworkIPAllocationMethod? privateIPAllocationMethod, WritableSubResource subnet, WritableSubResource publicIPAddress, WritableSubResource privateLinkConfiguration, NetworkProvisioningState? provisioningState) : base(id, name, resourceType, serializedAdditionalRawData)
         {
-            Etag = etag;
+            ETag = etag;
             PrivateIPAddress = privateIPAddress;
             PrivateIPAllocationMethod = privateIPAllocationMethod;
             Subnet = subnet;
@@ -42,11 +44,11 @@ namespace Azure.ResourceManager.Network.Models
         }
 
         /// <summary> A unique read-only string that changes whenever the resource is updated. </summary>
-        public ETag? Etag { get; }
+        public ETag? ETag { get; }
         /// <summary> PrivateIPAddress of the network interface IP Configuration. </summary>
         public string PrivateIPAddress { get; set; }
         /// <summary> The private IP address allocation method. </summary>
-        public IPAllocationMethod? PrivateIPAllocationMethod { get; set; }
+        public NetworkIPAllocationMethod? PrivateIPAllocationMethod { get; set; }
         /// <summary> Reference to the subnet resource. </summary>
         internal WritableSubResource Subnet { get; set; }
         /// <summary> Gets or sets Id. </summary>

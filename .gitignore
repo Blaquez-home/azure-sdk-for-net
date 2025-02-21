@@ -11,6 +11,9 @@ developer/
 launch.json
 launchSettings.json
 
+# Default Assets restore directory
+.assets
+
 # Build results
 binaries/
 [Dd]ebug*/
@@ -137,7 +140,7 @@ Backup*/
 UpgradeLog*.XML
 
 # NuGet
-packages
+# packages
 packages/repositories.config
 testPackages
 
@@ -161,11 +164,19 @@ pingme.txt
 # TS/Node files
 dist/
 node_modules/
+eng/packages/**/*.tgz
 
 # MSBuild binary log files
 msbuild.binlog
 
-# BenchmarkDotNet 
+# BenchmarkDotNet
 BenchmarkDotNet.Artifacts
 
 artifacts
+.assets
+
+# Temporary typespec folders for typespec generation
+TempTypeSpecFiles/
+
+# Common toolchain intermediate files
+temp

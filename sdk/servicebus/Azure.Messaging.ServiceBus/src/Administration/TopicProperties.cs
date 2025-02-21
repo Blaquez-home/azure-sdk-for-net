@@ -20,7 +20,7 @@ namespace Azure.Messaging.ServiceBus.Administration
         private string _userMetadata;
 
         /// <summary>
-        /// Initializes a new instance of TopicDescription class with the specified relative name.
+        /// Initializes a new instance of <see cref="TopicProperties"/> with the specified relative name.
         /// </summary>
         /// <param name="name">Name of the topic relative to the namespace base address.</param>
         internal TopicProperties(string name)
@@ -29,7 +29,7 @@ namespace Azure.Messaging.ServiceBus.Administration
         }
 
         /// <summary>
-        /// Initializes a new instance of TopicProperties from the provided options.
+        /// Initializes a new instance of <see cref="TopicProperties"/> from the provided options.
         /// </summary>
         /// <param name="options">Options used to create the properties instance.</param>
         internal TopicProperties(CreateTopicOptions options)
@@ -45,6 +45,7 @@ namespace Azure.Messaging.ServiceBus.Administration
             Status = options.Status;
             EnableBatchedOperations = options.EnableBatchedOperations;
             EnablePartitioning = options.EnablePartitioning;
+            SupportOrdering = options.SupportOrdering;
             if (options.UserMetadata != null)
             {
                 UserMetadata = options.UserMetadata;
@@ -84,6 +85,7 @@ namespace Azure.Messaging.ServiceBus.Administration
         /// The <see cref="TimeSpan"/> idle interval after which the topic is automatically deleted.
         /// </summary>
         /// <remarks>The minimum duration is 5 minutes. Default value is <see cref="TimeSpan.MaxValue"/>.</remarks>
+        /// <seealso href="https://learn.microsoft.com/azure/service-bus-messaging/message-expiration#idleness">Service Bus: Idleness</seealso>
         public TimeSpan AutoDeleteOnIdle
         {
             get => _autoDeleteOnIdle;
@@ -180,7 +182,7 @@ namespace Azure.Messaging.ServiceBus.Administration
         public bool EnableBatchedOperations { get; set; } = true;
 
         /// <summary>
-        /// Custom metadata that user can associate with the description.
+        /// Custom metadata that user can associate with the topic.
         /// </summary>
         /// <remarks>Cannot be null. Max length is 1024 chars.</remarks>
         public string UserMetadata
@@ -201,7 +203,7 @@ namespace Azure.Messaging.ServiceBus.Administration
         /// <summary>
         /// Gets or sets the maximum message size, in kilobytes, for messages sent to this topic.
         /// This feature is only available when using a Premium namespace and service version "2021-05" or higher.
-        /// <seealso href="https://docs.microsoft.com/azure/service-bus-messaging/service-bus-premium-messaging"/>
+        /// <seealso href="https://learn.microsoft.com/azure/service-bus-messaging/service-bus-premium-messaging"/>
         /// </summary>
         public long? MaxMessageSizeInKilobytes { get; set; }
 
@@ -216,8 +218,9 @@ namespace Azure.Messaging.ServiceBus.Administration
         internal bool EnableSubscriptionPartitioning { get; set; }
 
         /// <summary>
-        /// List of properties that were retrieved using GetTopic but are not understood by this version of client is stored here.
-        /// The list will be sent back when an already retrieved TopicDescription will be used in UpdateTopic call.
+        /// List of properties that were retrieved using <see cref="ServiceBusAdministrationClient.GetTopicAsync"/> but are not understood
+        /// by this version of client is stored here. The list will be sent back when an already retrieved <see cref="TopicProperties"/> is used in an
+        /// <see cref="ServiceBusAdministrationClient.UpdateTopicAsync"/> call.
         /// </summary>
         internal List<XElement> UnknownProperties { get; set; }
 
@@ -239,25 +242,25 @@ namespace Azure.Messaging.ServiceBus.Administration
         /// <summary>Determines whether the specified object is equal to the current object.</summary>
         public bool Equals(TopicProperties other)
         {
-            if (other is TopicProperties otherDescription
-                && Name.Equals(otherDescription.Name, StringComparison.OrdinalIgnoreCase)
-                && AutoDeleteOnIdle.Equals(otherDescription.AutoDeleteOnIdle)
-                && DefaultMessageTimeToLive.Equals(otherDescription.DefaultMessageTimeToLive)
-                && (!RequiresDuplicateDetection || DuplicateDetectionHistoryTimeWindow.Equals(otherDescription.DuplicateDetectionHistoryTimeWindow))
-                && EnableBatchedOperations == otherDescription.EnableBatchedOperations
-                && EnablePartitioning == otherDescription.EnablePartitioning
-                && MaxSizeInMegabytes == otherDescription.MaxSizeInMegabytes
-                && RequiresDuplicateDetection.Equals(otherDescription.RequiresDuplicateDetection)
-                && Status.Equals(otherDescription.Status)
-                && string.Equals(_userMetadata, otherDescription._userMetadata, StringComparison.OrdinalIgnoreCase)
+            if (other is TopicProperties otherProperties
+                && Name.Equals(otherProperties.Name, StringComparison.OrdinalIgnoreCase)
+                && AutoDeleteOnIdle.Equals(otherProperties.AutoDeleteOnIdle)
+                && DefaultMessageTimeToLive.Equals(otherProperties.DefaultMessageTimeToLive)
+                && (!RequiresDuplicateDetection || DuplicateDetectionHistoryTimeWindow.Equals(otherProperties.DuplicateDetectionHistoryTimeWindow))
+                && EnableBatchedOperations == otherProperties.EnableBatchedOperations
+                && EnablePartitioning == otherProperties.EnablePartitioning
+                && MaxSizeInMegabytes == otherProperties.MaxSizeInMegabytes
+                && RequiresDuplicateDetection.Equals(otherProperties.RequiresDuplicateDetection)
+                && Status.Equals(otherProperties.Status)
+                && string.Equals(_userMetadata, otherProperties._userMetadata, StringComparison.OrdinalIgnoreCase)
                 && string.Equals(ForwardTo, other.ForwardTo, StringComparison.OrdinalIgnoreCase)
                 && EnableExpress == other.EnableExpress
                 && IsAnonymousAccessible == other.IsAnonymousAccessible
                 && FilteringMessagesBeforePublishing == other.FilteringMessagesBeforePublishing
                 && EnableSubscriptionPartitioning == other.EnableSubscriptionPartitioning
-                && (AuthorizationRules != null && otherDescription.AuthorizationRules != null
-                    || AuthorizationRules == null && otherDescription.AuthorizationRules == null)
-                && (AuthorizationRules == null || AuthorizationRules.Equals(otherDescription.AuthorizationRules))
+                && (AuthorizationRules != null && otherProperties.AuthorizationRules != null
+                    || AuthorizationRules == null && otherProperties.AuthorizationRules == null)
+                && (AuthorizationRules == null || AuthorizationRules.Equals(otherProperties.AuthorizationRules))
                 && MaxMessageSizeInKilobytes.Equals(other.MaxMessageSizeInKilobytes))
             {
                 return true;

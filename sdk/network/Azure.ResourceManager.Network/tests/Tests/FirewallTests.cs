@@ -40,7 +40,7 @@ namespace Azure.ResourceManager.Network.Tests
             VirtualNetworkData vnetData = new VirtualNetworkData()
             {
                 Location = AzureLocation.WestUS2,
-                AddressSpace = new AddressSpace()
+                AddressSpace = new VirtualNetworkAddressSpace()
                 {
                     AddressPrefixes = { "10.20.0.0/16", }
                 },
@@ -56,7 +56,7 @@ namespace Azure.ResourceManager.Network.Tests
             PublicIPAddressData ipData = new PublicIPAddressData()
             {
                 Location = AzureLocation.WestUS2,
-                PublicIPAllocationMethod = IPAllocationMethod.Static,
+                PublicIPAllocationMethod = NetworkIPAllocationMethod.Static,
                 Sku = new PublicIPAddressSku() { Name = PublicIPAddressSkuName.Standard },
             };
             var ipLro = await rg.GetPublicIPAddresses().CreateOrUpdateAsync(WaitUntil.Completed, SessionRecording.GenerateAssetName("publicIp-"), ipData);

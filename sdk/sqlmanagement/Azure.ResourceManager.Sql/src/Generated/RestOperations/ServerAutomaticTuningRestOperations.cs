@@ -9,7 +9,6 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 
@@ -34,6 +33,21 @@ namespace Azure.ResourceManager.Sql
             _endpoint = endpoint ?? new Uri("https://management.azure.com");
             _apiVersion = apiVersion ?? "2020-11-01-preview";
             _userAgent = new TelemetryDetails(GetType().Assembly, applicationId);
+        }
+
+        internal RequestUriBuilder CreateGetRequestUri(string subscriptionId, string resourceGroupName, string serverName)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/automaticTuning/current", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
         }
 
         internal HttpMessage CreateGetRequest(string subscriptionId, string resourceGroupName, string serverName)
@@ -64,7 +78,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="serverName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="serverName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ServerAutomaticTuningData>> GetAsync(string subscriptionId, string resourceGroupName, string serverName, CancellationToken cancellationToken = default)
+        public async Task<Response<SqlServerAutomaticTuningData>> GetAsync(string subscriptionId, string resourceGroupName, string serverName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -76,13 +90,13 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        ServerAutomaticTuningData value = default;
+                        SqlServerAutomaticTuningData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ServerAutomaticTuningData.DeserializeServerAutomaticTuningData(document.RootElement);
+                        value = SqlServerAutomaticTuningData.DeserializeSqlServerAutomaticTuningData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((ServerAutomaticTuningData)null, message.Response);
+                    return Response.FromValue((SqlServerAutomaticTuningData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
@@ -95,7 +109,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="serverName"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="serverName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ServerAutomaticTuningData> Get(string subscriptionId, string resourceGroupName, string serverName, CancellationToken cancellationToken = default)
+        public Response<SqlServerAutomaticTuningData> Get(string subscriptionId, string resourceGroupName, string serverName, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -107,19 +121,34 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        ServerAutomaticTuningData value = default;
+                        SqlServerAutomaticTuningData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ServerAutomaticTuningData.DeserializeServerAutomaticTuningData(document.RootElement);
+                        value = SqlServerAutomaticTuningData.DeserializeSqlServerAutomaticTuningData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 case 404:
-                    return Response.FromValue((ServerAutomaticTuningData)null, message.Response);
+                    return Response.FromValue((SqlServerAutomaticTuningData)null, message.Response);
                 default:
                     throw new RequestFailedException(message.Response);
             }
         }
 
-        internal HttpMessage CreateUpdateRequest(string subscriptionId, string resourceGroupName, string serverName, ServerAutomaticTuningData data)
+        internal RequestUriBuilder CreateUpdateRequestUri(string subscriptionId, string resourceGroupName, string serverName, SqlServerAutomaticTuningData data)
+        {
+            var uri = new RawRequestUriBuilder();
+            uri.Reset(_endpoint);
+            uri.AppendPath("/subscriptions/", false);
+            uri.AppendPath(subscriptionId, true);
+            uri.AppendPath("/resourceGroups/", false);
+            uri.AppendPath(resourceGroupName, true);
+            uri.AppendPath("/providers/Microsoft.Sql/servers/", false);
+            uri.AppendPath(serverName, true);
+            uri.AppendPath("/automaticTuning/current", false);
+            uri.AppendQuery("api-version", _apiVersion, true);
+            return uri;
+        }
+
+        internal HttpMessage CreateUpdateRequest(string subscriptionId, string resourceGroupName, string serverName, SqlServerAutomaticTuningData data)
         {
             var message = _pipeline.CreateMessage();
             var request = message.Request;
@@ -138,7 +167,7 @@ namespace Azure.ResourceManager.Sql
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Content-Type", "application/json");
             var content = new Utf8JsonRequestContent();
-            content.JsonWriter.WriteObjectValue(data);
+            content.JsonWriter.WriteObjectValue(data, ModelSerializationExtensions.WireOptions);
             request.Content = content;
             _userAgent.Apply(message);
             return message;
@@ -152,7 +181,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="serverName"/> is an empty string, and was expected to be non-empty. </exception>
-        public async Task<Response<ServerAutomaticTuningData>> UpdateAsync(string subscriptionId, string resourceGroupName, string serverName, ServerAutomaticTuningData data, CancellationToken cancellationToken = default)
+        public async Task<Response<SqlServerAutomaticTuningData>> UpdateAsync(string subscriptionId, string resourceGroupName, string serverName, SqlServerAutomaticTuningData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -165,9 +194,9 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        ServerAutomaticTuningData value = default;
+                        SqlServerAutomaticTuningData value = default;
                         using var document = await JsonDocument.ParseAsync(message.Response.ContentStream, default, cancellationToken).ConfigureAwait(false);
-                        value = ServerAutomaticTuningData.DeserializeServerAutomaticTuningData(document.RootElement);
+                        value = SqlServerAutomaticTuningData.DeserializeSqlServerAutomaticTuningData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
@@ -183,7 +212,7 @@ namespace Azure.ResourceManager.Sql
         /// <param name="cancellationToken"> The cancellation token to use. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/>, <paramref name="serverName"/> or <paramref name="data"/> is null. </exception>
         /// <exception cref="ArgumentException"> <paramref name="subscriptionId"/>, <paramref name="resourceGroupName"/> or <paramref name="serverName"/> is an empty string, and was expected to be non-empty. </exception>
-        public Response<ServerAutomaticTuningData> Update(string subscriptionId, string resourceGroupName, string serverName, ServerAutomaticTuningData data, CancellationToken cancellationToken = default)
+        public Response<SqlServerAutomaticTuningData> Update(string subscriptionId, string resourceGroupName, string serverName, SqlServerAutomaticTuningData data, CancellationToken cancellationToken = default)
         {
             Argument.AssertNotNullOrEmpty(subscriptionId, nameof(subscriptionId));
             Argument.AssertNotNullOrEmpty(resourceGroupName, nameof(resourceGroupName));
@@ -196,9 +225,9 @@ namespace Azure.ResourceManager.Sql
             {
                 case 200:
                     {
-                        ServerAutomaticTuningData value = default;
+                        SqlServerAutomaticTuningData value = default;
                         using var document = JsonDocument.Parse(message.Response.ContentStream);
-                        value = ServerAutomaticTuningData.DeserializeServerAutomaticTuningData(document.RootElement);
+                        value = SqlServerAutomaticTuningData.DeserializeSqlServerAutomaticTuningData(document.RootElement);
                         return Response.FromValue(value, message.Response);
                     }
                 default:
